@@ -1,0 +1,28 @@
+---
+# Gateway network role - nftables, NAT, IP forwarding
+
+- name: Install nftables
+  apt:
+    name: nftables
+    state: present
+
+- name: Enable nftables service
+  systemd:
+    name: nftables
+    state: started
+    enabled: yes
+
+- name: Deploy nftables configuration
+  template:
+    src: nftables.conf.j2
+    dest: /etc/nftables.conf
+    backup: yes
+  notify: reload nftables
+
+- name: Ensure IP forwarding is enabled
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: yes
+    state: present
+    reload: yes

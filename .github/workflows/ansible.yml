@@ -1,0 +1,27 @@
+name: Ansible Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ansible/**'
+      - 'configs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, proxmox]
+    defaults:
+      run:
+        working-directory: ansible
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Run Ansible Playbook
+        run: ansible-playbook playbooks/site.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"

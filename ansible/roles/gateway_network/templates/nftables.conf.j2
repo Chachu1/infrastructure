@@ -1,0 +1,81 @@
+#!/usr/sbin/nft -f
+# Managed by Ansible
+
+flush ruleset
+
+table inet filter {
+    chain input {
+        type filter hook input priority 0; policy accept;
+
+        # Allow loopback
+        iif "lo" accept
+
+        # Allow established/related
+        ct state established,related accept
+
+        # Allow SSH
+        tcp dport 22 accept
+
+        # Allow HTTP/HTTPS (for Caddy)
+        tcp dport { 80, 443 } accept
+
+        # Allow WireGuard
+        udp dport {{ wireguard_port }} accept
+
+        # Allow ICMP
+        ip protocol icmp accept
+        ip6 nexthdr icmpv6 accept
+
+        # Allow from private network
+        ip saddr {{ private_subnet }} accept
+
+        # Allow from WireGuard network
+        ip saddr 10.10.0.0/24 accept
+
+        # Drop everything else
+        drop
+    }
+
+    chain forward {
+        type filter hook forward priority 0; policy accept;
+
+        # Allow established/related
+        ct state established,related accept
+
+        # Allow forwarding from private network
+        ip saddr {{ private_subnet }} accept
+
+        # Allow forwarding from WireGuard network
+        ip saddr 10.10.0.0/24 accept
+
+        # Allow forwarding to private network
+        ip daddr {{ private_subnet }} accept
+    }
+
+    chain output {
+        type filter hook output priority 0; policy accept;
+    }
+}
+
+table ip nat {
+    chain prerouting {
+        type nat hook prerouting priority -100;
+
+        # DNAT for HTTP/HTTPS to gateway
+        tcp dport 80 dnat to {{ gateway_ip }}:80
+        tcp dport 443 dnat to {{ gateway_ip }}:443
+
+        # DNAT for WireGuard
+        udp dport {{ wireguard_port }} dnat to {{ gateway_ip }}:{{ wireguard_port }}
+    }
+
+    chain postrouting {
+        type nat hook postrouting priority 100;
+
+        # Masquerade outgoing traffic from private network
+        ip saddr {{ private_subnet }} oif "{{ gateway_interface }}" masquerade
+
+        # Masquerade outgoing traffic from WireGuard network
+        ip saddr 10.10.0.0/24 oif "{{ gateway_interface }}" masquerade
+    }
+}

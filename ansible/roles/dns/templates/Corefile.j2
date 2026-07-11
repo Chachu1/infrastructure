@@ -1,0 +1,22 @@
+# Managed by Ansible
+# CoreDNS configuration
+
+{{ internal_domain }} {
+    hosts {
+{% for name, ip in dns_records.items() %}
+        {{ ip }} {{ name }}.{{ internal_domain }}
+{% endfor %}
+        fallthrough
+    }
+    log
+    errors
+}
+
+. {
+    forward . 8.8.8.8 8.8.4.4 {
+        health_check 5s
+    }
+    log
+    errors
+    cache 30
+}

@@ -1,0 +1,25 @@
+# Shared variables for all hosts
+domain: "mhlab.me"
+internal_domain: "internal.mhlab.me"
+private_subnet: "10.0.0.0/24"
+gateway_ip: "10.0.0.10"
+
+# DNS resolver for all VMs
+dns_servers:
+  - "{{ gateway_ip }}"
+
+# Timezone
+timezone: "UTC"
+
+# Common packages
+common_packages:
+  - curl
+  - wget
+  - vim
+  - htop
+  - net-tools
+  - dnsutils
+  - jq
+  - unzip
+  - sudo
+  - systemd

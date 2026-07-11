@@ -39,6 +39,12 @@ jobs:
       - name: Generate Ansible Inventory
         run: terraform output -raw ansible_inventory > ../ansible/inventory/hosts.yml
 
+      - name: Run Ansible Playbook
+        run: ansible-playbook playbooks/site.yml
+        working-directory: ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+
       - name: Commit Inventory
         run: |
           git config user.name "github-actions[bot]"

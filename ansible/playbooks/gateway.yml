@@ -1,0 +1,11 @@
+---
+# Gateway playbook - configure gateway only
+
+- name: Configure gateway
+  hosts: gateway
+  roles:
+    - common
+    - gateway_network
+    - caddy
+    - wireguard
+    - dns

@@ -1,0 +1,17 @@
+---
+# Master playbook - runs everything
+
+- name: Configure gateway
+  hosts: gateway
+  roles:
+    - common
+    - gateway_network
+    - caddy
+    - wireguard
+    - dns
+
+- name: Configure application VMs
+  hosts: apps
+  roles:
+    - common
+    - docker_host

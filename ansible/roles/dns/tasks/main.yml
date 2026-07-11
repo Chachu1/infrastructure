@@ -1,0 +1,69 @@
+---
+# CoreDNS role - internal DNS
+
+- name: Download CoreDNS
+  get_url:
+    url: "https://github.com/coredns/coredns/releases/download/v1.11.1/coredns_1.11.1_linux_amd64.tgz"
+    dest: /tmp/coredns.tgz
+    mode: "0644"
+
+- name: Extract CoreDNS
+  unarchive:
+    src: /tmp/coredns.tgz
+    dest: /usr/local/bin/
+    remote_src: yes
+    creates: /usr/local/bin/coredns
+
+- name: Create CoreDNS user
+  user:
+    name: coredns
+    system: yes
+    shell: /sbin/nologin
+    home: /etc/coredns
+    create_home: no
+
+- name: Create CoreDNS config directory
+  file:
+    path: /etc/coredns
+    state: directory
+    owner: coredns
+    group: coredns
+    mode: "0755"
+
+- name: Deploy Corefile
+  template:
+    src: Corefile.j2
+    dest: /etc/coredns/Corefile
+    owner: coredns
+    group: coredns
+  notify: restart coredns
+
+- name: Create CoreDNS systemd service
+  copy:
+    dest: /etc/systemd/system/coredns.service
+    content: |
+      [Unit]
+      Description=CoreDNS
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=coredns
+      Group=coredns
+      ExecStart=/usr/local/bin/coredns -conf /etc/coredns/Corefile
+      Restart=on-failure
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: "0644"
+  notify:
+    - reload systemd
+    - restart coredns
+
+- name: Enable CoreDNS service
+  systemd:
+    name: coredns
+    state: started
+    enabled: yes
+    daemon_reload: yes

@@ -1,0 +1,8 @@
+---
+# Apps playbook - configure application VMs only
+
+- name: Configure application VMs
+  hosts: apps
+  roles:
+    - common
+    - docker_host

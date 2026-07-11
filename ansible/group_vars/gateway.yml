@@ -1,0 +1,42 @@
+# Gateway configuration
+gateway_interface: "eth0"
+
+# Caddy reverse proxy hosts
+caddy_hosts:
+  - domain: "uptime.{{ domain }}"
+    backend: "10.0.0.51"
+    port: 3001
+
+# WireGuard configuration
+wireguard_address: "10.10.0.1/24"
+wireguard_port: 51820
+wireguard_private_key: "{{ vault_wireguard_private_key }}"
+wireguard_public_key: "{{ vault_wireguard_public_key }}"
+
+wireguard_peers:
+  - name: laptop
+    address: "10.10.0.2/32"
+    public_key: "{{ vault_wg_laptop_public_key }}"
+  - name: phone
+    address: "10.10.0.3/32"
+    public_key: "{{ vault_wg_phone_public_key }}"
+
+# CoreDNS
+dns_records:
+  gateway: "{{ gateway_ip }}"
+  uptime-kuma: "10.0.0.51"
+
+# nftables
+nftables_forward_ports:
+  - proto: tcp
+    dport: 80
+    dest: "{{ gateway_ip }}"
+    dest_port: 80
+  - proto: tcp
+    dport: 443
+    dest: "{{ gateway_ip }}"
+    dest_port: 443
+  - proto: udp
+    dport: 51820
+    dest: "{{ gateway_ip }}"
+    dest_port: 51820
