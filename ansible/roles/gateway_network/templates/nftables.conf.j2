@@ -19,9 +19,6 @@ table inet filter {
         # Allow HTTP/HTTPS (for Caddy)
         tcp dport { 80, 443 } accept
 
-        # Allow WireGuard
-        udp dport {{ wireguard_port }} accept
-
         # Allow ICMP
         ip protocol icmp accept
         ip6 nexthdr icmpv6 accept
@@ -29,8 +26,8 @@ table inet filter {
         # Allow from private network
         ip saddr {{ private_subnet }} accept
 
-        # Allow from WireGuard network
-        ip saddr 10.10.0.0/24 accept
+        # Allow from WireGuard network (home)
+        ip saddr 192.168.12.0/24 accept
 
         # Drop everything else
         drop
@@ -46,7 +43,7 @@ table inet filter {
         ip saddr {{ private_subnet }} accept
 
         # Allow forwarding from WireGuard network
-        ip saddr 10.10.0.0/24 accept
+        ip saddr 192.168.12.0/24 accept
 
         # Allow forwarding to private network
         ip daddr {{ private_subnet }} accept
@@ -58,24 +55,10 @@ table inet filter {
 }
 
 table ip nat {
-    chain prerouting {
-        type nat hook prerouting priority -100;
-
-        # DNAT for HTTP/HTTPS to gateway
-        tcp dport 80 dnat to {{ gateway_ip }}:80
-        tcp dport 443 dnat to {{ gateway_ip }}:443
-
-        # DNAT for WireGuard
-        udp dport {{ wireguard_port }} dnat to {{ gateway_ip }}:{{ wireguard_port }}
-    }
-
     chain postrouting {
         type nat hook postrouting priority 100;
 
         # Masquerade outgoing traffic from private network
-        ip saddr {{ private_subnet }} oif "{{ gateway_interface }}" masquerade
-
-        # Masquerade outgoing traffic from WireGuard network
-        ip saddr 10.10.0.0/24 oif "{{ gateway_interface }}" masquerade
+        ip saddr {{ private_subnet }} oif "wg0" masquerade
     }
 }
