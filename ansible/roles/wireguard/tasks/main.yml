@@ -1,11 +1,12 @@
 ---
 # WireGuard role - VPN tunnels
 
-- name: Install WireGuard
+- name: Install WireGuard and iptables
   apt:
     name:
       - wireguard
       - wireguard-tools
+      - iptables
     state: present
 
 - name: Generate WireGuard private key (if not set)
