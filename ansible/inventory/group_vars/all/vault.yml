@@ -1,0 +1,9 @@
+---
+# Ansible Vault - encrypted secrets
+# To edit: ansible-vault edit ansible/inventory/group_vars/all/vault.yml
+
+vault_wireguard_private_key: "oLl9bOUnWI4VjWBAksUaRoHaxyZVbdYkVcDF6Yq0aFQ="
+vault_wireguard_public_key: "lfyac6bF1YsjoIEJCobN4U1tVXB7FxTRL6o5oaVGaRw="
+vault_wg_laptop_public_key: "RRS0hiHY/0uBeEvt4m6i0ukyPZv5/uV7oOIesIHOzG4="
+vault_wg_phone_public_key: ""
+vault_cloudflare_api_token: "PLACEHOLDER_CLOUDFLARE_TOKEN"

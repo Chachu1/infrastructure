@@ -13,7 +13,10 @@ wireguard_port: 51820
 wireguard_private_key: "{{ vault_wireguard_private_key | default('') }}"
 wireguard_public_key: "{{ vault_wireguard_public_key | default('') }}"
 
-wireguard_peers: []
+wireguard_peers:
+  - name: laptop
+    address: "10.10.0.2/32"
+    public_key: "{{ vault_wg_laptop_public_key }}"
 
 # CoreDNS
 dns_records:
