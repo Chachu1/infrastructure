@@ -214,7 +214,7 @@ wg show
 | `SSH_PUBLIC_KEY` | Runner's public key |
 | `SSH_PRIVATE_KEY` | Runner's private key |
 | `TF_API_TOKEN` | Terraform Cloud API token |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API token (DNS + Caddy TLS) |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token (DNS record management) |
 | `CLOUDFLARE_ZONE_ID` | Cloudflare zone ID for mhlab.me |
 
 ---
@@ -248,10 +248,11 @@ ansible/
 └── roles/
     ├── common/                      # Base: packages, SSH, DNS
     ├── gateway_network/             # nftables firewall
-    ├── caddy/                       # Reverse proxy (auto-TLS via Cloudflare)
+    ├── caddy/                       # Reverse proxy (auto-TLS via HTTP-01 challenge)
     ├── wireguard/                   # VPN client
     ├── dns/                         # CoreDNS
-    └── docker_host/                 # Docker for app VMs
+    ├── docker_host/                 # Docker for app VMs
+    └── uptime_kuma/                 # Uptime Kuma monitoring (Docker Compose)
 ```
 
 ---
@@ -265,6 +266,11 @@ The gateway LXC connects to your home network as a WireGuard **client**.
 - Client IP: `192.168.12.2`
 - Server: `server.mhlab.me:51820`
 - Public key: `CPYgwb54Ciard/gBqdIgJ9N3AOxpP7InWjsSqM1IPm4=`
+- AllowedIPs: `192.168.12.0/24` (home network only — do NOT use `0.0.0.0/0`)
+
+> **Warning:** Setting `AllowedIPs = 0.0.0.0/0` routes ALL outbound traffic through the
+> tunnel, including reply packets to Cloudflare. This causes HTTP 522 (origin timeout)
+> for all proxied services. Always restrict AllowedIPs to only the subnets you need.
 
 ### Accessing VMs from home
 
@@ -331,6 +337,9 @@ caddy validate --config /etc/caddy/Caddyfile
 
 # Check Caddy logs
 journalctl -u caddy -f
+
+# TLS uses HTTP-01 challenge (Cloudflare must have port 80 open to the origin)
+# No Cloudflare DNS plugin needed — standard Caddy package works
 ```
 
 ### CoreDNS not resolving
@@ -360,6 +369,24 @@ journalctl -u wg-quick@wg0 -f
 
 # Restart
 systemctl restart wg-quick@wg0
+```
+
+### Cloudflare 522 (origin timeout)
+
+This usually means reply packets are being routed through WireGuard instead of back
+to the client. Check:
+
+```bash
+# Verify AllowedIPs is NOT 0.0.0.0/0
+grep AllowedIPs /etc/wireguard/wg0.conf
+# Should be: AllowedIPs = 192.168.12.0/24
+
+# Check routing rules — if you see "lookup 51820" the tunnel is hijacking traffic
+ip rule list
+
+# Check WireGuard routing table
+ip route show table 51820
+# Should NOT exist if AllowedIPs is restricted to 192.168.12.0/24
 ```
 
 ### GitHub Actions runner not picking up jobs

@@ -108,7 +108,7 @@ Internet
 | VPN | WireGuard | Kernel-native, fast, simple config |
 | DNS | CoreDNS | Lightweight, plugin-based, easy template integration |
 | Firewall | nftables | Modern Linux native, replaces iptables |
-| DNS provider | Cloudflare | ACME DNS challenge for Caddy |
+| DNS provider | Cloudflare | Proxied A records, managed by Terraform |
 
 ---
 
@@ -409,37 +409,26 @@ Edit `terraform/locals.tf`:
 
 ```hcl
 blog = {
-  cores   = 1
-  memory  = 1024
-  disk    = 10
-  ip_last = 15
-  type    = "lxc"
+  vm_id  = 252
+  cores  = 1
+  memory = 1024
+  disk   = 10
+  ip     = "10.0.0.15/24"
+  domain = "blog.mhlab.me"
+  port   = 8080
 }
 ```
 
-### Step 3 — Add the reverse proxy entry
+### Step 3 — Open a PR, review, merge
 
-Edit `ansible/group_vars/gateway.yml`:
+GitHub Actions handles everything automatically:
 
-```yaml
-caddy_hosts:
-  - domain: "blog.mhlab.me"
-    backend: "10.0.0.15"
-    port: 8080
-```
+1. **Terraform** creates the LXC + Cloudflare DNS A record (proxied)
+2. **CI script** generates `gateway_services.yml` from Terraform output
+3. **Ansible** configures Caddy reverse proxy with auto-TLS and CoreDNS internal record
 
-### Step 4 — Add DNS record
-
-Edit `ansible/group_vars/gateway.yml`:
-
-```yaml
-dns_records:
-  blog: "10.0.0.15"
-```
-
-### Step 5 — Open a PR, review, merge
-
-GitHub Actions handles the rest.
+No manual Ansible config needed — `caddy_hosts` and `dns_records` are derived from
+the `domain` and `port` fields in `locals.tf`.
 
 ---
 
@@ -494,8 +483,15 @@ journalctl -xe
 
 #### Caddy can't get TLS certificates
 
-- Check Cloudflare API token has Zone:DNS:Edit permission
-- Verify domain points to your Hetzner IP
+- Ensure port 80 is open and forwarded to the gateway (HTTP-01 challenge)
+- Cloudflare proxy must be enabled (grey cloud) for the domain
+- Check Caddy logs: `journalctl -u caddy -f`
+
+#### Cloudflare 522 (origin timeout)
+
+- Check WireGuard `AllowedIPs` is NOT `0.0.0.0/0` — it should be `192.168.12.0/24`
+- `AllowedIPs = 0.0.0.0/0` routes reply packets through the VPN tunnel, breaking responses
+- Verify: `grep AllowedIPs /etc/wireguard/wg0.conf`
 
 ### Emergency access
 
