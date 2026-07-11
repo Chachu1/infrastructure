@@ -18,10 +18,10 @@ jobs:
         working-directory: terraform
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: 1.7.5
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
@@ -40,7 +40,7 @@ jobs:
           TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
 
       - name: Comment PR with Plan
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         if: github.event_name == 'pull_request'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
