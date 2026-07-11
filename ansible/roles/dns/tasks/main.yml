@@ -15,10 +15,8 @@
     creates: /usr/local/bin/coredns
 
 - name: Allow CoreDNS to bind to privileged ports
-  capabilities:
-    path: /usr/local/bin/coredns
-    capability: cap_net_bind_service+ep
-    state: present
+  command: setcap cap_net_bind_service=+ep /usr/local/bin/coredns
+  changed_when: false
 
 - name: Create CoreDNS user
   user:
