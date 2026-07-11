@@ -1,18 +1,13 @@
 # Managed by Ansible
-# WireGuard configuration
+# WireGuard client configuration - connects to home network
 
 [Interface]
-PrivateKey = {{ wireguard_private_key }}
+PrivateKey = {{ vault_wireguard_client_private_key }}
 Address = {{ wireguard_address }}
-ListenPort = {{ wireguard_port }}
+DNS = {{ wireguard_dns }}
 
-# Post-up rules
-PostUp = iptables -A FORWARD -i wg0 -j ACCEPT; iptables -t nat -A POSTROUTING -o {{ gateway_interface }} -j MASQUERADE
-PostDown = iptables -D FORWARD -i wg0 -j ACCEPT; iptables -t nat -D POSTROUTING -o {{ gateway_interface }} -j MASQUERADE
-
-{% for peer in wireguard_peers %}
-# {{ peer.name }}
 [Peer]
-PublicKey = {{ peer.public_key }}
-AllowedIPs = {{ peer.address }}
-{% endfor %}
+PublicKey = {{ wireguard_server_public_key }}
+AllowedIPs = 0.0.0.0/0
+Endpoint = {{ wireguard_endpoint }}
+PersistentKeepalive = 25

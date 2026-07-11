@@ -7,16 +7,12 @@ caddy_hosts:
     backend: "10.0.0.51"
     port: 3001
 
-# WireGuard configuration
-wireguard_address: "10.10.0.1/24"
-wireguard_port: 51820
-wireguard_private_key: "{{ vault_wireguard_private_key | default('') }}"
-wireguard_public_key: "{{ vault_wireguard_public_key | default('') }}"
-
-wireguard_peers:
-  - name: laptop
-    address: "10.10.0.2/32"
-    public_key: "{{ vault_wg_laptop_public_key }}"
+# WireGuard configuration - client connecting to home network
+wireguard_mode: "client"
+wireguard_address: "192.168.12.2/32"
+wireguard_dns: "192.168.12.1"
+wireguard_endpoint: "server.mhlab.me:51820"
+wireguard_server_public_key: "CPYgwb54Ciard/gBqdIgJ9N3AOxpP7InWjsSqM1IPm4="
 
 # CoreDNS
 dns_records:

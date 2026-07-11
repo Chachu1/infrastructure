@@ -1,5 +1,5 @@
 ---
-# WireGuard role - VPN tunnels
+# WireGuard role - VPN client connecting to home network
 
 - name: Install WireGuard and iptables
   apt:
@@ -8,28 +8,6 @@
       - wireguard-tools
       - iptables
     state: present
-
-- name: Generate WireGuard private key (if not set)
-  shell: wg genkey
-  register: wg_key_result
-  changed_when: false
-  when: wireguard_private_key is not defined
-
-- name: Set WireGuard private key fact
-  set_fact:
-    wireguard_private_key: "{{ wg_key_result.stdout }}"
-  when: wireguard_private_key is not defined
-
-- name: Generate WireGuard public key
-  shell: "echo '{{ wireguard_private_key }}' | wg pubkey"
-  register: wg_pubkey_result
-  changed_when: false
-  when: wireguard_public_key is not defined
-
-- name: Set WireGuard public key fact
-  set_fact:
-    wireguard_public_key: "{{ wg_pubkey_result.stdout }}"
-  when: wireguard_public_key is not defined
 
 - name: Deploy WireGuard configuration
   template:
