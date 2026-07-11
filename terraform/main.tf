@@ -1,3 +1,4 @@
+# Proxmox provider configuration
 provider "proxmox" {
   endpoint = var.proxmox_url
   username = var.proxmox_username
