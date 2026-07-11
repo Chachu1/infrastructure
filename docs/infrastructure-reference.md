@@ -76,9 +76,7 @@ Internet
 
 ## Adding a New Service
 
-### Step 1: Define the service in Terraform
-
-Edit `terraform/locals.tf` and add a new entry:
+Edit `terraform/locals.tf` — add a new entry with `domain` and `port`:
 
 ```hcl
 locals {
@@ -91,59 +89,43 @@ locals {
       memory = 1024         # MB
       disk   = 10           # GB
       ip     = "10.0.0.12/24"  # Pick an unused IP
+      domain = "my-app.mhlab.me"
+      port   = 8080         # App's internal port
     }
   }
 }
 ```
 
-### Step 2: Add reverse proxy entry (if web app)
+That's it. On merge to `main`, CI automatically:
 
-Edit `ansible/inventory/group_vars/gateway.yml`:
+1. **Terraform** creates the LXC container + Cloudflare DNS A record (`my-app.mhlab.me` → `168.119.81.167`, proxied)
+2. **CI script** generates `gateway_services.yml` from Terraform output
+3. **Ansible** configures Caddy reverse proxy with automatic TLS (Let's Encrypt via Cloudflare DNS-01 challenge) and CoreDNS internal record
 
-```yaml
-caddy_hosts:
-  # ... existing hosts ...
-  - domain: "my-app.mhlab.me"
-    backend: "10.0.0.12"
-    port: 8080              # App's internal port
+### Without a public domain (internal-only services)
+
+Omit `domain` and `port` — Terraform only creates the LXC, no DNS or proxy:
+
+```hcl
+my-db = {
+  vm_id = 253; cores = 2; memory = 2048; disk = 20; ip = "10.0.0.21/24"
+}
 ```
 
-### Step 3: Add DNS record
-
-Edit `ansible/inventory/group_vars/gateway.yml`:
-
-```yaml
-dns_records:
-  # ... existing records ...
-  my-app: "10.0.0.12"
-```
-
-### Step 4: Add Cloudflare DNS
-
-In Cloudflare dashboard:
-- Type: `A`
-- Name: `my-app.mhlab.me`
-- Content: `168.119.81.167`
-- Proxy: enabled
-
-### Step 5: Create a branch and PR
+### Create a branch and PR
 
 ```bash
 git checkout -b add-my-app
-git add .
+git add terraform/locals.tf
 git commit -m "Add my-app service"
 git push origin add-my-app
 ```
 
 Open a PR → GitHub Actions will run `terraform plan` and post the diff.
 
-### Step 6: Merge to deploy
+### Merge to deploy
 
-After reviewing the plan, merge to `main`:
-1. Terraform creates the LXC
-2. Ansible configures all services
-3. Caddy starts reverse proxying
-4. CoreDNS adds the record
+After reviewing the plan, merge to `main`. The pipeline handles everything.
 
 ---
 
@@ -223,6 +205,8 @@ wg show
 | `SSH_PUBLIC_KEY` | Runner's public key |
 | `SSH_PRIVATE_KEY` | Runner's private key |
 | `TF_API_TOKEN` | Terraform Cloud API token |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token (DNS + Caddy TLS) |
+| `CLOUDFLARE_ZONE_ID` | Cloudflare zone ID for mhlab.me |
 
 ---
 
@@ -245,7 +229,8 @@ ansible/
 │       ├── all/
 │       │   ├── main.yml             # Shared variables
 │       │   └── vault.yml            # Encrypted secrets
-│       ├── gateway.yml              # Gateway config
+│       ├── gateway.yml              # Gateway static config (wireguard, nftables)
+│       ├── gateway_services.yml     # Auto-generated: caddy_hosts, dns_records
 │       └── apps.yml                 # App VM config
 ├── playbooks/
 │   ├── site.yml                     # Master playbook
@@ -254,7 +239,7 @@ ansible/
 └── roles/
     ├── common/                      # Base: packages, SSH, DNS
     ├── gateway_network/             # nftables firewall
-    ├── caddy/                       # Reverse proxy
+    ├── caddy/                       # Reverse proxy (auto-TLS via Cloudflare)
     ├── wireguard/                   # VPN client
     ├── dns/                         # CoreDNS
     └── docker_host/                 # Docker for app VMs
@@ -293,6 +278,8 @@ The gateway LXC connects to your home network as a WireGuard **client**.
 ## DNS
 
 ### Public DNS (Cloudflare)
+
+Per-service A records are created automatically by Terraform (proxied through Cloudflare).
 
 | Record | Type | Content |
 |--------|------|---------|
