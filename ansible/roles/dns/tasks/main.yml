@@ -14,6 +14,12 @@
     remote_src: yes
     creates: /usr/local/bin/coredns
 
+- name: Allow CoreDNS to bind to privileged ports
+  capabilities:
+    path: /usr/local/bin/coredns
+    capability: cap_net_bind_service+ep
+    state: present
+
 - name: Create CoreDNS user
   user:
     name: coredns
