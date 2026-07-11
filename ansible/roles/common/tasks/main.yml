@@ -6,8 +6,8 @@
     name: "{{ inventory_hostname }}"
 
 - name: Set timezone
-  timezone:
-    name: "{{ timezone }}"
+  command: timedatectl set-timezone {{ timezone }}
+  changed_when: false
 
 - name: Update apt cache
   apt:
