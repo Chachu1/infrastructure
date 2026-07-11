@@ -19,7 +19,7 @@
   notify: restart uptime-kuma
 
 - name: Start uptime-kuma containers
-  shell: docker-compose up -d
+  shell: docker compose up -d
   args:
     chdir: /opt/uptime-kuma
   notify: restart uptime-kuma

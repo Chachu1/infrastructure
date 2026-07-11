@@ -27,36 +27,6 @@
     state: present
     update_cache: yes
 
-- name: Create Caddy environment file
-  copy:
-    dest: /etc/caddy/env
-    content: "CF_API_TOKEN={{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}"
-    owner: root
-    group: caddy
-    mode: "0640"
-  notify: restart caddy
-
-- name: Create Caddy systemd override directory
-  file:
-    path: /etc/systemd/system/caddy.service.d
-    state: directory
-    owner: root
-    group: root
-    mode: "0755"
-
-- name: Configure Caddy to load environment file
-  copy:
-    dest: /etc/systemd/system/caddy.service.d/override.conf
-    content: |
-      [Service]
-      EnvironmentFile=/etc/caddy/env
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - reload systemd
-    - restart caddy
-
 - name: Deploy Caddyfile
   template:
     src: Caddyfile.j2
