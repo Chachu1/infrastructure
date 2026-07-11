@@ -6,6 +6,9 @@ on:
     paths:
       - 'terraform/**'
 
+permissions:
+  contents: write
+
 jobs:
   apply:
     runs-on: [self-hosted, proxmox]
