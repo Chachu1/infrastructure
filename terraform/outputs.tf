@@ -1,3 +1,4 @@
+# Outputs for Ansible inventory generation
 output "ansible_inventory" {
   description = "Ansible inventory in YAML format"
   value = yamlencode({
