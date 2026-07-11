@@ -48,5 +48,5 @@ resource "proxmox_virtual_environment_container" "gateway" {
   }
 
   started     = true
-  startup_order = 1
+  startup     = "order=1"
 }
