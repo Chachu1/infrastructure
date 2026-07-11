@@ -1,0 +1,8 @@
+---
+# Uptime Kuma handlers
+
+- name: restart uptime-kuma
+  docker_compose:
+    project_src: /opt/uptime-kuma
+    state: present
+    restarted: yes

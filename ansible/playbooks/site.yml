@@ -17,3 +17,8 @@
   roles:
     - common
     - docker_host
+
+- name: Deploy uptime-kuma
+  hosts: uptime-kuma
+  roles:
+    - uptime_kuma

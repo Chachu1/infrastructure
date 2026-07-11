@@ -1,0 +1,19 @@
+# Managed by Ansible
+# Uptime Kuma monitoring service
+
+version: '3.8'
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime-kuma-data:/app/data
+    environment:
+      - UPTIME_KUMA_DISABLE_FRAME_SAMEORIGIN=true
+
+volumes:
+  uptime-kuma-data:

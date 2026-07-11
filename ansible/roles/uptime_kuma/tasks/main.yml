@@ -1,0 +1,25 @@
+---
+# Uptime Kuma role - deploy via Docker Compose
+
+- name: Create uptime-kuma directory
+  file:
+    path: /opt/uptime-kuma
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy docker-compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/uptime-kuma/docker-compose.yml
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart uptime-kuma
+
+- name: Start uptime-kuma containers
+  docker_compose:
+    project_src: /opt/uptime-kuma
+    state: present
+  notify: restart uptime-kuma

@@ -36,41 +36,50 @@ Internet
 
 ### Subnets
 
-| Subnet | Purpose |
-|--------|---------|
-| `10.0.0.0/24` | Proxmox private network (vmbr1) |
-| `192.168.12.0/24` | Home network (via WireGuard) |
+|       Subnet        |              Purpose              |
+|---------------------|-----------------------------------|
+|  `10.0.0.0/24`      |  Proxmox private network (vmbr1)  |
+|  `192.168.12.0/24`  |  Home network (via WireGuard)     |
 
 ### IP Allocation
 
-| IP | Host | Role |
-|----|------|------|
-| `10.0.0.1` | vmbr1 bridge | Proxmox host (gateway for VMs) |
-| `10.0.0.2` | github-runner | GitHub Actions self-hosted runner |
-| `10.0.0.10` | gateway | Reverse proxy, DNS, firewall, VPN |
-| `10.0.0.51` | uptime-kuma | Monitoring dashboard |
-| `10.0.0.11-19` | — | Reserved for web applications |
-| `10.0.0.20-29` | — | Reserved for databases |
-| `10.0.0.30-39` | — | Reserved for monitoring |
-| `10.0.0.50-59` | — | Reserved for utilities |
+
+|       IP        |      Host       |                Role                |
+|-----------------|-----------------|------------------------------------|
+| `10.0.0.1`      |  vmbr1 bridge   |  Proxmox host (gateway for VMs)    |
+| `10.0.0.2`      |  github-runner  |  GitHub Actions self-hosted runner |
+| `10.0.0.10`     |  gateway        |  Reverse proxy, DNS, firewall, VPN |
+| `10.0.0.51`     |  uptime-kuma    |  Monitoring dashboard              |
+| `10.0.0.11-19`  |  —              |  Reserved for web applications     |
+| `10.0.0.20-29`  |  —              |  Reserved for databases            |
+| `10.0.0.30-39`  |  —              |  Reserved for monitoring           |
+| `10.0.0.50-59`  |  —              |  Reserved for utilities            |
+
+
 
 ### Ports (Public)
 
-| Port | Protocol | Destination | Service |
-|------|----------|-------------|---------|
-| 80 | TCP | 10.0.0.10:80 | Caddy (HTTP → HTTPS redirect) |
-| 443 | TCP | 10.0.0.10:443 | Caddy (HTTPS) |
-| 51820 | UDP | — | WireGuard (currently unused, client mode) |
+
+| Port   |  Protocol  |   Destination   |                   Service                  |
+|--------|------------|-----------------|--------------------------------------------|
+| 80     |  TCP       |  10.0.0.10:80   |  Caddy (HTTP → HTTPS redirect)             |
+| 443    |  TCP       |  10.0.0.10:443  |  Caddy (HTTPS)                             |
+| 51820  |  UDP       |  —              |  WireGuard (currently unused, client mode) |
+
+
 
 ---
 
 ## Current Services
 
-| Service | IP | Port | URL |
-|---------|-----|------|-----|
-| Caddy | 10.0.0.10 | 80, 443 | https://uptime.mhlab.me |
-| CoreDNS | 10.0.0.10 | 53 | Internal: *.internal.mhlab.me |
-| Uptime Kuma | 10.0.0.51 | 3001 | https://uptime.mhlab.me |
+
+|   Service    |     IP      |   Port    |               URL              |
+|--------------|-------------|-----------|--------------------------------|
+| Caddy        |  10.0.0.10  |  80, 443  |  https://uptime.mhlab.me       |
+| CoreDNS      |  10.0.0.10  |  53       |  Internal: *.internal.mhlab.me |
+| Uptime Kuma  |  10.0.0.51  |  3001     |  https://uptime.mhlab.me       |
+
+
 
 ---
 
