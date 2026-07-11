@@ -1,34 +1,54 @@
-resource "proxmox_lxc" "app" {
+resource "proxmox_virtual_environment_container" "app" {
   for_each = {
     for name, svc in local.services : name => svc
     if name != "gateway"
   }
 
-  vm_id       = each.value.vm_id
-  target_node = var.proxmox_node
-  hostname    = each.key
-  ostemplate  = local.template
-  password    = var.proxmox_password
-  unprivileged = true
+  node_name = var.proxmox_node
+  vm_id     = each.value.vm_id
 
-  cores  = each.value.cores
-  memory = each.value.memory
+  initialization {
+    hostname = each.key
 
-  rootfs {
-    storage = var.disk_storage
-    size    = "${each.value.disk}G"
+    ip_config {
+      ipv4 {
+        address = each.value.ip
+        gateway = local.network.gateway
+      }
+    }
+
+    user_account {
+      keys     = [trimspace(var.ssh_public_key)]
+      password = var.proxmox_password
+    }
   }
 
-  network {
+  cpu {
+    cores = each.value.cores
+  }
+
+  memory {
+    dedicated = each.value.memory
+  }
+
+  disk {
+    datastore_id = var.disk_storage
+    size         = each.value.disk
+  }
+
+  network_interface {
     name   = "eth0"
     bridge = local.network.bridge
-    ip     = each.value.ip
-    gw     = local.network.gateway
   }
 
-  ssh_public_keys = var.ssh_public_key
+  operating_system {
+    template_file_id = local.template
+    type             = "ubuntu"
+  }
 
   features {
     nesting = true
   }
+
+  started = true
 }
