@@ -1,11 +1,6 @@
-# Gateway configuration
+# Gateway configuration - static settings
+# Service-specific config (caddy_hosts, dns_records) is in gateway_services.yml
 gateway_interface: "eth0"
-
-# Caddy reverse proxy hosts
-caddy_hosts:
-  - domain: "uptime.{{ domain }}"
-    backend: "10.0.0.51"
-    port: 3001
 
 # WireGuard configuration - client connecting to home network
 wireguard_mode: "client"
@@ -13,11 +8,6 @@ wireguard_address: "192.168.12.2/32"
 wireguard_dns: "192.168.12.1"
 wireguard_endpoint: "server.mhlab.me:51820"
 wireguard_server_public_key: "CPYgwb54Ciard/gBqdIgJ9N3AOxpP7InWjsSqM1IPm4="
-
-# CoreDNS
-dns_records:
-  gateway: "{{ gateway_ip }}"
-  uptime-kuma: "10.0.0.51"
 
 # nftables
 nftables_forward_ports:

@@ -12,3 +12,8 @@ provider "proxmox" {
     password = var.proxmox_password
   }
 }
+
+# Cloudflare provider configuration
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}

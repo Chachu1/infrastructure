@@ -37,3 +37,14 @@ output "app_ips" {
     if name != "gateway"
   }
 }
+
+output "services" {
+  description = "Service definitions for Ansible (domain, backend_ip, port)"
+  value = {
+    for name, svc in local.services : name => {
+      domain     = svc.domain
+      backend_ip = split("/", svc.ip)[0]
+      port       = svc.port
+    } if try(svc.domain, "") != ""
+  }
+}

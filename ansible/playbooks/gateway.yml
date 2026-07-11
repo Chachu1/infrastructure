@@ -3,6 +3,8 @@
 
 - name: Configure gateway
   hosts: gateway
+  vars_files:
+    - ../inventory/group_vars/gateway_services.yml
   roles:
     - common
     - gateway_network

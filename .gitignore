@@ -13,7 +13,7 @@ terraform.rc
 
 # Ansible
 *.retry
-ansible/group_vars/all/vault.yml
+ansible/inventory/group_vars/all/vault.yml
 .vault_pass
 
 # SSH keys

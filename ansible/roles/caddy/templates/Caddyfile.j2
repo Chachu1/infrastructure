@@ -1,6 +1,11 @@
 # Managed by Ansible
 # Caddy reverse proxy configuration
 
+{
+    email admin@{{ domain }}
+    acme_dns cloudflare {env.CF_API_TOKEN}
+}
+
 {% for host in caddy_hosts %}
 {{ host.domain }} {
     reverse_proxy {{ host.backend }}:{{ host.port }}

@@ -14,5 +14,9 @@ terraform {
       source  = "bpg/proxmox"
       version = "~> 0.62"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 }
