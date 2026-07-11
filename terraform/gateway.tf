@@ -47,6 +47,9 @@ resource "proxmox_virtual_environment_container" "gateway" {
     nesting = true
   }
 
-  started     = true
-  startup     = "order=1"
+  started = true
+
+  startup {
+    order = 1
+  }
 }
