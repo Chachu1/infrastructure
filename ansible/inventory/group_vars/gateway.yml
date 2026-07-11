@@ -10,16 +10,10 @@ caddy_hosts:
 # WireGuard configuration
 wireguard_address: "10.10.0.1/24"
 wireguard_port: 51820
-wireguard_private_key: "{{ vault_wireguard_private_key }}"
-wireguard_public_key: "{{ vault_wireguard_public_key }}"
+wireguard_private_key: "{{ vault_wireguard_private_key | default('') }}"
+wireguard_public_key: "{{ vault_wireguard_public_key | default('') }}"
 
-wireguard_peers:
-  - name: laptop
-    address: "10.10.0.2/32"
-    public_key: "{{ vault_wg_laptop_public_key }}"
-  - name: phone
-    address: "10.10.0.3/32"
-    public_key: "{{ vault_wg_phone_public_key }}"
+wireguard_peers: []
 
 # CoreDNS
 dns_records:
