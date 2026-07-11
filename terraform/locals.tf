@@ -8,6 +8,7 @@ locals {
   template = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
 
   services = {
+    # Gateway - Caddy, WireGuard, CoreDNS, nftables
     gateway = {
       vm_id  = 100
       cores  = 1
