@@ -32,6 +32,7 @@
     src: resolv.conf.j2
     dest: /etc/resolv.conf
     backup: yes
+  when: dns_configured is defined and dns_configured
 
 - name: Ensure SSH is running
   systemd:
