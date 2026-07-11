@@ -1,6 +1,6 @@
 terraform {
   cloud {
-    organization = "Chachu1"
+    organization = "mhlab"
 
     workspaces {
       name = "proxmox-infra"
