@@ -36,6 +36,17 @@ locals {
       port   = 3001
     }
 
+
+    testing-vm = {
+      type = "vm"
+      distro = "debian"
+      vm_id = 301
+      cores = 4
+      memory = 4096
+      disk = 50
+      ip = "10.0.0.61/24"    
+    }
+
     # Example VM (uncomment to add a VM service):
     # my-vm = {
     #   type   = "vm"
