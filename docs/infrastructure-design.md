@@ -456,6 +456,25 @@ VM defaults: q35 machine, seabios BIOS, virtio-scsi disk, virtio NIC, cloud-init
 SSH key, qemu-guest-agent. Cloud images (Debian 13, Ubuntu 24.04) are auto-updated
 weekly on the Proxmox host via a systemd timer.
 
+### VM users (cloud-init)
+
+VMs are provisioned via cloud-init with two users:
+
+| User | SSH Key | Sudo | Password |
+|------|---------|------|----------|
+| `root` | Yes | Full root | Yes (`PROXMOX_PASS`) |
+| `mohsin` | Yes | `NOPASSWD: ALL` | No (key-only) |
+
+SSH into a new VM:
+```bash
+ssh root@10.0.0.60       # root user with key
+ssh mohsin@10.0.0.60     # mohsin user, then sudo -i for root
+```
+
+The cloud-init config is stored as a Proxmox snippet (`local:snippets/cloud-init-app.yml`)
+and managed by Terraform (`terraform/cloud-init.yml`). To modify users, edit that file
+and push — CI re-uploads the snippet on every `terraform apply`.
+
 ### Available distros
 
 | `distro` | LXC template | VM cloud image |
@@ -509,10 +528,12 @@ pct enter <vmid>
 journalctl -xe
 ```
 
-#### Ansible can't SSH into new VMs
+#### Can't SSH into new VMs
 
-- Wait for cloud-init to finish (adds the SSH key)
-- Verify the SSH key matches
+- Wait for cloud-init to finish (~30-60 seconds after first boot)
+- Cloud-init creates two users: `root` (with password) and `mohsin` (key-only, sudo NOPASSWD)
+- Verify the SSH key in `terraform/cloud-init.yml` matches your local key
+- Check cloud-init logs: `ssh root@<ip> journalctl -u cloud-init`
 
 #### Caddy can't get TLS certificates
 

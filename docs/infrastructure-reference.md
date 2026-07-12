@@ -205,7 +205,9 @@ lvextend -L +1T vg0/thin_pool
 
 ## Managing Services
 
-### SSH into a VM
+### SSH Access
+
+#### LXC containers
 
 From the Proxmox host:
 ```bash
@@ -219,6 +221,24 @@ From the runner or via Ansible:
 ssh root@10.0.0.10     # Gateway
 ssh root@10.0.0.51     # Uptime-kuma
 ```
+
+#### VMs (cloud-init)
+
+VMs have two users configured via cloud-init:
+
+| User | Sudo | Password | Usage |
+|------|------|----------|-------|
+| `root` | Full root | Yes (`PROXMOX_PASS`) | Direct root access |
+| `mohsin` | `NOPASSWD: ALL` | No (key-only) | Day-to-day, sudo when needed |
+
+```bash
+ssh root@<vm-ip>       # root with SSH key
+ssh mohsin@<vm-ip>     # mohsin with SSH key
+sudo -i                # switch to root from mohsin
+```
+
+Cloud-init config source: `terraform/cloud-init.yml`
+Proxmox snippet: `local:snippets/cloud-init-app.yml`
 
 ### View logs
 
