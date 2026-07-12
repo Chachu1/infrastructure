@@ -45,6 +45,7 @@ resource "proxmox_virtual_environment_vm" "app" {
     }
 
     user_account {
+      username = "root"
       keys     = [trimspace(var.ssh_public_key)]
       password = var.proxmox_password
     }
