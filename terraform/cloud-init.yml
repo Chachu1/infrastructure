@@ -16,3 +16,8 @@ chpasswd:
     root:${proxmox_password}
   expire: false
 ssh_pwauth: true
+packages:
+  - qemu-guest-agent
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
