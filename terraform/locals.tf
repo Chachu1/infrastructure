@@ -32,6 +32,7 @@ locals {
       memory = 1024
       disk   = 10
       ip     = "10.0.0.51/24"
+      domain = "uptime.mhlab.me"
       port   = 3001
     }
 
