@@ -5,7 +5,16 @@ locals {
     gateway = "10.0.0.1"
   }
 
-  template = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+  # LXC templates (on local directory storage)
+  lxc_templates = {
+    debian = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+  }
+
+  # VM cloud images (auto-updated weekly by cron on Proxmox host)
+  vm_images = {
+    debian = "local:cloudimg/debian-13-generic-amd64.qcow2"
+    ubuntu = "local:cloudimg/ubuntu-24.04-server-cloudimg-amd64.img"
+  }
 
   services = {
     # Gateway - Caddy, WireGuard, CoreDNS, nftables
@@ -26,5 +35,18 @@ locals {
       domain = "uptime.mhlab.me"
       port   = 3001
     }
+
+    # Example VM (uncomment to add a VM service):
+    # my-vm = {
+    #   type   = "vm"
+    #   distro = "ubuntu"    # or "debian" (default)
+    #   vm_id  = 300
+    #   cores  = 2
+    #   memory = 2048
+    #   disk   = 50          # minimum 50GB for VMs
+    #   ip     = "10.0.0.60/24"
+    #   domain = "app.mhlab.me"
+    #   port   = 8080
+    # }
   }
 }

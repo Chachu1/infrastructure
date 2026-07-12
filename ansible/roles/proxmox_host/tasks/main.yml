@@ -1,0 +1,32 @@
+---
+- name: Create cloud images directory
+  ansible.builtin.file:
+    path: /var/lib/vz/images/cloudimg
+    state: directory
+    mode: "0755"
+
+- name: Deploy cloud image update script
+  ansible.builtin.copy:
+    src: update-cloud-images.sh
+    dest: /usr/local/bin/update-cloud-images.sh
+    mode: "0755"
+
+- name: Deploy systemd service unit
+  ansible.builtin.copy:
+    src: update-cloud-images.service
+    dest: /etc/systemd/system/update-cloud-images.service
+
+- name: Deploy systemd timer unit
+  ansible.builtin.copy:
+    src: update-cloud-images.timer
+    dest: /etc/systemd/system/update-cloud-images.timer
+
+- name: Reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Enable and start cloud image update timer
+  ansible.builtin.systemd:
+    name: update-cloud-images.timer
+    enabled: true
+    state: started

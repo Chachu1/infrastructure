@@ -12,12 +12,26 @@ output "ansible_inventory" {
             }
           }
         }
-        apps = {
+        lxc_apps = {
           hosts = {
             for name, svc in local.services : name => {
               ansible_host = split("/", svc.ip)[0]
               ansible_user = "root"
-            } if name != "gateway"
+            } if name != "gateway" && try(svc.type, "lxc") == "lxc"
+          }
+        }
+        vm_apps = {
+          hosts = {
+            for name, svc in local.services : name => {
+              ansible_host = split("/", svc.ip)[0]
+              ansible_user = "root"
+            } if try(svc.type, "lxc") == "vm"
+          }
+        }
+        apps = {
+          children = {
+            lxc_apps = {}
+            vm_apps  = {}
           }
         }
       }
@@ -31,11 +45,13 @@ output "gateway_ip" {
 }
 
 output "app_ips" {
-  description = "Application LXC IP addresses"
-  value = {
-    for name, svc in local.services : name => split("/", svc.ip)[0]
-    if name != "gateway"
-  }
+  description = "Application LXC and VM IP addresses"
+  value = merge(
+    { for name, svc in local.services : name => split("/", svc.ip)[0]
+      if name != "gateway" && try(svc.type, "lxc") == "lxc" },
+    { for name, svc in local.services : name => split("/", svc.ip)[0]
+      if try(svc.type, "lxc") == "vm" }
+  )
 }
 
 output "services" {

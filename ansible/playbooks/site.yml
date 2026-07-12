@@ -1,6 +1,11 @@
 ---
 # Master playbook - runs everything
 
+- name: Configure Proxmox host
+  hosts: proxmox_host
+  roles:
+    - proxmox_host
+
 - name: Configure gateway
   hosts: gateway
   vars_files:

@@ -25,16 +25,16 @@ variable "proxmox_node" {
   default     = "germany1"
 }
 
-variable "template_storage" {
-  description = "Storage for LXC templates"
-  type        = string
-  default     = "local"
-}
-
 variable "disk_storage" {
   description = "Storage for LXC rootfs"
   type        = string
-  default     = "local"
+  default     = "lvmthin"
+}
+
+variable "vm_disk_storage" {
+  description = "Storage for VM disks"
+  type        = string
+  default     = "lvmthin"
 }
 
 variable "cloudflare_api_token" {

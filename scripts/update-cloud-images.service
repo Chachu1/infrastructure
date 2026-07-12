@@ -1,0 +1,10 @@
+[Unit]
+Description=Update Proxmox cloud images
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/update-cloud-images.sh
+StandardOutput=journal
+StandardError=journal

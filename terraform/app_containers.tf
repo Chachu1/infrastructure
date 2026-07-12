@@ -1,15 +1,18 @@
-resource "proxmox_virtual_environment_container" "gateway" {
-  node_name = var.proxmox_node
-  vm_id     = local.services.gateway.vm_id
+resource "proxmox_virtual_environment_container" "app" {
+  for_each = {
+    for name, svc in local.services : name => svc
+    if name != "gateway" && try(svc.type, "lxc") == "lxc"
+  }
 
-  description = "Gateway LXC - Caddy, WireGuard, CoreDNS, nftables"
+  node_name = var.proxmox_node
+  vm_id     = each.value.vm_id
 
   initialization {
-    hostname = "gateway"
+    hostname = each.key
 
     ip_config {
       ipv4 {
-        address = local.services.gateway.ip
+        address = each.value.ip
         gateway = local.network.gateway
       }
     }
@@ -21,16 +24,16 @@ resource "proxmox_virtual_environment_container" "gateway" {
   }
 
   cpu {
-    cores = local.services.gateway.cores
+    cores = each.value.cores
   }
 
   memory {
-    dedicated = local.services.gateway.memory
+    dedicated = each.value.memory
   }
 
   disk {
     datastore_id = var.disk_storage
-    size         = local.services.gateway.disk
+    size         = each.value.disk
   }
 
   network_interface {
@@ -39,7 +42,7 @@ resource "proxmox_virtual_environment_container" "gateway" {
   }
 
   operating_system {
-    template_file_id = local.lxc_templates["debian"]
+    template_file_id = local.lxc_templates[try(each.value.distro, "debian")]
     type             = "ubuntu"
   }
 
@@ -48,8 +51,4 @@ resource "proxmox_virtual_environment_container" "gateway" {
   }
 
   started = true
-
-  startup {
-    order = 1
-  }
 }

@@ -85,7 +85,10 @@ Internet
 
 ## Adding a New Service
 
-Edit `terraform/locals.tf` — add a new entry with `domain` and `port`:
+Edit `terraform/locals.tf` — add a new entry. Set `type` to `"vm"` for a cloud-init VM,
+or omit it (defaults to `"lxc"`).
+
+### LXC container (default)
 
 ```hcl
 locals {
@@ -93,6 +96,7 @@ locals {
     # ... existing services ...
 
     my-app = {
+      # type defaults to "lxc", distro defaults to "debian"
       vm_id  = 252          # Unique VM ID (check Proxmox for available)
       cores  = 1
       memory = 1024         # MB
@@ -105,11 +109,27 @@ locals {
 }
 ```
 
+### VM (cloud-init)
+
+```hcl
+my-vm = {
+  type   = "vm"
+  distro = "ubuntu"         # or "debian" (default)
+  vm_id  = 300
+  cores  = 2
+  memory = 2048
+  disk   = 50               # minimum 50GB
+  ip     = "10.0.0.60/24"
+  domain = "app.mhlab.me"
+  port   = 8080
+}
+```
+
 That's it. On merge to `main`, CI automatically:
 
-1. **Terraform** creates the LXC container + Cloudflare DNS A record (`my-app.mhlab.me` → `168.119.81.167`, proxied)
+1. **Terraform** creates the LXC/VM + Cloudflare DNS A record (proxied)
 2. **CI script** generates `gateway_services.yml` from Terraform output
-3. **Ansible** configures Caddy reverse proxy with automatic TLS (Let's Encrypt via Cloudflare DNS-01 challenge) and CoreDNS internal record
+3. **Ansible** configures Caddy reverse proxy with automatic TLS and CoreDNS internal record
 
 ### Without a public domain (internal-only services)
 
@@ -135,6 +155,51 @@ Open a PR → GitHub Actions will run `terraform plan` and post the diff.
 ### Merge to deploy
 
 After reviewing the plan, merge to `main`. The pipeline handles everything.
+
+---
+
+## Storage
+
+### LVM-Thin Pool
+
+All LXC rootfs and VM disks live on an LVM-thin pool (`thin_pool` on `vg0`).
+
+| Storage | Type | Content | Purpose |
+|---------|------|---------|---------|
+| `lvmthin` | lvmthin | `rootdir`, `images` | LXC rootfs + VM disks |
+| `local` | dir | `backup`, `rootdir`, `vztmpl`, `images`, `snippets`, `iso` | Templates, ISOs, backups, cloud images |
+
+### Cloud Images
+
+Cloud images are stored at `/var/lib/vz/images/cloudimg/` on the Proxmox host
+(mapped to `local:cloudimg/` in Proxmox). A systemd timer updates them weekly
+(Sunday 03:00 with up to 5 min random delay).
+
+Available images:
+- `debian-13-generic-amd64.qcow2` — Debian 13 Trixie (daily)
+- `ubuntu-24.04-server-cloudimg-amd64.img` — Ubuntu 24.04 Noble (daily)
+
+To trigger a manual update:
+```bash
+ssh root@10.0.0.1 /usr/local/bin/update-cloud-images.sh
+```
+
+To check timer status:
+```bash
+ssh root@10.0.0.1 systemctl status update-cloud-images.timer
+```
+
+### Thin Pool Monitoring
+
+Check utilization:
+```bash
+ssh root@10.0.0.1 lvs vg0/thin_pool
+```
+
+Alert if Data% exceeds 80%. To add capacity, extend the pool:
+```bash
+lvextend -L +1T vg0/thin_pool
+```
 
 ---
 
@@ -420,12 +485,29 @@ curl -k https://168.119.81.167:8006/api2/json/version
 ## Useful Commands
 
 ```bash
-# Proxmox host
+# Proxmox host - LXCs
 pct list                              # List all LXCs
 pct status <vmid>                     # Check LXC status
 pct enter <vmid>                      # Enter LXC shell
 pct start <vmid>                      # Start LXC
 pct stop <vmid>                       # Stop LXC
+pct move <vmid> rootfs lvmthin        # Migrate LXC to thin pool
+
+# Proxmox host - VMs
+qm list                                # List all VMs
+qm status <vmid>                       # Check VM status
+qm start <vmid>                        # Start VM
+qm stop <vmid>                         # Stop VM
+qm terminal <vmid>                     # VM console
+
+# Proxmox host - Storage
+pvesm status                           # Storage status
+lvs vg0/thin_pool                      # Thin pool utilization
+
+# Proxmox host - Cloud images
+systemctl status update-cloud-images.timer  # Check image update timer
+/usr/local/bin/update-cloud-images.sh       # Manual image update
+ls -lh /var/lib/vz/images/cloudimg/         # List cloud images
 
 # Inside gateway
 systemctl status caddy                # Caddy status

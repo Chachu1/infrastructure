@@ -395,20 +395,26 @@ locals {
 
 ## Adding a New Service
 
+Each service is defined in `terraform/locals.tf` with a `type` field (`lxc` or `vm`)
+and an optional `distro` field (`debian` or `ubuntu`).
+
+### Adding an LXC container
+
 Example: adding a service called `blog` on IP `10.0.0.15` with port `8080`.
 
-### Step 1 — Create a branch
+#### Step 1 — Create a branch
 
 ```bash
 git checkout -b add-blog
 ```
 
-### Step 2 — Add the VM to Terraform
+#### Step 2 — Add the service to Terraform
 
 Edit `terraform/locals.tf`:
 
 ```hcl
 blog = {
+  # type defaults to "lxc", distro defaults to "debian"
   vm_id  = 252
   cores  = 1
   memory = 1024
@@ -419,7 +425,7 @@ blog = {
 }
 ```
 
-### Step 3 — Open a PR, review, merge
+#### Step 3 — Open a PR, review, merge
 
 GitHub Actions handles everything automatically:
 
@@ -429,6 +435,33 @@ GitHub Actions handles everything automatically:
 
 No manual Ansible config needed — `caddy_hosts` and `dns_records` are derived from
 the `domain` and `port` fields in `locals.tf`.
+
+### Adding a VM (cloud-init)
+
+```hcl
+my-vm = {
+  type   = "vm"
+  distro = "ubuntu"    # or "debian" (default)
+  vm_id  = 300
+  cores  = 2
+  memory = 2048
+  disk   = 50          # minimum 50GB for VMs
+  ip     = "10.0.0.60/24"
+  domain = "app.mhlab.me"
+  port   = 8080
+}
+```
+
+VM defaults: q35 machine, seabios BIOS, virtio-scsi disk, virtio NIC, cloud-init with
+SSH key, qemu-guest-agent. Cloud images (Debian 13, Ubuntu 24.04) are auto-updated
+weekly on the Proxmox host via a systemd timer.
+
+### Available distros
+
+| `distro` | LXC template | VM cloud image |
+|----------|-------------|----------------|
+| `debian` | Debian 12 (Bookworm) | Debian 13 (Trixie) |
+| `ubuntu` | — | Ubuntu 24.04 (Noble) |
 
 ---
 
