@@ -10,10 +10,10 @@ locals {
     debian = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
   }
 
-  # VM cloud images (auto-updated weekly by cron on Proxmox host)
-  vm_images = {
-    debian = "local:debian-13-generic-amd64.qcow2"
-    ubuntu = "local:ubuntu-24.04-server-cloudimg-amd64.img"
+  # VM template IDs (auto-updated weekly by cron on Proxmox host)
+  vm_templates = {
+    debian = 9001
+    ubuntu = 9002
   }
 
   services = {

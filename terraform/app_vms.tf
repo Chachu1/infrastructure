@@ -34,9 +34,13 @@ resource "proxmox_virtual_environment_vm" "app" {
     dedicated = each.value.memory
   }
 
+  clone {
+    vm_id = local.vm_templates[try(each.value.distro, "debian")]
+    full  = true
+  }
+
   disk {
     datastore_id = var.vm_disk_storage
-    file_id      = local.vm_images[try(each.value.distro, "debian")]
     interface    = "scsi0"
     iothread     = true
     discard      = "on"

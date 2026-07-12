@@ -34,7 +34,7 @@ variable "disk_storage" {
 variable "vm_disk_storage" {
   description = "Storage for VM disks"
   type        = string
-  default     = "local"
+  default     = "lvmthin"
 }
 
 variable "cloudflare_api_token" {
