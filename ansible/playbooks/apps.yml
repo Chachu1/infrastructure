@@ -1,6 +1,17 @@
 ---
 # Apps playbook - configure application VMs only
 
+- name: Bootstrap Python on all hosts
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Install Python
+      raw: apt-get update -qq && apt-get install -y -qq python3
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
 - name: Configure application VMs
   hosts: apps
   roles:
