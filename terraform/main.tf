@@ -7,9 +7,9 @@ provider "proxmox" {
   insecure = true
 
   ssh {
-    agent    = false
-    username = "root"
-    password = var.proxmox_password
+    agent       = false
+    username    = "root"
+    private_key = file("/home/runner/.ssh/id_ed25519")
   }
 }
 
