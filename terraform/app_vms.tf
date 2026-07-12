@@ -51,6 +51,8 @@ resource "proxmox_virtual_environment_vm" "app" {
   }
 
   initialization {
+    datastore_id = var.vm_disk_storage
+
     ip_config {
       ipv4 {
         address = each.value.ip
