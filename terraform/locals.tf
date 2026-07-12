@@ -10,10 +10,10 @@ locals {
     debian = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
   }
 
-  # VM cloud images (auto-updated weekly by cron on Proxmox host)
+  # VM cloud images (auto-updated weekly by cron on Proxmox host, stored in lvmthin)
   vm_images = {
-    debian = "local:cloudimg/debian-13-generic-amd64.qcow2"
-    ubuntu = "local:cloudimg/ubuntu-24.04-server-cloudimg-amd64.img"
+    debian = "lvmthin:vm-9000-disk-0"
+    ubuntu = "lvmthin:vm-9000-disk-1"
   }
 
   services = {
@@ -32,7 +32,6 @@ locals {
       memory = 1024
       disk   = 10
       ip     = "10.0.0.51/24"
-      domain = "uptime.mhlab.me"
       port   = 3001
     }
 
