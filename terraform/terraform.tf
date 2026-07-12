@@ -1,4 +1,8 @@
 terraform {
+  backend "local" {
+    path = "/home/runner/terraform-state/terraform.tfstate"
+  }
+
   required_version = ">= 1.7.0"
 
   required_providers {
