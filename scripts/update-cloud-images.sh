@@ -14,7 +14,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-STORAGE_PATH="/var/lib/vz/images"
+STORAGE_PATH="/var/lib/vz"
 mkdir -p "$STORAGE_PATH"
 
 IMAGES=(

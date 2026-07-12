@@ -12,8 +12,8 @@ locals {
 
   # VM cloud images (auto-updated weekly by cron on Proxmox host)
   vm_images = {
-    debian = "local:images/debian-13-generic-amd64.qcow2"
-    ubuntu = "local:images/ubuntu-24.04-server-cloudimg-amd64.img"
+    debian = "local:debian-13-generic-amd64.qcow2"
+    ubuntu = "local:ubuntu-24.04-server-cloudimg-amd64.img"
   }
 
   services = {
