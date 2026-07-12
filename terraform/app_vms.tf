@@ -1,3 +1,17 @@
+resource "proxmox_virtual_environment_file" "cloud_init" {
+  content_type = "snippets"
+  datastore_id = "local"
+  node_name    = var.proxmox_node
+
+  source_raw {
+    data = templatefile("${path.module}/cloud-init.yml", {
+      ssh_public_key  = trimspace(var.ssh_public_key)
+      proxmox_password = var.proxmox_password
+    })
+    file_name = "cloud-init-app.yml"
+  }
+}
+
 resource "proxmox_virtual_environment_vm" "app" {
   for_each = {
     for name, svc in local.services : name => svc
@@ -44,11 +58,7 @@ resource "proxmox_virtual_environment_vm" "app" {
       }
     }
 
-    user_account {
-      username = "root"
-      keys     = [trimspace(var.ssh_public_key)]
-      password = var.proxmox_password
-    }
+    user_data_file_id = proxmox_virtual_environment_file.cloud_init.id
   }
 
   operating_system {

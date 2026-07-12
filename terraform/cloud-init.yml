@@ -1,0 +1,18 @@
+#cloud-config
+users:
+  - name: root
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+    lock_passwd: false
+  - name: mohsin
+    groups: sudo
+    shell: /bin/bash
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+    lock_passwd: false
+chpasswd:
+  list: |
+    root:${proxmox_password}
+  expire: false
+ssh_pwauth: true
