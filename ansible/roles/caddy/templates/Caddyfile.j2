@@ -4,6 +4,7 @@
 
 {
     email admin@{{ domain }}
+    acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 }
 
 {% for host in caddy_hosts %}

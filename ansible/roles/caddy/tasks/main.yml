@@ -21,11 +21,26 @@
     state: present
     filename: caddy-stable
 
-- name: Install Caddy
+- name: Install Caddy (for service file and user)
   apt:
     name: caddy
     state: present
     update_cache: yes
+
+- name: Download Caddy with Cloudflare DNS module
+  get_url:
+    url: "https://caddyserver.com/api/download?os=linux&arch=amd64&p=github.com%2Fcaddy-dns%2Fcloudflare"
+    dest: /tmp/caddy-custom
+    mode: "0755"
+  notify: restart caddy
+
+- name: Replace Caddy binary with custom build
+  copy:
+    src: /tmp/caddy-custom
+    dest: /usr/bin/caddy
+    mode: "0755"
+    remote_src: yes
+  notify: restart caddy
 
 - name: Create Caddy systemd drop-in directory
   file:
