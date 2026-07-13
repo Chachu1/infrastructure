@@ -1,8 +1,5 @@
 # Managed by Ansible
 # Caddy reverse proxy configuration
-
-# Managed by Ansible
-# Caddy reverse proxy configuration
 # Force redeploy: {{ ansible_date_time.iso8601 }}
 
 {
@@ -11,7 +8,6 @@
 
 {% for host in caddy_hosts %}
 {{ host.domain }} {
-    tls internal
     reverse_proxy {{ host.backend }}:{{ host.port }}
 }
 {% endfor %}
