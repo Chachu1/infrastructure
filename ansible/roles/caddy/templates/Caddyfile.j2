@@ -1,9 +1,12 @@
 # Managed by Ansible
 # Caddy reverse proxy configuration
 
+# Managed by Ansible
+# Caddy reverse proxy configuration
+# Force redeploy: {{ ansible_date_time.iso8601 }}
+
 {
     email admin@{{ domain }}
-    acme_dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 }
 
 {% for host in caddy_hosts %}
