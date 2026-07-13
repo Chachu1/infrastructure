@@ -40,9 +40,12 @@
       [Service]
       Environment=CLOUDFLARE_API_TOKEN={{ lookup('env', 'CLOUDFLARE_API_TOKEN') }}
     mode: "0644"
-  notify:
-    - reload systemd
-    - restart caddy
+  register: caddy_env
+
+- name: Reload systemd for Caddy drop-in
+  systemd:
+    daemon_reload: yes
+  when: caddy_env.changed
 
 - name: Deploy Caddyfile
   template:
