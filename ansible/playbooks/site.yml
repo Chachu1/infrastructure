@@ -51,6 +51,7 @@
         name: qemu-guest-agent
         state: started
         enabled: yes
+      ignore_errors: yes
 
 - name: Deploy uptime-kuma
   hosts: uptime-kuma

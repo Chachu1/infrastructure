@@ -72,7 +72,7 @@ resource "proxmox_virtual_environment_vm" "app" {
   }
 
   agent {
-    enabled = false
+    enabled = true
   }
 
   timeout_clone = 600
