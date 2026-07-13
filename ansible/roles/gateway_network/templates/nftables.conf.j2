@@ -59,6 +59,6 @@ table ip nat {
         type nat hook postrouting priority 100;
 
         # Masquerade outgoing traffic from private network
-        ip saddr {{ private_subnet }} oif "wg0" masquerade
+        ip saddr {{ private_subnet }} oifname "wg0" masquerade
     }
 }
