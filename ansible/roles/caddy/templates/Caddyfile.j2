@@ -11,6 +11,7 @@
 
 {% for host in caddy_hosts %}
 {{ host.domain }} {
+    tls internal
     reverse_proxy {{ host.backend }}:{{ host.port }}
 }
 {% endfor %}
