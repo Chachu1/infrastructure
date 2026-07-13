@@ -10,7 +10,7 @@
         timeout: 60
 
     - name: Install Python
-      raw: apt-get update -qq || true; apt-get install -y -qq python3
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
       changed_when: false
 
     - name: Gather facts
