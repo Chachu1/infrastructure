@@ -33,6 +33,7 @@
     name: "{{ docker_packages }}"
     state: present
     update_cache: yes
+    dpkg_options: force-overwrite
 
 - name: Enable Docker service
   systemd:
