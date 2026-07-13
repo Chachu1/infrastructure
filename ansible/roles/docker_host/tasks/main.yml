@@ -18,10 +18,9 @@
     mode: '0755'
 
 - name: Add Docker GPG key
-  get_url:
-    url: https://download.docker.com/linux/debian/gpg
-    dest: /etc/apt/keyrings/docker.asc
-    mode: '0644'
+  shell: curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.asc
+  args:
+    creates: /etc/apt/keyrings/docker.asc
 
 - name: Add Docker repository
   apt_repository:
