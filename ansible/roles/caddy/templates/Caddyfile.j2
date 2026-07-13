@@ -1,9 +1,10 @@
 # Managed by Ansible
 # Caddy reverse proxy configuration
-# v2 - proxy entries managed via gateway_services.yml
+# v3 - DNS challenge for Cloudflare
 
 {
     email admin@{{ domain }}
+    acme_dns cloudflare
 }
 
 {% for host in caddy_hosts %}
