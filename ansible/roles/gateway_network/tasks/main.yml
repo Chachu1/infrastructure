@@ -6,18 +6,18 @@
     name: nftables
     state: present
 
-- name: Enable nftables service
-  systemd:
-    name: nftables
-    state: started
-    enabled: yes
-
 - name: Deploy nftables configuration
   template:
     src: nftables.conf.j2
     dest: /etc/nftables.conf
     backup: yes
   notify: reload nftables
+
+- name: Enable nftables service
+  systemd:
+    name: nftables
+    state: started
+    enabled: yes
 
 - name: Ensure IP forwarding is enabled
   sysctl:
