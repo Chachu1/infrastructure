@@ -61,6 +61,7 @@ output "services" {
       domain     = svc.domain
       backend_ip = split("/", svc.ip)[0]
       port       = svc.port
+      scheme     = try(svc.scheme, "http")
     } if try(svc.domain, "") != ""
   }
 }

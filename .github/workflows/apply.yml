@@ -62,7 +62,7 @@ jobs:
           gw_ip = '${{ steps.gateway_ip.outputs.value }}'
           result = {
               'caddy_hosts': [
-                  {'domain': s['domain'], 'backend': s['backend_ip'], 'port': s['port']}
+                  {'domain': s['domain'], 'backend': s['backend_ip'], 'port': s['port'], 'scheme': s.get('scheme', 'http')}
                   for s in data.values()
               ],
               'dns_records': {name: s['backend_ip'] for name, s in data.items()}

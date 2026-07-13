@@ -51,6 +51,7 @@ locals {
       ip     = "10.0.0.1"
       domain = "proxmox.mhlab.me"
       port   = 8006
+      scheme = "https"
     }
 
     # Example VM (uncomment to add a VM service):

@@ -9,6 +9,14 @@
 
 {% for host in caddy_hosts %}
 {{ host.domain }} {
+{% if host.scheme | default('http') == 'https' %}
+    reverse_proxy https://{{ host.backend }}:{{ host.port }} {
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }
+{% else %}
     reverse_proxy {{ host.backend }}:{{ host.port }}
+{% endif %}
 }
 {% endfor %}
