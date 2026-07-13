@@ -2,9 +2,11 @@ caddy_hosts:
 - backend: 10.0.0.1
   domain: proxmox.mhlab.me
   port: 8006
+  scheme: https
 - backend: 10.0.0.51
   domain: uptime.mhlab.me
   port: 3001
+  scheme: http
 dns_records:
   gateway: 10.0.0.10
   proxmox: 10.0.0.1
