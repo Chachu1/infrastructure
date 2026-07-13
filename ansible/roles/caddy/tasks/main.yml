@@ -32,7 +32,7 @@
     src: Caddyfile.j2
     dest: /etc/caddy/Caddyfile
     backup: yes
-  notify: reload caddy
+  notify: restart caddy
 
 - name: Ensure Caddy is running
   systemd:
