@@ -25,6 +25,7 @@
   hosts: gateway
   vars_files:
     - ../inventory/group_vars/gateway_services.yml
+    - ../inventory/group_vars/all/vault.yml
   roles:
     - common
     - gateway_network
