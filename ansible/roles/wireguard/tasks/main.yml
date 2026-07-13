@@ -9,6 +9,11 @@
       - iptables
     state: present
 
+- name: Set WireGuard private key from environment
+  set_fact:
+    wireguard_client_private_key: "{{ lookup('env', 'WIREGUARD_PRIVATE_KEY') }}"
+  no_log: true
+
 - name: Deploy WireGuard configuration
   template:
     src: wg0.conf.j2
