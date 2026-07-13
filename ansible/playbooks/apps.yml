@@ -5,8 +5,12 @@
   hosts: all
   gather_facts: false
   tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
     - name: Install Python
-      raw: apt-get update -qq && apt-get install -y -qq python3
+      raw: apt-get update -qq || true; apt-get install -y -qq python3
       changed_when: false
 
     - name: Gather facts
