@@ -60,5 +60,8 @@ table ip nat {
 
         # Masquerade outgoing traffic from private network
         ip saddr {{ private_subnet }} oifname "wg0" masquerade
+
+        # Masquerade traffic from home network via WireGuard into private network
+        iifname "wg0" ip saddr 192.168.1.0/24 masquerade
     }
 }
