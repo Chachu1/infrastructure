@@ -14,9 +14,20 @@
     state: directory
     mode: "0755"
 
-- name: Add PostgreSQL GPG key
+- name: Remove stale PostgreSQL GPG key
+  file:
+    path: /etc/apt/keyrings/postgresql.asc
+    state: absent
+
+- name: Download PostgreSQL GPG key
+  get_url:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    dest: /tmp/postgresql-key.asc
+    mode: "0644"
+
+- name: Dearmor PostgreSQL GPG key
   shell:
-    cmd: curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/keyrings/postgresql.asc
+    cmd: gpg --dearmor -o /etc/apt/keyrings/postgresql.asc /tmp/postgresql-key.asc
     creates: /etc/apt/keyrings/postgresql.asc
 
 - name: Add PostgreSQL APT repository
