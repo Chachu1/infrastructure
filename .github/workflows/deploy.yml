@@ -1,0 +1,169 @@
+name: Deploy
+
+# Single deploy pipeline for the whole repo.
+#
+# Ordering guarantee: if a push touches both terraform/** and ansible/**
+# (e.g. adding a new VM + its playbook in one commit), Terraform always
+# applies first and Ansible only runs afterwards - via `needs:`, not by
+# racing two independent workflow triggers against each other.
+#
+#   terraform/** changed only  -> terraform job runs, then ansible job runs
+#   ansible|configs/** changed only -> ansible job runs directly
+#   both changed                -> terraform job runs, then ansible job runs
+#   neither changed (shouldn't happen given path filters, but covers
+#   workflow_dispatch)          -> both run
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+      - 'ansible/**'
+      - 'configs/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  changes:
+    runs-on: [self-hosted, proxmox]
+    outputs:
+      terraform: ${{ steps.filter.outputs.terraform }}
+      ansible: ${{ steps.filter.outputs.ansible }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: filter
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "terraform=true" >> "$GITHUB_OUTPUT"
+            echo "ansible=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CHANGED=$(git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}")
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          if echo "$CHANGED" | grep -q '^terraform/'; then
+            echo "terraform=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "terraform=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if echo "$CHANGED" | grep -qE '^(ansible|configs)/'; then
+            echo "ansible=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ansible=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  terraform:
+    needs: changes
+    if: needs.changes.outputs.terraform == 'true'
+    runs-on: [self-hosted, proxmox]
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p /home/runner/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_ed25519
+          chmod 600 /home/runner/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > /home/runner/.ssh/id_ed25519.pub
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.7.5
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+        env:
+          TF_VAR_proxmox_url: ${{ secrets.PROXMOX_URL }}
+          TF_VAR_proxmox_username: ${{ secrets.PROXMOX_USER }}
+          TF_VAR_proxmox_password: ${{ secrets.PROXMOX_PASS }}
+          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+
+      - name: Generate Ansible Inventory
+        run: |
+          terraform output -raw ansible_inventory > ../ansible/inventory/hosts.yml
+          printf '\nproxmox_host:\n  hosts:\n    proxmox:\n      ansible_host: 10.0.0.1\n      ansible_user: root\n      ansible_connection: local\n' >> ../ansible/inventory/hosts.yml
+
+      - name: Get gateway IP
+        id: gateway_ip
+        run: echo "value=$(terraform output -raw gateway_ip)" >> "$GITHUB_OUTPUT"
+
+      - name: Generate gateway services vars
+        run: |
+          terraform output -json services | python3 -c "
+          import sys, json, yaml
+          data = json.load(sys.stdin)
+          gw_ip = '${{ steps.gateway_ip.outputs.value }}'
+          result = {
+              'caddy_hosts': [
+                  {'domain': s['domain'], 'backend': s['backend_ip'], 'port': s['port'], 'scheme': s.get('scheme', 'http')}
+                  for s in data.values()
+              ],
+              'dns_records': {name: s['backend_ip'] for name, s in data.items()}
+          }
+          result['dns_records']['gateway'] = gw_ip
+          yaml.dump(result, sys.stdout, default_flow_style=False)
+          " > ../ansible/inventory/group_vars/gateway_services.yml
+
+      - name: Commit Inventory
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ../ansible/inventory/hosts.yml ../ansible/inventory/group_vars/gateway_services.yml
+          git diff --staged --quiet || git commit -m "Update Ansible inventory [skip ci]"
+          git push
+
+  ansible:
+    needs: [changes, terraform]
+    # Runs when ansible/configs changed directly, OR after terraform applied
+    # (new/changed infra always needs a config pass). `always()` is required
+    # here because a skipped `terraform` job would otherwise skip this one too.
+    if: |
+      always() &&
+      (needs.changes.outputs.ansible == 'true' || needs.changes.outputs.terraform == 'true') &&
+      needs.changes.result == 'success' &&
+      (needs.terraform.result == 'success' || needs.terraform.result == 'skipped')
+    runs-on: [self-hosted, proxmox]
+    defaults:
+      run:
+        working-directory: ansible
+
+    steps:
+      # Check out the latest main HEAD rather than the triggering SHA:
+      # when the terraform job ran, it pushed a new commit (the regenerated
+      # inventory) that this job must see.
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p /home/runner/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_ed25519
+          chmod 600 /home/runner/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > /home/runner/.ssh/id_ed25519.pub
+
+      - name: Run Ansible Playbook
+        run: ansible-playbook playbooks/site.yml
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WIREGUARD_PRIVATE_KEY: ${{ secrets.WIREGUARD_PRIVATE_KEY }}

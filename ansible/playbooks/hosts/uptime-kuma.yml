@@ -1,0 +1,25 @@
+---
+# uptime-kuma - monitoring dashboard (Docker Compose), LXC
+# Run standalone: ansible-playbook playbooks/hosts/uptime-kuma.yml
+
+- name: Bootstrap uptime-kuma
+  hosts: uptime-kuma
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure uptime-kuma
+  hosts: uptime-kuma
+  roles:
+    - common
+    - docker_host
+    - uptime_kuma

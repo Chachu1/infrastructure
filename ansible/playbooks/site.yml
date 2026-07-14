@@ -1,65 +1,16 @@
 ---
-# Master playbook - runs everything
+# site.yml - full infrastructure run
+#
+# This is a thin aggregator: each host has its own playbook under
+# playbooks/hosts/<name>.yml which is the single source of truth for
+# exactly what gets applied to that host. Add a new VM/LXC in
+# terraform/locals.tf, then add a matching playbooks/hosts/<name>.yml
+# and an import_playbook line below.
+#
+# Idempotent - safe to run against everything on every push.
 
-- name: Bootstrap Python on all hosts
-  hosts: all
-  gather_facts: false
-  tasks:
-    - name: Wait for SSH
-      wait_for_connection:
-        timeout: 60
-
-    - name: Install Python
-      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
-      changed_when: false
-
-    - name: Gather facts
-      setup:
-
-- name: Configure Proxmox host
-  hosts: proxmox_host
-  roles:
-    - proxmox_host
-
-- name: Configure gateway
-  hosts: gateway
-  vars_files:
-    - ../inventory/group_vars/gateway_services.yml
-  roles:
-    - common
-    - gateway_network
-    - caddy
-    - wireguard
-    - dns
-
-- name: Configure application VMs
-  hosts: apps:!postgres
-  roles:
-    - common
-    - docker_host
-
-- name: Install QEMU guest agent on VMs
-  hosts: vm_apps
-  tasks:
-    - name: Install qemu-guest-agent
-      apt:
-        name: qemu-guest-agent
-        state: present
-
-    - name: Ensure qemu-guest-agent is running
-      systemd:
-        name: qemu-guest-agent
-        state: started
-        enabled: yes
-      ignore_errors: yes
-
-- name: Deploy uptime-kuma
-  hosts: uptime-kuma
-  roles:
-    - uptime_kuma
-
-- name: Configure PostgreSQL
-  hosts: postgres
-  roles:
-    - common
-    - postgresql
+- import_playbook: hosts/proxmox.yml
+- import_playbook: hosts/gateway.yml
+- import_playbook: hosts/uptime-kuma.yml
+- import_playbook: hosts/postgres.yml
+- import_playbook: hosts/testing-vm.yml

@@ -1,0 +1,24 @@
+---
+# postgres - PostgreSQL 18 database server, LXC
+# Run standalone: ansible-playbook playbooks/hosts/postgres.yml
+
+- name: Bootstrap postgres
+  hosts: postgres
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure postgres
+  hosts: postgres
+  roles:
+    - common
+    - postgresql

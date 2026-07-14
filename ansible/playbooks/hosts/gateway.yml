@@ -1,0 +1,29 @@
+---
+# gateway - Caddy reverse proxy, WireGuard VPN, CoreDNS, nftables firewall
+# Run standalone: ansible-playbook playbooks/hosts/gateway.yml
+
+- name: Bootstrap gateway
+  hosts: gateway
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure gateway
+  hosts: gateway
+  vars_files:
+    - ../../inventory/group_vars/gateway_services.yml
+  roles:
+    - common
+    - gateway_network
+    - caddy
+    - wireguard
+    - dns

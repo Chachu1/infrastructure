@@ -1,8 +1,9 @@
 ---
-# Apps playbook - configure application VMs only
+# testing-vm - general-purpose test VM (Docker), QEMU guest agent
+# Run standalone: ansible-playbook playbooks/hosts/testing-vm.yml
 
-- name: Bootstrap Python on all hosts
-  hosts: all
+- name: Bootstrap testing-vm
+  hosts: testing-vm
   gather_facts: false
   tasks:
     - name: Wait for SSH
@@ -16,14 +17,12 @@
     - name: Gather facts
       setup:
 
-- name: Configure application VMs
-  hosts: apps
+- name: Configure testing-vm
+  hosts: testing-vm
   roles:
     - common
     - docker_host
 
-- name: Install QEMU guest agent on VMs
-  hosts: vm_apps
   tasks:
     - name: Install qemu-guest-agent
       apt:
@@ -36,8 +35,3 @@
         state: started
         enabled: yes
       ignore_errors: yes
-
-- name: Deploy uptime-kuma
-  hosts: uptime-kuma
-  roles:
-    - uptime_kuma

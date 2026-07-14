@@ -1,0 +1,9 @@
+---
+# proxmox - the Proxmox VE host itself
+# Run standalone: ansible-playbook playbooks/hosts/proxmox.yml
+
+- name: Configure proxmox
+  hosts: proxmox_host
+  gather_facts: true
+  roles:
+    - proxmox_host
