@@ -5,10 +5,10 @@ locals {
     gateway = "10.0.0.1"
   }
 
-  # LXC templates (on lvmthin directory storage)
+  # LXC templates (on local directory storage)
   lxc_templates = {
-    debian = "lvmthin:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
-    ubuntu = "lvmthin:vztmpl/ubuntu-24.04-standard_24.04-1_amd64.tar.zst"
+    debian = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+    ubuntu = "local:vztmpl/ubuntu-24.04-standard_24.04-1_amd64.tar.zst"
   }
 
   # VM template IDs (auto-updated weekly by cron on Proxmox host)
