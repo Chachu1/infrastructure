@@ -37,15 +37,15 @@ locals {
     #   port   = 3001
     # }
 
-    postgres = {
-      type   = "lxc"
-      distro = "ubuntu"
-      vm_id  = 252
-      cores  = 8
-      memory = 32768
-      disk   = 200
-      ip     = "10.0.0.20/24"
-    }
+    # postgres = {
+    #   type   = "lxc"
+    #   distro = "ubuntu"
+    #   vm_id  = 252
+    #   cores  = 8
+    #   memory = 32768
+    #   disk   = 200
+    #   ip     = "10.0.0.20/24"
+    # }
 
     testing-vm = {
       type   = "vm"
