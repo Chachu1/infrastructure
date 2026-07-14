@@ -33,7 +33,7 @@
     - dns
 
 - name: Configure application VMs
-  hosts: apps
+  hosts: apps:!postgres
   roles:
     - common
     - docker_host
@@ -61,4 +61,5 @@
 - name: Configure PostgreSQL
   hosts: postgres
   roles:
+    - common
     - postgresql
