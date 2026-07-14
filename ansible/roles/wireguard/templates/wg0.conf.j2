@@ -4,9 +4,10 @@
 [Interface]
 PrivateKey = {{ wireguard_client_private_key }}
 Address = {{ wireguard_address }}
+ListenPort = 51820
 
 [Peer]
 PublicKey = {{ wireguard_server_public_key }}
-AllowedIPs = 192.168.12.0/24
+AllowedIPs = 192.168.1.0/24
 Endpoint = {{ wireguard_endpoint }}
 PersistentKeepalive = 25

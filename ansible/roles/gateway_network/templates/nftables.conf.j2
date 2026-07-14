@@ -26,8 +26,8 @@ table inet filter {
         # Allow from private network
         ip saddr {{ private_subnet }} accept
 
-        # Allow from WireGuard network (home)
-        ip saddr 192.168.12.0/24 accept
+        # Allow from home network via WireGuard
+        ip saddr 192.168.1.0/24 accept
 
         # Drop everything else
         drop
@@ -42,8 +42,8 @@ table inet filter {
         # Allow forwarding from private network
         ip saddr {{ private_subnet }} accept
 
-        # Allow forwarding from WireGuard network
-        ip saddr 192.168.12.0/24 accept
+        # Allow forwarding from home network via WireGuard
+        ip saddr 192.168.1.0/24 accept
 
         # Allow forwarding to private network
         ip daddr {{ private_subnet }} accept

@@ -24,3 +24,25 @@
     name: update-cloud-images.timer
     enabled: true
     state: started
+
+- name: Install iptables-persistent
+  apt:
+    name: iptables-persistent
+    state: present
+
+- name: Ensure DNAT rules exist
+  shell: |
+    set -e
+    rules() {
+      iptables -t nat -C PREROUTING -i eno1 -p tcp --dport 80 -j DNAT --to-destination {{ gateway_ip }}:80 2>/dev/null || \
+        iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 80 -j DNAT --to-destination {{ gateway_ip }}:80
+      iptables -t nat -C PREROUTING -i eno1 -p tcp --dport 443 -j DNAT --to-destination {{ gateway_ip }}:443 2>/dev/null || \
+        iptables -t nat -A PREROUTING -i eno1 -p tcp --dport 443 -j DNAT --to-destination {{ gateway_ip }}:443
+      iptables -t nat -C PREROUTING -i eno1 -p udp --dport 51820 -j DNAT --to-destination {{ gateway_ip }}:51820 2>/dev/null || \
+        iptables -t nat -A PREROUTING -i eno1 -p udp --dport 51820 -j DNAT --to-destination {{ gateway_ip }}:51820
+      iptables -t nat -C POSTROUTING -s {{ private_subnet }} -o eno1 -j MASQUERADE 2>/dev/null || \
+        iptables -t nat -A POSTROUTING -s {{ private_subnet }} -o eno1 -j MASQUERADE
+    }
+    rules
+    iptables-save > /etc/iptables/rules.v4
+  changed_when: false
