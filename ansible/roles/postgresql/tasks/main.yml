@@ -63,5 +63,6 @@
   shell:
     cmd: |
       psql -tc "SELECT 1 FROM pg_roles WHERE rolname='mohsin'" | grep -q 1 || \
-      psql -c "CREATE ROLE mohsin WITH LOGIN SUPERUSER PASSWORD '{{ vault_postgres_mohsin_password }}'"
+      psql -c "CREATE ROLE mohsin WITH LOGIN SUPERUSER PASSWORD '{{ lookup('env', 'POSTGRES_MOHSIN_PASSWORD') }}'"
   changed_when: false
+  no_log: true
