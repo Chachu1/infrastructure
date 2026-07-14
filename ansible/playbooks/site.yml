@@ -57,3 +57,8 @@
   hosts: uptime-kuma
   roles:
     - uptime_kuma
+
+- name: Configure PostgreSQL
+  hosts: postgres
+  roles:
+    - postgresql

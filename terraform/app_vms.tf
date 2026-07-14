@@ -5,7 +5,7 @@ resource "proxmox_virtual_environment_file" "cloud_init" {
 
   source_raw {
     data = templatefile("${path.module}/cloud-init.yml", {
-      ssh_public_key  = trimspace(var.ssh_public_key)
+      ssh_public_key   = trimspace(var.ssh_public_key)
       proxmox_password = var.proxmox_password
     })
     file_name = "cloud-init-app.yml"

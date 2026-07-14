@@ -5,9 +5,10 @@ locals {
     gateway = "10.0.0.1"
   }
 
-  # LXC templates (on local directory storage)
+  # LXC templates (on lvmthin directory storage)
   lxc_templates = {
-    debian = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+    debian = "lvmthin:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+    ubuntu = "lvmthin:vztmpl/ubuntu-24.04-standard_24.04-1_amd64.tar.zst"
   }
 
   # VM template IDs (auto-updated weekly by cron on Proxmox host)
@@ -34,6 +35,16 @@ locals {
       ip     = "10.0.0.51/24"
       domain = "uptime.mhlab.me"
       port   = 3001
+    }
+
+    postgres = {
+      type   = "lxc"
+      distro = "ubuntu"
+      vm_id  = 252
+      cores  = 8
+      memory = 32768
+      disk   = 200
+      ip     = "10.0.0.20/24"
     }
 
     testing-vm = {

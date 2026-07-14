@@ -48,9 +48,9 @@ output "app_ips" {
   description = "Application LXC and VM IP addresses"
   value = merge(
     { for name, svc in local.services : name => split("/", svc.ip)[0]
-      if name != "gateway" && try(svc.type, "lxc") == "lxc" },
+    if name != "gateway" && try(svc.type, "lxc") == "lxc" },
     { for name, svc in local.services : name => split("/", svc.ip)[0]
-      if try(svc.type, "lxc") == "vm" }
+    if try(svc.type, "lxc") == "vm" }
   )
 }
 
