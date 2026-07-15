@@ -3,16 +3,16 @@
   "model": "xiaomi-token-plan-sgp/mimo-v2.5-pro",
   "agent": {
     "build": {
-      "model": "xiaomi-token-plan-sgp/mimo-v2.5-pro"
+      "model": "opencode-go/deepseek-v4-pro"
     },
     "plan": {
-      "model": "xiaomi-token-plan-sgp/mimo-v2.5-pro"
+      "model": "opencode-go/deepseek-v4-pro"
     },
     "explore": {
       "model": "xiaomi-token-plan-sgp/mimo-v2.5"
     },
     "code": {
-      "model": "xiaomi-token-plan-sgp/mimo-v2.5-pro"
+      "model": "opencode-go/deepseek-v4-flash"
     }
   },
   "mcp": {
