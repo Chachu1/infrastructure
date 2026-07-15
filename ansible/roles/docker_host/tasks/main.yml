@@ -39,3 +39,19 @@
     name: docker
     state: started
     enabled: yes
+
+- name: Ensure /etc/docker directory exists
+  file:
+    path: /etc/docker
+    state: directory
+    mode: '0755'
+
+- name: Disable AppArmor in Docker daemon config
+  copy:
+    dest: /etc/docker/daemon.json
+    content: |
+      {
+        "apparmor": false
+      }
+    mode: '0644'
+  notify: restart docker
