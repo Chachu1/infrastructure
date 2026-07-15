@@ -21,8 +21,8 @@ locals {
     # Gateway - Caddy, WireGuard, CoreDNS, nftables
     gateway = {
       vm_id  = 100
-      cores  = 1
-      memory = 256
+      cores  = 4
+      memory = 4096
       disk   = 4
       ip     = "10.0.0.10/24"
     }

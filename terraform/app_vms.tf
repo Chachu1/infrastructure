@@ -60,7 +60,7 @@ resource "proxmox_virtual_environment_vm" "app" {
     ip_config {
       ipv4 {
         address = each.value.ip
-        gateway = local.network.gateway
+        gateway = split("/", local.services.gateway.ip)[0]
       }
     }
 

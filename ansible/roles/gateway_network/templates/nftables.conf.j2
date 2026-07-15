@@ -58,8 +58,11 @@ table ip nat {
     chain postrouting {
         type nat hook postrouting priority 100;
 
-        # Masquerade outgoing traffic from private network
+        # Masquerade outgoing traffic from private network to home network via WireGuard
         ip saddr {{ private_subnet }} oifname "wg0" masquerade
+
+        # Masquerade outgoing traffic from private network to internet via Proxmox host
+        ip saddr {{ private_subnet }} oifname "eth0" masquerade
 
         # Masquerade traffic from home network via WireGuard into private network
         iifname "wg0" ip saddr 192.168.1.0/24 masquerade
