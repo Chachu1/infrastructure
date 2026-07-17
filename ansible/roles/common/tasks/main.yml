@@ -15,11 +15,13 @@
   apt:
     update_cache: yes
     cache_valid_time: 3600
+  when: ansible_connection != 'local'
 
 - name: Install common packages
   apt:
     name: "{{ common_packages }}"
     state: present
+  when: ansible_connection != 'local'
 
 - name: Enable IP forwarding
   sysctl:
@@ -28,6 +30,7 @@
     sysctl_set: yes
     state: present
     reload: yes
+  when: ansible_connection != 'local'
 
 - name: Set DNS resolver
   template:
