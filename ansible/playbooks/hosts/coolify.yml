@@ -1,0 +1,23 @@
+---
+# coolify - self-hosted PaaS (Docker-based), VM
+# Run standalone: ansible-playbook playbooks/hosts/coolify.yml
+
+- name: Bootstrap coolify
+  hosts: coolify
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure coolify
+  hosts: coolify
+  roles:
+    - common

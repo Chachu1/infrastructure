@@ -53,9 +53,21 @@ locals {
       domain = "proxmox.mhlab.me"
       port   = 8006
       scheme = "https"
+    }    
+
+    coolify = {
+      type   = "vm"
+      vm_id  = 300
+      cores  = 8
+      memory = 8192
+      disk   = 100
+      ip     = "10.0.0.60/24"
+      domain = "coolify-h.mhlab.me"
+      port   = 8000
     }
 
-    # Example VM (uncomment to add a VM service):
+
+        # Example VM (uncomment to add a VM service):
     # my-vm = {
     #   type   = "vm"
     #   distro = "ubuntu"    # or "debian" (default)

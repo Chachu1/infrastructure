@@ -13,3 +13,4 @@
 - import_playbook: hosts/gateway.yml
 - import_playbook: hosts/uptime-kuma.yml
 - import_playbook: hosts/postgres.yml
+- import_playbook: hosts/coolify.yml
