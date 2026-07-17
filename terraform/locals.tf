@@ -47,16 +47,6 @@ locals {
       ip     = "10.0.0.20/24"
     }
 
-    testing-vm = {
-      type   = "vm"
-      distro = "debian"
-      vm_id  = 301
-      cores  = 4
-      memory = 4096
-      disk   = 50
-      ip     = "10.0.0.61/24"
-    }
-
     proxmox = {
       type   = "external"
       ip     = "10.0.0.1"
