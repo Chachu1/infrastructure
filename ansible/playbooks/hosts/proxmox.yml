@@ -6,4 +6,5 @@
   hosts: proxmox_host
   gather_facts: true
   roles:
+    - common
     - proxmox_host
