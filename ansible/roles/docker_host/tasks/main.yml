@@ -54,4 +54,10 @@
         "apparmor": false
       }
     mode: '0644'
-  notify: restart docker
+  register: daemon_config
+
+- name: Restart Docker to apply daemon config
+  systemd:
+    name: docker
+    state: restarted
+  when: daemon_config.changed

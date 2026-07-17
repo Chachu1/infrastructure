@@ -1,0 +1,6 @@
+---
+uptime_kuma_port: 3001
+uptime_kuma_dir: /opt/uptime-kuma
+uptime_kuma_node_version: "22"
+uptime_kuma_github_repo: "louislam/uptime-kuma"
+uptime_kuma_version: "latest"

@@ -1,7 +1,6 @@
 ---
-# Uptime Kuma handlers
-
 - name: restart uptime-kuma
-  shell: docker compose up -d --force-recreate
-  args:
-    chdir: /opt/uptime-kuma
+  systemd:
+    name: uptime-kuma
+    state: restarted
+    daemon_reload: true

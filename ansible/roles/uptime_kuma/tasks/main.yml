@@ -1,25 +1,121 @@
 ---
-# Uptime Kuma role - deploy via Docker Compose
+- name: Install NodeSource GPG key
+  get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /etc/apt/keyrings/nodesource.asc
+    mode: "0644"
+  register: nodesource_key
 
-- name: Create uptime-kuma directory
+- name: Add NodeSource repository
+  apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/nodesource.asc] https://deb.nodesource.com/node_{{ uptime_kuma_node_version }}.x nodistro main"
+    state: present
+    filename: nodesource
+    update_cache: true
+
+- name: Install Node.js
+  apt:
+    name: nodejs
+    state: present
+
+- name: Install runtime dependencies
+  apt:
+    name:
+      - chromium
+      - git
+    state: present
+
+- name: Fetch latest release info
+  uri:
+    url: "https://api.github.com/repos/{{ uptime_kuma_github_repo }}/releases/latest"
+    return_content: true
+    headers:
+      Accept: application/vnd.github+json
+  register: github_release
+
+- name: Read installed version
+  slurp:
+    src: "{{ uptime_kuma_dir }}/package.json"
+  register: installed_pkg
+  failed_when: false
+
+- name: Determine target version
+  set_fact:
+    _latest_tag: "{{ github_release.json.tag_name }}"
+    _installed_version: >-
+      {{ (installed_pkg.content | default('') | b64decode | trim | from_json).version
+          if (installed_pkg.content | default('')) | length > 0
+          else '' }}
+
+- name: Stop service before update
+  systemd:
+    name: uptime-kuma
+    state: stopped
+  when:
+    - _installed_version | length > 0
+    - _installed_version != _latest_tag
+
+- name: Download release tarball
+  get_url:
+    url: "https://github.com/{{ uptime_kuma_github_repo }}/archive/refs/tags/{{ _latest_tag }}.tar.gz"
+    dest: /tmp/uptime-kuma.tar.gz
+  when: _installed_version != _latest_tag
+
+- name: Ensure target directory exists
   file:
-    path: /opt/uptime-kuma
+    path: "{{ uptime_kuma_dir }}"
     state: directory
     owner: root
     group: root
     mode: "0755"
 
-- name: Deploy docker-compose file
+- name: Extract release tarball
+  unarchive:
+    src: /tmp/uptime-kuma.tar.gz
+    dest: "{{ uptime_kuma_dir }}"
+    remote_src: true
+    extra_opts:
+      - --strip-components=1
+  when: _installed_version != _latest_tag
+  notify: restart uptime-kuma
+
+- name: Clean up tarball
+  file:
+    path: /tmp/uptime-kuma.tar.gz
+    state: absent
+
+- name: Install npm dependencies
+  shell:
+    cmd: npm install --omit dev
+    chdir: "{{ uptime_kuma_dir }}"
+  when: _installed_version != _latest_tag
+  changed_when: true
+
+- name: Download frontend dist
+  shell:
+    cmd: npm run download-dist
+    chdir: "{{ uptime_kuma_dir }}"
+  when: _installed_version != _latest_tag
+  changed_when: true
+
+- name: Create chromium symlink
+  file:
+    src: /usr/bin/chromium
+    dest: "{{ uptime_kuma_dir }}/chromium"
+    state: link
+
+- name: Deploy systemd service unit
   template:
-    src: docker-compose.yml.j2
-    dest: /opt/uptime-kuma/docker-compose.yml
+    src: uptime-kuma.service.j2
+    dest: /etc/systemd/system/uptime-kuma.service
     owner: root
     group: root
     mode: "0644"
   notify: restart uptime-kuma
 
-- name: Start uptime-kuma containers
-  shell: docker compose up -d
-  args:
-    chdir: /opt/uptime-kuma
-  notify: restart uptime-kuma
+- name: Enable and start uptime-kuma service
+  systemd:
+    name: uptime-kuma
+    state: started
+    enabled: true
+    daemon_reload: true

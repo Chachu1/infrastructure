@@ -1,5 +1,5 @@
 ---
-# uptime-kuma - monitoring dashboard (Docker Compose), LXC
+# uptime-kuma - monitoring dashboard (Node.js + systemd), LXC
 # Run standalone: ansible-playbook playbooks/hosts/uptime-kuma.yml
 
 - name: Bootstrap uptime-kuma
@@ -21,5 +21,4 @@
   hosts: uptime-kuma
   roles:
     - common
-    - docker_host
     - uptime_kuma
