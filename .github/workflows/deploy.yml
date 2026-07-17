@@ -108,7 +108,7 @@ jobs:
       - name: Generate Ansible Inventory
         run: |
           terraform output -raw ansible_inventory > ../ansible/inventory/hosts.yml
-          printf '\nproxmox_host:\n  hosts:\n    proxmox:\n      ansible_host: 10.0.0.1\n      ansible_user: root\n      ansible_connection: ssh\n      ansible_ssh_private_key_file: /home/runner/.ssh/proxmox_key\n' >> ../ansible/inventory/hosts.yml
+          printf '\nproxmox_host:\n  hosts:\n    germany1:\n      ansible_host: 10.0.0.1\n      ansible_user: root\n      ansible_connection: ssh\n      ansible_ssh_private_key_file: /home/runner/.ssh/proxmox_key\n' >> ../ansible/inventory/hosts.yml
 
       - name: Get gateway IP
         id: gateway_ip
