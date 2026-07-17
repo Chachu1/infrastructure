@@ -21,3 +21,4 @@
   hosts: coolify
   roles:
     - common
+    - docker_host
