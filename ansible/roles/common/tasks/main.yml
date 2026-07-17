@@ -34,8 +34,33 @@
     backup: yes
   when: dns_configured is defined and dns_configured
 
+- name: Harden SSH daemon
+  template:
+    src: sshd_hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/90-hardening.conf
+    mode: "0644"
+  notify: restart ssh
+
 - name: Ensure SSH is running
   systemd:
     name: ssh
+    state: started
+    enabled: yes
+
+- name: Install fail2ban
+  apt:
+    name: fail2ban
+    state: present
+
+- name: Configure fail2ban
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    mode: "0644"
+  notify: restart fail2ban
+
+- name: Ensure fail2ban is running
+  systemd:
+    name: fail2ban
     state: started
     enabled: yes

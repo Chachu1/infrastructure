@@ -1,0 +1,12 @@
+{{ ansible_managed | comment }}
+
+[DEFAULT]
+bantime = 1h
+findtime = 10m
+maxretry = 5
+destemail = root@localhost
+action = %(action_)s
+
+[sshd]
+enabled = true
+mode = aggressive

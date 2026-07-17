@@ -3,19 +3,15 @@ users:
   - name: root
     ssh_authorized_keys:
       - ${ssh_public_key}
-    lock_passwd: false
+    lock_passwd: true
   - name: mohsin
     groups: sudo
     shell: /bin/bash
     sudo: ['ALL=(ALL) NOPASSWD:ALL']
     ssh_authorized_keys:
       - ${ssh_public_key}
-    lock_passwd: false
-chpasswd:
-  list: |
-    root:${proxmox_password}
-  expire: false
-ssh_pwauth: true
+    lock_passwd: true
+ssh_pwauth: false
 packages:
   - qemu-guest-agent
 runcmd:
