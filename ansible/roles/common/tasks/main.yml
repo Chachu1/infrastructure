@@ -4,6 +4,7 @@
 - name: Set hostname
   hostname:
     name: "{{ inventory_hostname }}"
+  when: ansible_connection != 'local'
 
 - name: Set timezone
   command: timedatectl set-timezone {{ timezone }}
