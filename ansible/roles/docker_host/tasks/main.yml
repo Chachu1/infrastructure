@@ -46,18 +46,7 @@
     state: directory
     mode: '0755'
 
-- name: Disable AppArmor in Docker daemon config
-  copy:
-    dest: /etc/docker/daemon.json
-    content: |
-      {
-        "apparmor": false
-      }
-    mode: '0644'
-  register: daemon_config
-
-- name: Restart Docker to apply daemon config
-  systemd:
-    name: docker
-    state: restarted
-  when: daemon_config.changed
+- name: Remove broken daemon.json (apparmor key not supported by newer Docker)
+  file:
+    path: /etc/docker/daemon.json
+    state: absent
