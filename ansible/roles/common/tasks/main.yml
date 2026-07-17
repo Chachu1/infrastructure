@@ -9,6 +9,7 @@
 - name: Set timezone
   command: timedatectl set-timezone {{ timezone }}
   changed_when: false
+  when: ansible_connection != 'local'
 
 - name: Update apt cache
   apt:
