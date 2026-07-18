@@ -34,5 +34,6 @@ caddy_hosts:
 dns_records:
   coolify: 10.0.0.60
   gateway: 10.0.0.10
+  postgres: 10.0.0.20
   proxmox: 10.0.0.1
   uptime-kuma: 10.0.0.51
