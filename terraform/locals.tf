@@ -38,13 +38,14 @@ locals {
     }
 
     postgres = {
-      type   = "lxc"
-      distro = "ubuntu"
-      vm_id  = 252
-      cores  = 8
-      memory = 32768
-      disk   = 200
-      ip     = "10.0.0.20/24"
+      type         = "lxc"
+      distro       = "ubuntu"
+      vm_id        = 252
+      cores        = 8
+      memory       = 32768
+      disk         = 200
+      ip           = "10.0.0.20/24"
+      internal_dns = "postgres"
     }
 
     proxmox = {
@@ -53,18 +54,18 @@ locals {
       domain = "proxmox.mhlab.me"
       port   = 8006
       scheme = "https"
-    }    
+    }
 
     coolify = {
-      type            = "vm"
-      vm_id           = 300
-      cores           = 8
-      memory          = 8192
-      disk            = 100
-      ip              = "10.0.0.60/24"
-      domain          = "coolify.mhlab.me"
-      port            = 80
-      app_domains     = [
+      type   = "vm"
+      vm_id  = 300
+      cores  = 8
+      memory = 8192
+      disk   = 100
+      ip     = "10.0.0.60/24"
+      domain = "coolify.mhlab.me"
+      port   = 80
+      app_domains = [
         "jobs.mhlab.me",
         "prod-match.mhlab.me",
         "screenshots.mhlab.me",

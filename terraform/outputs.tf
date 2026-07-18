@@ -67,3 +67,11 @@ output "services" {
     } if try(svc.domain, "") != ""
   }
 }
+
+output "internal_dns" {
+  description = "Internal hostnames to add to CoreDNS (internal.mhlab.me zone)"
+  value = {
+    for name, svc in local.services : svc.internal_dns => split("/", svc.ip)[0]
+    if try(svc.internal_dns, "") != ""
+  }
+}

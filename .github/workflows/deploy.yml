@@ -117,7 +117,7 @@ jobs:
       - name: Generate gateway services vars
         run: |
           terraform output -json services | python3 -c "
-          import sys, json, yaml
+          import sys, json, yaml, subprocess
           data = json.load(sys.stdin)
           gw_ip = '${{ steps.gateway_ip.outputs.value }}'
           caddy_hosts_list = []
@@ -148,6 +148,10 @@ jobs:
               'dns_records': {name: s['backend_ip'] for name, s in data.items()}
           }
           result['dns_records']['gateway'] = gw_ip
+          internal_dns = json.loads(subprocess.check_output(
+              ['terraform', 'output', '-json', 'internal_dns']
+          ))
+          result['dns_records'].update(internal_dns)
           yaml.dump(result, sys.stdout, default_flow_style=False)
           " > ../ansible/inventory/group_vars/gateway_services.yml
 
