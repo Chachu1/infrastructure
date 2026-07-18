@@ -1,6 +1,6 @@
 # Infrastructure Reference
 
-**Last updated:** 2026-07-11
+**Last updated:** 2026-07-18
 **Proxmox host:** germany1 (168.119.81.167)
 **Domain:** mhlab.me
 
@@ -22,6 +22,7 @@ Internet
 │  vmbr1 (private: 10.0.0.0/24)                          │
 │    ├─ gateway       (10.0.0.10) — Caddy, CoreDNS,      │
 │    │                            nftables, WireGuard     │
+│    ├─ postgres      (10.0.0.20) — PostgreSQL 18         │
 │    ├─ uptime-kuma   (10.0.0.51) — monitoring           │
 │    └─ github-runner (10.0.0.2)  — CI/CD                │
 │                                                         │
@@ -51,7 +52,8 @@ Internet
 | `10.0.0.10`     |  gateway        |  Reverse proxy, DNS, firewall, VPN |
 | `10.0.0.51`     |  uptime-kuma    |  Monitoring dashboard              |
 | `10.0.0.11-19`  |  —              |  Reserved for web applications     |
-| `10.0.0.20-29`  |  —              |  Reserved for databases            |
+| `10.0.0.20`     |  postgres       |  PostgreSQL database (VMID 252)     |
+| `10.0.0.21-29`  |  —              |  Reserved for databases            |
 | `10.0.0.30-39`  |  —              |  Reserved for monitoring           |
 | `10.0.0.50-59`  |  —              |  Reserved for utilities            |
 
@@ -78,6 +80,7 @@ Internet
 | Caddy        |  10.0.0.10  |  80, 443  |  https://uptime.mhlab.me       |
 | CoreDNS      |  10.0.0.10  |  53       |  Internal: *.internal.mhlab.me |
 | Uptime Kuma  |  10.0.0.51  |  3001     |  https://uptime.mhlab.me       |
+| Postgres     |  10.0.0.20  |  5432     |  postgres.internal.mhlab.me    |
 
 
 
@@ -212,6 +215,7 @@ lvextend -L +1T vg0/thin_pool
 From the Proxmox host:
 ```bash
 pct enter 100          # Gateway
+pct enter 252          # Postgres
 pct enter 251          # Uptime-kuma
 pct enter 200          # GitHub runner
 ```
@@ -391,6 +395,7 @@ Per-service A records are created automatically by Terraform (proxied through Cl
 |--------|-----|
 | `gateway.internal.mhlab.me` | 10.0.0.10 |
 | `uptime-kuma.internal.mhlab.me` | 10.0.0.51 |
+| `postgres.internal.mhlab.me` | 10.0.0.20 |
 
 All VMs use `10.0.0.10` as their DNS resolver (configured via DHCP on vmbr1).
 
