@@ -1,9 +1,6 @@
 # Application VMs configuration
 # Add app-specific variables here
 
-# Configure resolv.conf and Docker daemon DNS on app VMs
-dns_configured: true
-
 # Docker settings (for VMs that need docker)
 docker_edition: "ce"
 docker_packages:

@@ -19,6 +19,8 @@
 
 - name: Configure coolify
   hosts: coolify
+  vars:
+    dns_configured: true
   roles:
     - common
     - docker_host
