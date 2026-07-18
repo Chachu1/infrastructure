@@ -63,7 +63,7 @@ locals {
       disk            = 100
       ip              = "10.0.0.60/24"
       domain          = "coolify.mhlab.me"
-      port            = 8080
+      port            = 80
       app_domains     = [
         "jobs.mhlab.me",
         "prod-match.mhlab.me",
