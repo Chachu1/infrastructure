@@ -33,6 +33,29 @@
     update_cache: yes
   notify: restart postgresql
 
+- name: Reinit cluster as UTF8 if currently SQL_ASCII
+  block:
+    - name: Check current cluster encoding
+      become: yes
+      become_user: postgres
+      shell: psql -tAc "SELECT pg_encoding_to_char(encoding) FROM pg_database WHERE datname='template0'"
+      register: pg_encoding
+      changed_when: false
+
+    - name: Reinit cluster as UTF8
+      when: pg_encoding.stdout | trim == 'SQL_ASCII'
+      block:
+        - name: Stop PostgreSQL
+          systemd:
+            name: postgresql
+            state: stopped
+
+        - name: Drop existing empty SQL_ASCII cluster
+          shell: pg_dropcluster 18 main --stop
+
+        - name: Recreate cluster as UTF8
+          shell: pg_createcluster 18 main --encoding=UTF8 --locale=C.UTF-8 --start
+
 - name: Configure PostgreSQL listen addresses
   lineinfile:
     path: /etc/postgresql/18/main/postgresql.conf
@@ -64,5 +87,26 @@
     cmd: |
       psql -tc "SELECT 1 FROM pg_roles WHERE rolname='mohsin'" | grep -q 1 || \
       psql -c "CREATE ROLE mohsin WITH LOGIN SUPERUSER PASSWORD '{{ lookup('env', 'POSTGRES_MOHSIN_PASSWORD') }}'"
+  changed_when: false
+  no_log: true
+
+- name: Create superuser pricetracker
+  become: yes
+  become_user: postgres
+  shell:
+    cmd: |
+      psql -tc "SELECT 1 FROM pg_roles WHERE rolname='pricetracker'" | grep -q 1 || \
+      psql -c "CREATE ROLE pricetracker WITH LOGIN SUPERUSER PASSWORD '{{ lookup('env', 'POSTGRES_PRICETRACKER_PASSWORD') }}'"
+  changed_when: false
+  no_log: true
+
+- name: Ensure postgres database is owned by pricetracker
+  become: yes
+  become_user: postgres
+  shell:
+    cmd: |
+      psql -tc "SELECT 1 FROM pg_database WHERE datname='postgres' AND pg_get_userbyid(pg_database_owner)='pricetracker'" | grep -q 1 || \
+      ( psql -c "ALTER DATABASE postgres OWNER TO pricetracker" && \
+        psql -c "GRANT ALL ON DATABASE postgres TO pricetracker" )
   changed_when: false
   no_log: true
