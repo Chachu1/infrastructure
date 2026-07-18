@@ -120,11 +120,31 @@ jobs:
           import sys, json, yaml
           data = json.load(sys.stdin)
           gw_ip = '${{ steps.gateway_ip.outputs.value }}'
+          caddy_hosts_list = []
+          for s in data.values():
+              caddy_hosts_list.append({
+                  'domain': s['domain'],
+                  'backend': s['backend_ip'],
+                  'port': s['port'],
+                  'scheme': s.get('scheme', 'http')
+              })
+              for app_domain in s.get('app_domains', []):
+                  caddy_hosts_list.append({
+                      'domain': app_domain,
+                      'backend': s['backend_ip'],
+                      'port': 80,
+                      'scheme': 'http'
+                  })
+              wildcard = s.get('wildcard_domain', '')
+              if wildcard:
+                  caddy_hosts_list.append({
+                      'domain': wildcard,
+                      'backend': s['backend_ip'],
+                      'port': 80,
+                      'scheme': 'http'
+                  })
           result = {
-              'caddy_hosts': [
-                  {'domain': s['domain'], 'backend': s['backend_ip'], 'port': s['port'], 'scheme': s.get('scheme', 'http')}
-                  for s in data.values()
-              ],
+              'caddy_hosts': caddy_hosts_list,
               'dns_records': {name: s['backend_ip'] for name, s in data.items()}
           }
           result['dns_records']['gateway'] = gw_ip
