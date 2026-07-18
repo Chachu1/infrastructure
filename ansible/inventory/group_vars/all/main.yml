@@ -8,6 +8,9 @@ gateway_ip: "10.0.0.10"
 dns_servers:
   - "{{ gateway_ip }}"
 
+# Configure Docker daemon DNS on docker_host-managed VMs
+dns_configured: true
+
 # Timezone
 timezone: "UTC"
 

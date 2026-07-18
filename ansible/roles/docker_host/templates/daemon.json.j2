@@ -1,0 +1,4 @@
+{
+  "dns": [{% for ns in dns_servers %}"{{ ns }}"{% if not loop.last %}, {% endif %}{% endfor %}],
+  "log-driver": "json-file"
+}

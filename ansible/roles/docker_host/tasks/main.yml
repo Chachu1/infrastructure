@@ -46,7 +46,9 @@
     state: directory
     mode: '0755'
 
-- name: Remove broken daemon.json (apparmor key not supported by newer Docker)
-  file:
-    path: /etc/docker/daemon.json
-    state: absent
+- name: Configure Docker daemon (DNS + log driver)
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    mode: "0644"
+  when: dns_configured | default(false) | bool
