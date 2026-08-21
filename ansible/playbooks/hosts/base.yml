@@ -1,0 +1,10 @@
+---
+# base.yml - create the mohsin admin user on every LXC and the coolify VM.
+# Run standalone: ansible-playbook playbooks/hosts/base.yml
+# Not applied to the Proxmox hypervisor.
+
+- name: Base user for LXCs and VM
+  hosts: gateway:lxc_apps:vm_apps
+  become: true
+  roles:
+    - base_user

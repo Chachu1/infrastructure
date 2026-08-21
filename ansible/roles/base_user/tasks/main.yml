@@ -1,0 +1,35 @@
+---
+# base_user - create the mohsin admin user with passwordless sudo and SSH key.
+# Applied to all LXCs and the coolify VM (see playbooks/hosts/base.yml).
+
+- name: Create mohsin user
+  user:
+    name: mohsin
+    groups: sudo
+    append: true
+    shell: /bin/bash
+    create_home: true
+
+- name: Ensure .ssh directory exists
+  file:
+    path: /home/mohsin/.ssh
+    state: directory
+    owner: mohsin
+    group: mohsin
+    mode: "0700"
+
+- name: Add mohsin SSH public key
+  authorized_key:
+    user: mohsin
+    key: "{{ mohsin_ssh_public_key }}"
+    state: present
+    exclusive: false
+
+- name: Grant passwordless sudo to mohsin
+  copy:
+    content: "mohsin ALL=(ALL) NOPASSWD:ALL\n"
+    dest: /etc/sudoers.d/90-mohsin
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s

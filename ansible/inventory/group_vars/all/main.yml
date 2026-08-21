@@ -11,6 +11,9 @@ dns_servers:
 # Timezone
 timezone: "UTC"
 
+# Admin user (base_user role) - SSH public key for key-only sudo access.
+mohsin_ssh_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMz/z3teYrXid/cPA6VBTEW6BcObOE9/u9aENFP7lXAH mohsin@infra"
+
 # Common packages
 common_packages:
   - curl

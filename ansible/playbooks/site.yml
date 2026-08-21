@@ -10,6 +10,7 @@
 # Idempotent - safe to run against everything on every push.
 
 - import_playbook: hosts/proxmox.yml
+- import_playbook: hosts/base.yml
 - import_playbook: hosts/gateway.yml
 - import_playbook: hosts/uptime-kuma.yml
 - import_playbook: hosts/postgres.yml
