@@ -24,6 +24,6 @@ app_env_vars:
 # Secrets are injected from GitHub Actions env at deploy time. Add/rename keys
 # here to match the app's needs; empty values are written verbatim.
 app_secrets:
-  PG_DSN: "{{ lookup('env', 'CATEGORIZER_PG_DSN', default='') | default(lookup('env', 'PG_DSN'), true) }}"
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   OPENROUTER_CATEGORIZER_KEY: "{{ lookup('env', 'OPENROUTER_CATEGORIZER_KEY', default='') }}"
   OPENROUTER_MODEL: "{{ lookup('env', 'OPENROUTER_MODEL', default='') }}"

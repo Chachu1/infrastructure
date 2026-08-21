@@ -22,5 +22,5 @@ app_env_vars:
 # Secrets are injected from GitHub Actions env at deploy time. Add/rename keys
 # here to match the app's needs; empty values are written verbatim.
 app_secrets:
-  PG_DSN: "{{ lookup('env', 'REVIEW_API_PG_DSN', default='') | default(lookup('env', 'PG_DSN'), true) }}"
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   REVIEW_API_BEARER_TOKEN: "{{ lookup('env', 'REVIEW_API_BEARER_TOKEN', default='') }}"

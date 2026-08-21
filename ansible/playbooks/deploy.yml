@@ -42,6 +42,11 @@
           register: deploy_lock_created
 
         # --- Refresh unit + env from current vars (idempotent) ---
+        - name: Require PG_DSN
+          fail:
+            msg: "PG_DSN is empty - set secrets.PG_DSN in Chachu1/infrastructure (single DSN for all services)"
+          when: lookup('env', 'PG_DSN') | length == 0
+
         - name: Refresh systemd unit and env file
           include_role:
             name: app_systemd
