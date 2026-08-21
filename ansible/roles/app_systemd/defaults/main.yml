@@ -32,4 +32,12 @@ app_env: "{{ app_env_vars | combine(app_secrets) }}"
 # "/opt/categorizer/current/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port {{ app_port }}"
 app_service_exec: "/opt/{{ app_name }}/current/venv/bin/python -m app"
 
+# WorkingDirectory for the systemd unit. Override per-service when the
+# app's entrypoint lives in a subdirectory (e.g. coolify/review-api).
+app_working_dir: "/opt/{{ app_name }}/current"
+
+# Health check mode: http (curl /health) or systemd (check service active).
+# Workers like categorizer have no HTTP endpoint.
+app_health_check: "http"
+
 app_description: "{{ app_name }} service"
