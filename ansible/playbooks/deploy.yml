@@ -14,6 +14,8 @@
   vars:
     service: "{{ lookup('env', 'SERVICE', default='categorizer') }}"
     sha: "{{ lookup('env', 'DEPLOY_SHA', default='') }}"
+    github_token: "{{ lookup('env', 'PRICE_TRACKER_PAT') | default(lookup('env', 'GH_TOKEN'), true) | default('', true) }}"
+    _repo_url: "{{ app_repo_url | replace('https://', 'https://x-access-token:' + github_token + '@') if github_token | length > 0 else app_repo_url }}"
 
   tasks:
     - name: Require a commit SHA
@@ -55,12 +57,19 @@
             path: "{{ release_dir }}"
           register: release_stat
 
+        - name: Remove invalid bare repo left by previous failed clone
+          shell: "if [ -d {{ repo_bare }} ] && ! git --git-dir={{ repo_bare }} rev-parse --is-bare-repository >/dev/null 2>&1; then rm -rf {{ repo_bare }}; echo removed; else echo ok; fi"
+          changed_when: false
+          become: true
+          become_user: "{{ app_user }}"
+
         - name: Ensure bare clone of app repo exists
-          command: "git clone --bare --branch {{ app_branch }} {{ app_repo_url }} {{ repo_bare }}"
+          command: "git clone --bare --branch {{ app_branch }} {{ _repo_url }} {{ repo_bare }}"
           args:
             creates: "{{ repo_bare }}"
           become: true
           become_user: "{{ app_user }}"
+          no_log: true
 
         - name: Fetch latest refs
           command: "git --git-dir={{ repo_bare }} fetch origin --tags --prune '+refs/heads/*:refs/heads/*'"

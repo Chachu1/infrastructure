@@ -68,6 +68,11 @@ jobs:
         run: ansible-playbook playbooks/deploy.yml -e service=${{ steps.validate.outputs.service }} -e sha=${{ steps.validate.outputs.sha }}
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
+          # Token to clone the private Price_Tracker repo from the LXC.
+          # Create a fine-grained PAT scoped to Chachu1/Price_Tracker
+          # (Contents: Read) and add as PRICE_TRACKER_PAT in this repo.
+          PRICE_TRACKER_PAT: ${{ secrets.PRICE_TRACKER_PAT }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           # App secrets are read by playbooks/deploy/vars/<service>.yml via
           # lookup('env', ...). Empty values are written verbatim and no_log
           # keeps them out of the run log. Add new secrets here as needed.
