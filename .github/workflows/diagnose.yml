@@ -1,0 +1,54 @@
+name: Diagnose
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p /home/runner/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_ed25519
+          chmod 600 /home/runner/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > /home/runner/.ssh/id_ed25519.pub
+          echo "${{ secrets.PROXMOX_SSH_KEY }}" > /home/runner/.ssh/proxmox_key
+          chmod 600 /home/runner/.ssh/proxmox_key
+
+      - name: Check review-api LXC
+        working-directory: ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          echo "=== systemctl status review-api ==="
+          ansible review-api -m shell -a 'systemctl status review-api --no-pager -l || true' 2>&1 | tail -n 100
+          echo "=== ss -tlnp ==="
+          ansible review-api -m shell -a 'ss -tlnp | grep -E "8013|LISTEN" || ss -tlnp || netstat -tlnp || true' 2>&1 | tail -n 100
+          echo "=== journalctl review-api ==="
+          ansible review-api -m shell -a 'journalctl -u review-api -n 100 --no-pager || true' 2>&1 | tail -n 200
+          echo "=== systemd unit ==="
+          ansible review-api -m shell -a 'cat /etc/systemd/system/review-api.service; echo ---; cat /etc/review-api/env | sed -E "s/(PG_DSN|TOKEN|PASSWORD|KEY).*=\".*/\1=***/" | head -n 30' 2>&1 | tail -n 100
+          echo "=== current symlink and venv ==="
+          ansible review-api -m shell -a 'ls -l /opt/review-api/current 2>&1 | head -n 20; ls -l /opt/review-api/releases/ 2>&1 | head -n 20; cat /opt/review-api/current/coolify/review-api/main.py 2>&1 | head -n 20' 2>&1 | tail -n 100
+
+      - name: Check gateway and Caddy
+        working-directory: ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          echo "=== Caddyfile ==="
+          ansible gateway -m shell -a 'cat /etc/caddy/Caddyfile' 2>&1 | tail -n 100
+          echo "=== Caddy logs ==="
+          ansible gateway -m shell -a 'journalctl -u caddy -n 100 --no-pager | tail -n 100' 2>&1 | tail -n 150
+          echo "=== curl from gateway to review-api ==="
+          ansible gateway -m shell -a 'curl -v http://10.0.0.62:8013/health 2>&1 | head -n 50; echo EXIT:$?; ss -tlnp | head -n 20' 2>&1 | tail -n 100
+          echo "=== curl from gateway to itself ==="
+          ansible gateway -m shell -a 'curl -v http://127.0.0.1:8013/health 2>&1 | head -n 20 || true' 2>&1 | tail -n 30
+          echo "=== nftables ==="
+          ansible gateway -m shell -a 'nft list ruleset 2>&1 | head -n 100' 2>&1 | tail -n 100
