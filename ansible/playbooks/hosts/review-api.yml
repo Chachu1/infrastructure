@@ -1,0 +1,44 @@
+---
+# review-api - production review API (native systemd + venv), LXC
+# Serves prod-match.mhlab.me (migrated off Coolify) on port 8013.
+# Run standalone: ansible-playbook playbooks/hosts/review-api.yml
+
+- name: Bootstrap review-api
+  hosts: review-api
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure review-api
+  hosts: review-api
+  vars:
+    dns_configured: true
+    app_name: review-api
+    app_user: review-api
+    app_group: review-api
+    app_port: 8013
+    app_health_path: /health
+    app_health_port: 8013
+    domain: prod-match.mhlab.me
+    app_service_exec: "/opt/review-api/current/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8013"
+    app_env_vars:
+      APP_ENV: production
+      APP_PORT: "8013"
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

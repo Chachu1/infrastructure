@@ -1,0 +1,22 @@
+---
+# Per-service vars for review-api (used by playbooks/deploy.yml).
+# Mirrors playbooks/hosts/review-api.yml - keep both in sync.
+
+app_name: review-api
+app_user: review-api
+app_group: review-api
+app_port: 8013
+app_health_path: /health
+app_health_port: 8013
+domain: prod-match.mhlab.me
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/opt/review-api/current/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8013"
+app_env_vars:
+  APP_ENV: production
+  APP_PORT: "8013"
+# Secrets are injected from GitHub Actions env at deploy time. Add/rename keys
+# here to match the app's needs; empty values are written verbatim.
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'REVIEW_API_PG_DSN', default='') }}"

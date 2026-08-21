@@ -1,0 +1,70 @@
+---
+# maintenance.yml - weekly OS maintenance for application hosts.
+#
+# Targets the lxc_apps + vm_apps groups only (one host at a time via serial: 1)
+# so apt upgrades never touch the gateway (Caddy/WireGuard/CoreDNS) or the
+# Proxmox host. Run via the maintenance GitHub Actions workflow:
+#   ansible-playbook playbooks/maintenance.yml
+#
+# Deploy coordination: deploy.yml creates /tmp/deploy-{{ service }}.lock while
+# an app deploy is in progress. inventory_hostname equals the service name for
+# app hosts (categorizer, review-api, ...), so if a deploy is mid-flight this
+# playbook fails out on that host instead of racing it.
+#
+# Note on inventory generation: new services do NOT need changes here. The
+# deploy.yml workflow regenerates ansible/inventory/hosts.yml from Terraform
+# outputs on every push, and the gateway_services.yml generation loops over ALL
+# services - so any service with a `domain` in terraform/locals.tf is added to
+# caddy_hosts + dns_records automatically. Internal-only services (no domain,
+# e.g. categorizer) are added to CoreDNS via the internal_dns output instead.
+# Only require: a matching ansible/playbooks/hosts/<name>.yml and
+# ansible/playbooks/deploy/vars/<name>.yml.
+
+- name: Weekly maintenance
+  hosts: lxc_apps:vm_apps
+  become: true
+  serial: 1  # one host at a time
+
+  tasks:
+    - name: Check deploy lock
+      stat:
+        path: "/tmp/deploy-{{ inventory_hostname }}.lock"
+      register: deploy_lock
+      when: ansible_connection != 'local'
+
+    - name: Fail if deploy in progress
+      fail:
+        msg: "Deploy in progress on {{ inventory_hostname }}, skipping maintenance"
+      when:
+        - ansible_connection != 'local'
+        - deploy_lock.stat.exists
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_connection != 'local'
+
+    - name: Upgrade all packages
+      apt:
+        upgrade: dist
+      when: ansible_connection != 'local'
+
+    - name: Check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+      when: ansible_connection != 'local'
+
+    - name: Notify reboot required
+      debug:
+        msg: "Reboot required on {{ inventory_hostname }}, schedule manually"
+      when:
+        - ansible_connection != 'local'
+        - reboot_required.stat.exists
+
+    # Optional: re-apply common role handlers (restart ssh / fail2ban if their
+    # config templates changed). Handlers only run when notified.
+    - name: Re-apply common role handlers
+      meta: flush_handlers
+      when: ansible_connection != 'local'

@@ -1,0 +1,35 @@
+---
+# Generic native-systemd application role.
+# Provisioning only: creates the user/dirs/service skeleton. The actual
+# release is deployed by playbooks/deploy.yml (or the helper script
+# /usr/local/bin/deploy-{{ app_name }}.sh) on an immutable-release basis.
+
+app_name: "app"
+app_user: "{{ app_name }}"
+app_group: "{{ app_name }}"
+app_deploy_user: "{{ app_user }}"
+
+app_port: 8000
+app_health_path: "/health"
+app_health_port: "{{ app_port }}"
+
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: "main"
+app_keep_releases: 3
+
+# Non-secret environment for the app (rendered into /etc/{{ app_name }}/env).
+app_env_vars: {}
+
+# Secret environment, normally populated per-service from GH secrets via
+# lookup('env', ...). app_secrets role keeps the rendered file permissions sane.
+app_secrets: {}
+
+# Merged env written to /etc/{{ app_name }}/env (app_env_vars win over secrets
+# on key collisions).
+app_env: "{{ app_env_vars | combine(app_secrets) }}"
+
+# ExecStart for the systemd unit. Override per host/service - e.g.
+# "/opt/categorizer/current/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port {{ app_port }}"
+app_service_exec: "/opt/{{ app_name }}/current/venv/bin/python -m app"
+
+app_description: "{{ app_name }} service"

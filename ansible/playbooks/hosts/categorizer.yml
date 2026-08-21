@@ -1,0 +1,42 @@
+---
+# categorizer - price categorization worker (native systemd + venv), LXC
+# Run standalone: ansible-playbook playbooks/hosts/categorizer.yml
+
+- name: Bootstrap categorizer
+  hosts: categorizer
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure categorizer
+  hosts: categorizer
+  vars:
+    dns_configured: true
+    app_name: categorizer
+    app_user: categorizer
+    app_group: categorizer
+    app_port: 8000
+    app_health_path: /health
+    app_health_port: 8000
+    app_service_exec: "/opt/categorizer/current/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000"
+    app_env_vars:
+      APP_ENV: production
+      APP_PORT: "8000"
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

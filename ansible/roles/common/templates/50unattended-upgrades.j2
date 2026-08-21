@@ -1,0 +1,22 @@
+// Managed by Ansible
+// Only security and base (stable) updates; no automatic reboots.
+// Docker packages are blacklisted - the docker_host role owns their lifecycle.
+
+Unattended-Upgrade::Allowed-Origins {
+    "${distro_id}:${distro_codename}";
+    "${distro_id}:${distro_codename}-security";
+    "${distro_id}:${distro_codename}-updates";
+};
+
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+
+Unattended-Upgrade::Package-Blacklist {
+    "docker";
+    "docker.io";
+    "docker-ce";
+    "docker-ce-cli";
+    "docker-compose-plugin";
+    "containerd";
+    "containerd.io";
+};

@@ -1,0 +1,11 @@
+---
+# app_secrets - ensure /etc/{{ app_name }}/env is private to the app user.
+# The env file itself is templated by the app_systemd role; this role only
+# guarantees permissions so secrets can never be world-readable.
+
+- name: Ensure app env file ownership and permissions
+  file:
+    path: "/etc/{{ app_name }}/env"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0600"

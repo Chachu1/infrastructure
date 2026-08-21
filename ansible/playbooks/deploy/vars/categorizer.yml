@@ -1,0 +1,21 @@
+---
+# Per-service vars for categorizer (used by playbooks/deploy.yml).
+# Mirrors playbooks/hosts/categorizer.yml - keep both in sync.
+
+app_name: categorizer
+app_user: categorizer
+app_group: categorizer
+app_port: 8000
+app_health_path: /health
+app_health_port: 8000
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/opt/categorizer/current/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000"
+app_env_vars:
+  APP_ENV: production
+  APP_PORT: "8000"
+# Secrets are injected from GitHub Actions env at deploy time. Add/rename keys
+# here to match the app's needs; empty values are written verbatim.
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'CATEGORIZER_PG_DSN', default='') }}"

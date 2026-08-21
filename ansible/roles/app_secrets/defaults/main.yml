@@ -1,0 +1,8 @@
+---
+# Scope: the env file /etc/{{ app_name }}/env is RENDERED by the app_systemd
+# role (single source of truth, from app_env_vars + app_secrets dicts). This
+# role is a thin wrapper that only guarantees the rendered file's ownership and
+# permissions, so it can be depended on by app_systemd without duplicating the
+# templating logic.
+
+app_secrets: {}

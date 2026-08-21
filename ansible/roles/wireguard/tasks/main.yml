@@ -27,3 +27,21 @@
     state: started
     enabled: yes
   ignore_errors: yes
+
+- name: Deploy WireGuard DNS check script
+  template:
+    src: wireguard-dns-check.sh.j2
+    dest: /usr/local/bin/wireguard-dns-check.sh
+    mode: "0755"
+
+- name: Install dnsutils for dig
+  apt:
+    name: dnsutils
+    state: present
+
+- name: Add cron job for WireGuard DNS re-resolution
+  copy:
+    dest: /etc/cron.d/wireguard-dns-check
+    content: |
+      */5 * * * * root /usr/local/bin/wireguard-dns-check.sh
+    mode: "0644"

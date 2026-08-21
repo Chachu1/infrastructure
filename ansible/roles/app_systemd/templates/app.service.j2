@@ -1,0 +1,21 @@
+[Unit]
+Description={{ app_description }}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory=/opt/{{ app_name }}/current
+EnvironmentFile=/etc/{{ app_name }}/env
+ExecStart={{ app_service_exec }}
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGTERM
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

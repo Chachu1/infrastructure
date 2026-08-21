@@ -1,0 +1,10 @@
+# Managed by Ansible
+services:
+  {{ app_name }}:
+    build: .
+    restart: unless-stopped
+    env_file: /etc/{{ app_name }}/env
+    ports:
+      - "127.0.0.1:{{ app_health_port }}:{{ app_health_port }}"
+    security_opt:
+      - apparmor:unconfined

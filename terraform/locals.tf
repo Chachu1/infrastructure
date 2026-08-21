@@ -67,13 +67,35 @@ locals {
       port   = 80
       app_domains = [
         "jobs.mhlab.me",
-        "prod-match.mhlab.me",
         "screenshots.mhlab.me",
         "backfill.mhlab.me",
       ]
+      # prod-match.mhlab.me moved to review-api LXC (native systemd) during
+      # Docker-in-LXC migration - do not re-add here or Caddy gets a duplicate
+      # site block.
       wildcard_domain = "*.backend.mhlab.me"
     }
 
+    # App LXCs - 10.0.0.61-69 reserved for application LXCs
+    categorizer = {
+      vm_id        = 260
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.61/24"
+      internal_dns = "categorizer"
+    }
+
+    review-api = {
+      vm_id        = 261
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.62/24"
+      domain       = "prod-match.mhlab.me"
+      port         = 8013
+      internal_dns = "review-api"
+    }
 
     # Example VM (uncomment to add a VM service):
     # my-vm = {

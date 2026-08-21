@@ -1,0 +1,24 @@
+#!/bin/bash
+# Check if WireGuard endpoint DNS has changed and restart if needed
+
+ENDPOINT_HOST="{{ wireguard_endpoint | regex_replace(':.*', '') }}"
+ENDPOINT_PORT="{{ wireguard_endpoint | regex_replace('.*:', '') }}"
+
+CURRENT_IP=$(dig +short "$ENDPOINT_HOST" | head -1)
+WG_ENDPOINT=$(wg show wg0 endpoints 2>/dev/null | awk '{print $2}' | cut -d: -f1)
+
+if [ -z "$CURRENT_IP" ]; then
+    echo "[$(date)] DNS resolution failed for $ENDPOINT_HOST" >&2
+    exit 1
+fi
+
+if [ -z "$WG_ENDPOINT" ]; then
+    echo "[$(date)] Could not read WireGuard endpoint, restarting" >&2
+    systemctl restart wg-quick@wg0
+    exit 0
+fi
+
+if [ "$CURRENT_IP" != "$WG_ENDPOINT" ]; then
+    echo "[$(date)] Endpoint IP changed ($WG_ENDPOINT -> $CURRENT_IP), restarting WireGuard" >&2
+    systemctl restart wg-quick@wg0
+fi

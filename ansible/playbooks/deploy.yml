@@ -1,0 +1,141 @@
+---
+# Generic immutable-release deploy for systemd app LXCs.
+# Usage: ansible-playbook playbooks/deploy.yml -e service=categorizer -e sha=<commit-sha>
+# (or export DEPLOY_SHA and SERVICE and omit -e sha).
+#
+# Hosts the playbook targets is the inventory host/group named by `service`
+# (categorizer, review-api, ...). Per-service app vars live in
+# playbooks/deploy/vars/<service>.yml.
+
+- name: Deploy {{ service }}
+  hosts: "{{ service | default(lookup('env', 'SERVICE') | default('categorizer', true)) }}"
+  vars_files:
+    - "deploy/vars/{{ service | default(lookup('env', 'SERVICE') | default('categorizer', true)) }}.yml"
+  vars:
+    service: "{{ lookup('env', 'SERVICE', default='categorizer') }}"
+    sha: "{{ lookup('env', 'DEPLOY_SHA', default='') }}"
+
+  tasks:
+    - name: Require a commit SHA
+      fail:
+        msg: "Provide the commit SHA to deploy via -e sha=<commit-sha> (or set DEPLOY_SHA)"
+      when: sha | length == 0
+
+    - block:
+        # --- Lock: serialize deploys against maintenance runs ---
+        - name: Check deploy lock
+          stat:
+            path: "/tmp/deploy-{{ service }}.lock"
+          register: deploy_lock
+
+        - name: Fail if a deploy is already running
+          fail:
+            msg: "A deploy for {{ service }} is already running ({{ deploy_lock.stat.path }} present)"
+          when: deploy_lock.stat.exists
+
+        - name: Create deploy lock
+          file:
+            path: "/tmp/deploy-{{ service }}.lock"
+            state: touch
+          register: deploy_lock_created
+
+        # --- Refresh unit + env from current vars (idempotent) ---
+        - name: Refresh systemd unit and env file
+          include_role:
+            name: app_systemd
+
+        # --- Release deploy ---
+        - name: Set release facts
+          set_fact:
+            release_dir: "/opt/{{ service }}/releases/{{ sha }}"
+            repo_bare: "/opt/{{ service }}/shared/repo.git"
+
+        - name: Check if release already exists
+          stat:
+            path: "{{ release_dir }}"
+          register: release_stat
+
+        - name: Ensure bare clone of app repo exists
+          command: "git clone --bare --branch {{ app_branch }} {{ app_repo_url }} {{ repo_bare }}"
+          args:
+            creates: "{{ repo_bare }}"
+          become: true
+          become_user: "{{ app_user }}"
+
+        - name: Fetch latest refs
+          command: "git --git-dir={{ repo_bare }} fetch origin --tags --prune '+refs/heads/*:refs/heads/*'"
+          changed_when: false
+          become: true
+          become_user: "{{ app_user }}"
+
+        - name: Verify commit exists
+          command: "git --git-dir={{ repo_bare }} rev-parse --verify --quiet '{{ sha }}^{commit}'"
+          register: sha_verify
+          changed_when: false
+          failed_when: sha_verify.rc != 0
+          become: true
+          become_user: "{{ app_user }}"
+
+        - name: Export release from git archive
+          shell: "mkdir -p {{ release_dir }} && git --git-dir={{ repo_bare }} archive {{ sha }} | tar -x -C {{ release_dir }}"
+          when: not release_stat.stat.exists
+          become: true
+          become_user: "{{ app_user }}"
+
+        - name: Build release venv
+          shell: |
+            cd {{ release_dir }}
+            uv venv venv
+            if [ -f requirements.txt ]; then
+              uv pip install --python venv/bin/python -r requirements.txt
+            else
+              uv pip install --python venv/bin/python .
+            fi
+          when: not release_stat.stat.exists
+          become: true
+          become_user: "{{ app_user }}"
+
+        - name: Create new current symlink
+          command: "ln -sfn {{ release_dir }} /opt/{{ service }}/current.new"
+          become: true
+
+        - name: Atomically swap current symlink
+          command: "mv -Tf /opt/{{ service }}/current.new /opt/{{ service }}/current"
+          become: true
+
+        - name: Reload systemd
+          systemd:
+            daemon_reload: true
+          become: true
+
+        - name: Restart {{ service }} service
+          systemd:
+            name: "{{ service }}.service"
+            state: restarted
+            enabled: true
+          become: true
+
+        - name: Wait for health endpoint
+          uri:
+            url: "http://127.0.0.1:{{ app_health_port }}{{ app_health_path }}"
+            status_code: 200
+          register: health
+          until: health.status == 200
+          retries: 30
+          delay: 2
+          changed_when: false
+          become: true
+
+        - name: Prune old releases
+          shell: |
+            cd /opt/{{ service }}/releases
+            ls -1dt */ | tail -n +$(( {{ app_keep_releases }} + 1 )) | xargs -r rm -rf --
+          changed_when: false
+          become: true
+
+      always:
+        - name: Release deploy lock
+          file:
+            path: "/tmp/deploy-{{ service }}.lock"
+            state: absent
+          when: deploy_lock_created is defined and deploy_lock_created.changed

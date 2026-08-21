@@ -1,0 +1,92 @@
+name: Deploy App
+
+# Per-service immutable-release deploys triggered from the Price Tracker repo
+# via a repository_dispatch event:
+#
+#   gh api -X POST repos/Chachu1/infrastructure/dispatches \
+#     -F event_type=deploy-app \
+#     -F "client_payload[service]=categorizer" \
+#     -F "client_payload[sha]=<commit-sha>"
+#
+# Only allowlisted services may be deployed; the SHA is validated as a git
+# commit hash before anything runs. Per-service secrets are injected as env
+# vars on the Ansible step and read by playbooks/deploy/vars/<service>.yml
+# via lookup('env', ...). They are no_log in Ansible.
+
+on:
+  repository_dispatch:
+    types: [deploy-app]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-app-${{ github.event.client_payload.service }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, proxmox]
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p /home/runner/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_ed25519
+          chmod 600 /home/runner/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > /home/runner/.ssh/id_ed25519.pub
+          echo "${{ secrets.PROXMOX_SSH_KEY }}" > /home/runner/.ssh/proxmox_key
+          chmod 600 /home/runner/.ssh/proxmox_key
+
+      - name: Validate payload
+        id: validate
+        run: |
+          SERVICE="${{ github.event.client_payload.service }}"
+          SHA="${{ github.event.client_payload.sha }}"
+          case "$SERVICE" in
+            categorizer|review-api|enrichment-worker|local-scraper|screenshot-service)
+              ;;
+            *)
+              echo "::error::service '$SERVICE' not in allowlist"
+              exit 1
+              ;;
+          esac
+          if ! echo "$SHA" | grep -qE '^[0-9a-f]{7,40}$'; then
+            echo "::error::sha '$SHA' is not a valid git commit hash"
+            exit 1
+          fi
+          echo "service=$SERVICE" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Run Ansible deploy
+        id: deploy
+        working-directory: ansible
+        run: ansible-playbook playbooks/deploy.yml -e service=${{ steps.validate.outputs.service }} -e sha=${{ steps.validate.outputs.sha }}
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+          # App secrets are read by playbooks/deploy/vars/<service>.yml via
+          # lookup('env', ...). Empty values are written verbatim and no_log
+          # keeps them out of the run log. Add new secrets here as needed.
+          PG_DSN: ${{ secrets.PG_DSN }}
+          CATEGORIZER_PG_DSN: ${{ secrets.CATEGORIZER_PG_DSN }}
+          REVIEW_API_PG_DSN: ${{ secrets.REVIEW_API_PG_DSN }}
+          OPENROUTER_CATEGORIZER_KEY: ${{ secrets.OPENROUTER_CATEGORIZER_KEY }}
+          OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
+          REVIEW_API_BEARER_TOKEN: ${{ secrets.REVIEW_API_BEARER_TOKEN }}
+          # Shared infra secrets (same set the site.yml ansible job uses).
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WIREGUARD_PRIVATE_KEY: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
+          POSTGRES_MOHSIN_PASSWORD: ${{ secrets.POSTGRES_MOHSIN_PASSWORD }}
+          POSTGRES_PRICETRACKER_PASSWORD: ${{ secrets.POSTGRES_PRICETRACKER_PASSWORD }}
+
+      - name: Get service logs on failure
+        if: steps.deploy.outcome == 'failure'
+        working-directory: ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible ${{ steps.validate.outputs.service }} -m shell -a 'journalctl -u ${{ steps.validate.outputs.service }} --no-pager -n 100'

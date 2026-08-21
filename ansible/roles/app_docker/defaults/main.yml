@@ -1,0 +1,17 @@
+---
+# Generic Docker-compose application role (used for browser services only:
+# enrichment-worker, local-scraper, screenshot-service). Depends on docker_host
+# for the Docker engine.
+
+app_name: "app"
+app_user: "{{ app_name }}"
+app_group: "{{ app_name }}"
+
+app_port: 8000
+app_health_path: "/health"
+app_health_port: "{{ app_port }}"
+
+app_compose_services: {}
+app_env_vars: {}
+app_secrets: {}
+app_env: "{{ app_env_vars | combine(app_secrets) }}"
