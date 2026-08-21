@@ -8,10 +8,6 @@ caddy_hosts:
   port: 80
   scheme: http
 - backend: 10.0.0.60
-  domain: prod-match.mhlab.me
-  port: 80
-  scheme: http
-- backend: 10.0.0.60
   domain: screenshots.mhlab.me
   port: 80
   scheme: http
@@ -27,13 +23,19 @@ caddy_hosts:
   domain: proxmox.mhlab.me
   port: 8006
   scheme: https
+- backend: 10.0.0.62
+  domain: prod-match.mhlab.me
+  port: 8013
+  scheme: http
 - backend: 10.0.0.51
   domain: uptime.mhlab.me
   port: 3001
   scheme: http
 dns_records:
+  categorizer: 10.0.0.61
   coolify: 10.0.0.60
   gateway: 10.0.0.10
   postgres: 10.0.0.20
   proxmox: 10.0.0.1
+  review-api: 10.0.0.62
   uptime-kuma: 10.0.0.51
