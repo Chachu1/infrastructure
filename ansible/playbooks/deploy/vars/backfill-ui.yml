@@ -1,0 +1,26 @@
+---
+# Per-service vars for backfill-ui (used by playbooks/deploy.yml).
+# Mirrors playbooks/hosts/backfill-ui.yml - keep both in sync.
+
+app_name: backfill-ui
+app_user: backfill-ui
+app_group: backfill-ui
+app_port: 8012
+app_health_path: /health
+app_health_port: 8012
+app_health_check: "http"
+app_working_dir: "/opt/backfill-ui/current/coolify/backfill-ui"
+app_requirements: "coolify/backfill-ui/requirements.txt"
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/opt/backfill-ui/current/venv/bin/uvicorn app:app --host 0.0.0.0 --port 8012"
+app_env_vars:
+  APP_ENV: production
+  APP_PORT: "8012"
+  LABELING_DATA_DIR: "/var/lib/backfill-ui/labeling"
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY', default='') }}"
+  SCRAPED_DATA_BUCKET: "{{ lookup('env', 'SCRAPED_DATA_BUCKET', default='') }}"

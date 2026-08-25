@@ -1,0 +1,46 @@
+---
+# dashboard-api - read-only customer dashboard API (native systemd + venv), LXC
+# Internal service (no public domain until cutover). Serves the Next.js frontend.
+# Run standalone: ansible-playbook playbooks/hosts/dashboard-api.yml
+
+- name: Bootstrap dashboard-api
+  hosts: dashboard-api
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure dashboard-api
+  hosts: dashboard-api
+  vars:
+    dns_configured: true
+    app_name: dashboard-api
+    app_user: dashboard-api
+    app_group: dashboard-api
+    app_port: 8002
+    app_health_path: /health
+    app_health_port: 8002
+    app_health_check: "http"
+    app_working_dir: "/opt/dashboard-api/current/coolify/dashboard-api"
+    app_service_exec: "/opt/dashboard-api/current/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8002"
+    app_env_vars:
+      APP_ENV: production
+      APP_PORT: "8002"
+      ALLOWED_ORIGINS: "*"
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

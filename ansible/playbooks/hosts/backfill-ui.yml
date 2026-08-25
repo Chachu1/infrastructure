@@ -1,0 +1,45 @@
+---
+# backfill-ui - S3 transform backfill UI (native systemd + venv), LXC
+# Serves backfill.mhlab.me after cutover. Runs in parallel with Coolify until then.
+# Run standalone: ansible-playbook playbooks/hosts/backfill-ui.yml
+
+- name: Bootstrap backfill-ui
+  hosts: backfill-ui
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure backfill-ui
+  hosts: backfill-ui
+  vars:
+    dns_configured: true
+    app_name: backfill-ui
+    app_user: backfill-ui
+    app_group: backfill-ui
+    app_port: 8012
+    app_health_path: /health
+    app_health_port: 8012
+    app_health_check: "http"
+    app_working_dir: "/opt/backfill-ui/current/coolify/backfill-ui"
+    app_service_exec: "/opt/backfill-ui/current/venv/bin/uvicorn app:app --host 0.0.0.0 --port 8012"
+    app_env_vars:
+      APP_ENV: production
+      APP_PORT: "8012"
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

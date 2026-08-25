@@ -1,0 +1,23 @@
+---
+# Per-service vars for dashboard-api (used by playbooks/deploy.yml).
+# Mirrors playbooks/hosts/dashboard-api.yml - keep both in sync.
+
+app_name: dashboard-api
+app_user: dashboard-api
+app_group: dashboard-api
+app_port: 8002
+app_health_path: /health
+app_health_port: 8002
+app_health_check: "http"
+app_working_dir: "/opt/dashboard-api/current/coolify/dashboard-api"
+app_requirements: "coolify/dashboard-api/requirements.txt"
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/opt/dashboard-api/current/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8002"
+app_env_vars:
+  APP_ENV: production
+  APP_PORT: "8002"
+  ALLOWED_ORIGINS: "*"
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"

@@ -112,7 +112,27 @@
             if [ -d shared/python ] && [ -f shared/python/pyproject.toml ]; then
               uv pip install --python venv/bin/python -e shared/python || true
             fi
-          when: not release_stat.stat.exists
+          when: not release_stat.stat.exists and (app_runtime | default('python')) == 'python'
+          become: true
+          become_user: "{{ app_user }}"
+
+        - name: Install Chromium for browser services (no Docker)
+          shell: |
+            cd {{ release_dir }}
+            ./venv/bin/python -m playwright install chromium
+            ./venv/bin/python -m playwright install-deps chromium || true
+            # patchright workers use patchright's own browser
+            ./venv/bin/python -m patchright install chromium || true
+          when: not release_stat.stat.exists and (app_browser | default(false))
+          become: true
+          become_user: "{{ app_user }}"
+
+        - name: Build Node release (frontend)
+          shell: |
+            cd {{ release_dir }}/{{ app_node_dir | default('.') }}
+            npm ci
+            npm run build
+          when: not release_stat.stat.exists and (app_runtime | default('python')) == 'node'
           become: true
           become_user: "{{ app_user }}"
 

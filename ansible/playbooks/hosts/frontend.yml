@@ -1,0 +1,59 @@
+---
+# frontend - Next.js 16 dashboard (native Node systemd + LXC, NO Docker).
+# `npm ci && npm run build` in the release dir, then `next start` as a systemd unit.
+# Serves frontend.mhlab.me after cutover.
+# Run standalone: ansible-playbook playbooks/hosts/frontend.yml
+
+- name: Bootstrap frontend
+  hosts: frontend
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python (for Ansible bootstrap)
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Install Node.js 20
+  hosts: frontend
+  become: true
+  tasks:
+    - name: Install Node source + runtime
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y -qq nodejs
+      args:
+        creates: /usr/bin/node
+
+- name: Configure frontend
+  hosts: frontend
+  vars:
+    dns_configured: true
+    app_name: frontend
+    app_user: frontend
+    app_group: frontend
+    app_port: 3000
+    app_health_path: /
+    app_health_port: 3000
+    app_health_check: "http"
+    app_runtime: "node"
+    app_working_dir: "/opt/frontend/current/frontend"
+    app_service_exec: "/usr/bin/npx next start -p 3000 -H 0.0.0.0"
+    app_env_vars:
+      NODE_ENV: production
+      APP_PORT: "3000"
+      NEXT_PUBLIC_DASHBOARD_API_URL: "http://dashboard-api:8002"
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

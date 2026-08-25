@@ -97,6 +97,97 @@ locals {
       internal_dns = "review-api"
     }
 
+    # ── Full LXC migration services (PRD_LXC_FULL_MIGRATION) ──────────────
+    # LXCs are created WITHOUT a `domain` first (Caddy still routes to Coolify
+    # at 10.0.0.60). After the app is deployed + health-checked on the LXC, a
+    # follow-up commit moves `domain` here to cut traffic over (PRD §8).
+
+    job-tracker-api = {
+      vm_id        = 262
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.63/24"
+      port         = 8001
+      internal_dns = "job-tracker-api"
+    }
+
+    dashboard-api = {
+      vm_id        = 263
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.64/24"
+      port         = 8002
+      internal_dns = "dashboard-api"
+    }
+
+    transform-worker = {
+      vm_id        = 264
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.65/24"
+      internal_dns = "transform-worker"
+    }
+
+    backfill-ui = {
+      vm_id        = 265
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.66/24"
+      port         = 8012
+      internal_dns = "backfill-ui"
+    }
+
+    screenshot-service = {
+      vm_id        = 266
+      cores        = 2
+      memory       = 4096
+      disk         = 12
+      ip           = "10.0.0.67/24"
+      port         = 8010
+      internal_dns = "screenshot-service"
+    }
+
+    local-scraper = {
+      vm_id        = 267
+      cores        = 2
+      memory       = 4096
+      disk         = 12
+      ip           = "10.0.0.68/24"
+      internal_dns = "local-scraper"
+    }
+
+    enrichment-worker = {
+      vm_id        = 268
+      cores        = 2
+      memory       = 4096
+      disk         = 12
+      ip           = "10.0.0.69/24"
+      internal_dns = "enrichment-worker"
+    }
+
+    frontend = {
+      vm_id        = 269
+      cores        = 2
+      memory       = 2048
+      disk         = 12
+      ip           = "10.0.0.70/24"
+      port         = 3000
+      internal_dns = "frontend"
+    }
+
+    pg-backup = {
+      vm_id        = 270
+      cores        = 1
+      memory       = 1024
+      disk         = 10
+      ip           = "10.0.0.71/24"
+      internal_dns = "pg-backup"
+    }
+
     # Example VM (uncomment to add a VM service):
     # my-vm = {
     #   type   = "vm"

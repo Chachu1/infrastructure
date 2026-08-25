@@ -48,7 +48,7 @@ jobs:
           SERVICE="${{ github.event.client_payload.service }}"
           SHA="${{ github.event.client_payload.sha }}"
           case "$SERVICE" in
-            categorizer|review-api|enrichment-worker|local-scraper|screenshot-service)
+            categorizer|review-api|enrichment-worker|local-scraper|screenshot-service|job-tracker-api|dashboard-api|transform-worker|backfill-ui|frontend|pg-backup)
               ;;
             *)
               echo "::error::service '$SERVICE' not in allowlist"
@@ -80,6 +80,16 @@ jobs:
           OPENROUTER_CATEGORIZER_KEY: ${{ secrets.OPENROUTER_CATEGORIZER_KEY }}
           OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
           REVIEW_API_BEARER_TOKEN: ${{ secrets.REVIEW_API_BEARER_TOKEN }}
+          # Secrets consumed by the new migrated services (deploy/vars/*.yml).
+          # Missing secrets resolve to empty strings via lookup('env', ..., default='').
+          JOB_TRACKER_API_TOKEN: ${{ secrets.JOB_TRACKER_API_TOKEN }}
+          SQS_QUEUE_URL: ${{ secrets.SQS_QUEUE_URL }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SCREENSHOT_S3_BUCKET: ${{ secrets.SCREENSHOT_S3_BUCKET }}
+          PG_BACKUP_S3_BUCKET: ${{ secrets.PG_BACKUP_S3_BUCKET }}
+          SCRAPED_DATA_BUCKET: ${{ secrets.SCRAPED_DATA_BUCKET }}
           # Shared infra secrets (same set the site.yml ansible job uses).
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WIREGUARD_PRIVATE_KEY: ${{ secrets.WIREGUARD_PRIVATE_KEY }}

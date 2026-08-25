@@ -1,0 +1,28 @@
+---
+# Per-service vars for screenshot-service (used by playbooks/deploy.yml).
+# Native LXC + system Chromium (no Docker). Mirrors hosts/screenshot-service.yml.
+
+app_name: screenshot-service
+app_user: screenshot-service
+app_group: screenshot-service
+app_port: 8010
+app_health_path: /health
+app_health_port: 8010
+app_health_check: "http"
+app_browser: true
+app_working_dir: "/opt/screenshot-service/current/coolify/screenshot-service"
+app_requirements: "coolify/screenshot-service/requirements.txt"
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/opt/screenshot-service/current/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8010"
+app_env_vars:
+  APP_ENV: production
+  APP_PORT: "8010"
+  SCREENSHOT_WORKER_ENABLED: "true"
+  AWS_REGION: "eu-central-1"
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY', default='') }}"
+  SCREENSHOT_S3_BUCKET: "{{ lookup('env', 'SCREENSHOT_S3_BUCKET', default='') }}"

@@ -1,0 +1,59 @@
+---
+# pg-backup - PostgreSQL dump to S3 (native systemd + LXC, NO Docker).
+# Runs coolify/pg-backup/backup.sh on a loop via a systemd service.
+# Internal service; health checked via systemd active.
+# Run standalone: ansible-playbook playbooks/hosts/pg-backup.yml
+
+- name: Bootstrap pg-backup
+  hosts: pg-backup
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Install postgresql-client + aws cli
+  hosts: pg-backup
+  become: true
+  tasks:
+    - name: Install pg_dump + aws cli
+      apt:
+        name:
+          - postgresql-client
+          - awscli
+        state: present
+        update_cache: yes
+
+- name: Configure pg-backup
+  hosts: pg-backup
+  vars:
+    dns_configured: true
+    app_name: pg-backup
+    app_user: pg-backup
+    app_group: pg-backup
+    app_port: 8000
+    app_health_path: /health
+    app_health_port: 8000
+    app_health_check: "systemd"
+    app_runtime: "script"
+    app_working_dir: "/opt/pg-backup/current/coolify/pg-backup"
+    app_service_exec: "/bin/bash -c 'while true; do /usr/bin/bash /opt/pg-backup/current/coolify/pg-backup/backup.sh; echo \"[pg-backup] sleeping ${BACKUP_INTERVAL_SECONDS:-86400}s\"; sleep ${BACKUP_INTERVAL_SECONDS:-86400}; done'"
+    app_env_vars:
+      APP_ENV: production
+      BACKUP_INTERVAL_SECONDS: "86400"
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

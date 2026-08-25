@@ -86,10 +86,15 @@
     group: root
     mode: "0755"
 
+- name: Check whether an application release is installed
+  stat:
+    path: "/opt/{{ app_name }}/current"
+  register: app_current
+
 - name: Reload systemd and enable service
   systemd:
     name: "{{ app_name }}.service"
-    state: started
+    state: "{{ 'started' if app_current.stat.exists else 'stopped' }}"
     enabled: true
     daemon_reload: true
 

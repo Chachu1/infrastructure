@@ -17,3 +17,12 @@
 - import_playbook: hosts/coolify.yml
 - import_playbook: hosts/categorizer.yml
 - import_playbook: hosts/review-api.yml
+- import_playbook: hosts/job-tracker-api.yml
+- import_playbook: hosts/dashboard-api.yml
+- import_playbook: hosts/transform-worker.yml
+- import_playbook: hosts/backfill-ui.yml
+- import_playbook: hosts/screenshot-service.yml
+- import_playbook: hosts/local-scraper.yml
+- import_playbook: hosts/enrichment-worker.yml
+- import_playbook: hosts/frontend.yml
+- import_playbook: hosts/pg-backup.yml

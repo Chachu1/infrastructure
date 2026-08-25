@@ -1,0 +1,27 @@
+---
+# Per-service vars for transform-worker (used by playbooks/deploy.yml).
+# Mirrors playbooks/hosts/transform-worker.yml - keep both in sync.
+
+app_name: transform-worker
+app_user: transform-worker
+app_group: transform-worker
+app_port: 8000
+app_health_path: /health
+app_health_port: 8000
+app_health_check: "systemd"
+app_working_dir: "/opt/transform-worker/current/coolify/transform-worker"
+app_requirements: "coolify/transform-worker/requirements.txt"
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/opt/transform-worker/current/venv/bin/python -u worker.py"
+app_env_vars:
+  APP_ENV: production
+  JT_POLL_INTERVAL: "10"
+  JOB_TRACKER_URL: "http://job-tracker-api:8001"
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  JOB_TRACKER_API_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY', default='') }}"
+  SCRAPED_DATA_BUCKET: "{{ lookup('env', 'SCRAPED_DATA_BUCKET', default='') }}"

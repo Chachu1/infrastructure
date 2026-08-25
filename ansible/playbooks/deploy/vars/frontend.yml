@@ -1,0 +1,24 @@
+---
+# Per-service vars for frontend (used by playbooks/deploy.yml).
+# Native Node LXC (no Docker): npm ci && npm run build, then `next start`.
+# Mirrors hosts/frontend.yml.
+
+app_name: frontend
+app_user: frontend
+app_group: frontend
+app_port: 3000
+app_health_path: /
+app_health_port: 3000
+app_health_check: "http"
+app_runtime: "node"
+app_node_dir: "frontend"
+app_working_dir: "/opt/frontend/current/frontend"
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/usr/bin/npx next start -p 3000 -H 0.0.0.0"
+app_env_vars:
+  NODE_ENV: production
+  APP_PORT: "3000"
+  NEXT_PUBLIC_DASHBOARD_API_URL: "http://dashboard-api:8002"
+app_secrets: {}
