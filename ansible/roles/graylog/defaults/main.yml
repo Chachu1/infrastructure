@@ -6,6 +6,6 @@
 graylog_dir: /opt/graylog
 graylog_docker_image: "graylog/graylog:6.1"
 graylog_mongodb_image: "mongo:7.0"
-graylog_opensearch_image: "opensearch:2"
+graylog_opensearch_image: "opensearchproject/opensearch:2.17.0"
 graylog_external_uri: "https://graylog.mhlab.me/"
 graylog_elasticsearch_heap: "1g"
