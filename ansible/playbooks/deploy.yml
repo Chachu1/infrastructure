@@ -132,6 +132,9 @@
         - name: Build Node release (frontend)
           shell: |
             cd {{ release_dir }}/{{ app_node_dir | default('.') }}
+            set -a
+            . /etc/{{ service }}/env 2>/dev/null || true
+            set +a
             npm ci
             npm run build
           when: not release_stat.stat.exists and (app_runtime | default('python')) == 'node'

@@ -57,22 +57,20 @@ locals {
     }
 
     coolify = {
-      type   = "vm"
-      vm_id  = 300
-      cores  = 8
-      memory = 8192
-      disk   = 100
-      ip     = "10.0.0.60/24"
-      domain = "coolify.mhlab.me"
-      port   = 80
-      app_domains = [
-        "jobs.mhlab.me",
-        "screenshots.mhlab.me",
-        "backfill.mhlab.me",
-      ]
+      type        = "vm"
+      vm_id       = 300
+      cores       = 8
+      memory      = 8192
+      disk        = 100
+      ip          = "10.0.0.60/24"
+      domain      = "coolify.mhlab.me"
+      port        = 80
+      app_domains = []
       # prod-match.mhlab.me moved to review-api LXC (native systemd) during
       # Docker-in-LXC migration - do not re-add here or Caddy gets a duplicate
       # site block.
+      # jobs/screenshots/backfill cut over to their LXCs (PRD §8) - do not
+      # re-add to app_domains or Caddy gets duplicate site blocks.
       wildcard_domain = "*.backend.mhlab.me"
     }
 
@@ -108,6 +106,7 @@ locals {
       memory       = 2048
       disk         = 10
       ip           = "10.0.0.63/24"
+      domain       = "jobs.mhlab.me"
       port         = 8001
       internal_dns = "job-tracker-api"
     }
@@ -118,6 +117,7 @@ locals {
       memory       = 2048
       disk         = 10
       ip           = "10.0.0.64/24"
+      domain       = "dashboard-api.mhlab.me"
       port         = 8002
       internal_dns = "dashboard-api"
     }
@@ -137,6 +137,7 @@ locals {
       memory       = 2048
       disk         = 10
       ip           = "10.0.0.66/24"
+      domain       = "backfill.mhlab.me"
       port         = 8012
       internal_dns = "backfill-ui"
     }
@@ -147,6 +148,7 @@ locals {
       memory       = 4096
       disk         = 12
       ip           = "10.0.0.67/24"
+      domain       = "screenshots.mhlab.me"
       port         = 8010
       internal_dns = "screenshot-service"
     }
@@ -175,6 +177,7 @@ locals {
       memory       = 2048
       disk         = 12
       ip           = "10.0.0.70/24"
+      domain       = "frontend.mhlab.me"
       port         = 3000
       internal_dns = "frontend"
     }

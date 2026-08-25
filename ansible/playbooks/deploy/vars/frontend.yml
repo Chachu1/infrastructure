@@ -20,5 +20,5 @@ app_service_exec: "/usr/bin/npx next start -p 3000 -H 0.0.0.0"
 app_env_vars:
   NODE_ENV: production
   APP_PORT: "3000"
-  NEXT_PUBLIC_DASHBOARD_API_URL: "http://dashboard-api:8002"
+  NEXT_PUBLIC_DASHBOARD_API_URL: "https://dashboard-api.mhlab.me"
 app_secrets: {}

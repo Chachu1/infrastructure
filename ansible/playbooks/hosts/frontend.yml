@@ -47,7 +47,7 @@
     app_env_vars:
       NODE_ENV: production
       APP_PORT: "3000"
-      NEXT_PUBLIC_DASHBOARD_API_URL: "http://dashboard-api:8002"
+      NEXT_PUBLIC_DASHBOARD_API_URL: "https://dashboard-api.mhlab.me"
   pre_tasks:
     - name: Check distribution is supported
       assert:
