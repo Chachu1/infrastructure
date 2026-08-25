@@ -2,6 +2,20 @@
 # base_user - create the mohsin admin user with passwordless sudo and SSH key.
 # Applied to all LXCs and the coolify VM (see playbooks/hosts/base.yml).
 
+- name: Install sudo for administrative access
+  apt:
+    name: sudo
+    state: present
+    update_cache: true
+
+- name: Ensure sudoers include directory exists
+  file:
+    path: /etc/sudoers.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Create mohsin user
   user:
     name: mohsin
