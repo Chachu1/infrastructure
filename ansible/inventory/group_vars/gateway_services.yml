@@ -19,6 +19,10 @@ caddy_hosts:
   domain: frontend.mhlab.me
   port: 3000
   scheme: http
+- backend: 10.0.0.72
+  domain: graylog.mhlab.me
+  port: 9000
+  scheme: http
 - backend: 10.0.0.63
   domain: jobs.mhlab.me
   port: 8001
@@ -47,6 +51,7 @@ dns_records:
   enrichment-worker: 10.0.0.69
   frontend: 10.0.0.70
   gateway: 10.0.0.10
+  graylog: 10.0.0.72
   job-tracker-api: 10.0.0.63
   local-scraper: 10.0.0.68
   pg-backup: 10.0.0.71
