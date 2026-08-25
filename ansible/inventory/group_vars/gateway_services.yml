@@ -1,23 +1,27 @@
 caddy_hosts:
+- backend: 10.0.0.66
+  domain: backfill.mhlab.me
+  port: 8012
+  scheme: http
 - backend: 10.0.0.60
   domain: coolify.mhlab.me
   port: 80
   scheme: http
 - backend: 10.0.0.60
-  domain: jobs.mhlab.me
-  port: 80
-  scheme: http
-- backend: 10.0.0.60
-  domain: screenshots.mhlab.me
-  port: 80
-  scheme: http
-- backend: 10.0.0.60
-  domain: backfill.mhlab.me
-  port: 80
-  scheme: http
-- backend: 10.0.0.60
   domain: '*.backend.mhlab.me'
   port: 80
+  scheme: http
+- backend: 10.0.0.64
+  domain: dashboard-api.mhlab.me
+  port: 8002
+  scheme: http
+- backend: 10.0.0.70
+  domain: frontend.mhlab.me
+  port: 3000
+  scheme: http
+- backend: 10.0.0.63
+  domain: jobs.mhlab.me
+  port: 8001
   scheme: http
 - backend: 10.0.0.1
   domain: proxmox.mhlab.me
@@ -26,6 +30,10 @@ caddy_hosts:
 - backend: 10.0.0.62
   domain: prod-match.mhlab.me
   port: 8013
+  scheme: http
+- backend: 10.0.0.67
+  domain: screenshots.mhlab.me
+  port: 8010
   scheme: http
 - backend: 10.0.0.51
   domain: uptime.mhlab.me
