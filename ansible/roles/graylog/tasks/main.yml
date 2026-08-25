@@ -63,22 +63,18 @@
   command: docker compose -f {{ graylog_dir }}/docker-compose.yml up -d --remove-orphans
   changed_when: true
 
-- name: Dump Graylog diagnostics
+- name: Capture Graylog diagnostics (compact)
   shell: |
-    {
-      echo "=== vm.max_map_count (inherited from host) ==="; sysctl vm.max_map_count || true
-      echo "=== docker ps ==="; docker ps -a || true
-      echo "=== opensearch logs ==="; docker logs graylog-opensearch --tail 60 2>&1 || true
-      echo "=== graylog logs ==="; docker logs graylog-server --tail 60 2>&1 || true
-      echo "=== mongo logs ==="; docker logs graylog-mongodb --tail 30 2>&1 || true
-      echo "=== curl 127.0.0.1:9000 ==="; curl -sv http://127.0.0.1:9000/ 2>&1 | head -20 || true
-    } | tee /tmp/graylog-diag.txt
+    echo "max_map_count=$(sysctl -n vm.max_map_count 2>/dev/null)"
+    echo "docker_ps=$(docker ps -a --format '{{.Names}} {{.Status}}' 2>/dev/null | tr '\n' ';')"
+    echo "opensearch_tail=$(docker logs graylog-opensearch --tail 6 2>&1 | tail -6 | tr '\n' ' | ')"
+    echo "graylog_tail=$(docker logs graylog-server --tail 6 2>&1 | tail -6 | tr '\n' ' | ')"
+  register: graylog_diag
   failed_when: false
 
 - name: Show Graylog diagnostics
-  command: cat /tmp/graylog-diag.txt
-  failed_when: false
-  register: graylog_diag
+  debug:
+    msg: "{{ graylog_diag.stdout }}"
 
 - name: Wait for Graylog web UI
   uri:
