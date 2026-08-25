@@ -18,6 +18,7 @@ app_keep_releases: 3
 app_service_exec: "/opt/local-scraper/current/venv/bin/python -u worker.py"
 app_env_vars:
   APP_ENV: production
+  AWS_DEFAULT_REGION: "us-east-1"
   JT_POLL_INTERVAL: "15"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
   LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
