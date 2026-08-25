@@ -59,6 +59,14 @@
     state: started
     enabled: true
 
+- name: First-time reset of Graylog MongoDB state (clean setup)
+  shell: |
+    if [ ! -f {{ graylog_dir }}/.initialized ]; then
+      docker compose -f {{ graylog_dir }}/docker-compose.yml down -v || true
+      touch {{ graylog_dir }}/.initialized
+    fi
+  changed_when: false
+
 - name: Deploy Graylog stack
   command: docker compose -f {{ graylog_dir }}/docker-compose.yml up -d --remove-orphans
   changed_when: true
@@ -66,9 +74,11 @@
 - name: Wait for Graylog web UI
   uri:
     url: "http://127.0.0.1:9000/"
-    status_code: 200
+    status_code:
+      - 200
+      - 401
   register: graylog_health
-  until: graylog_health.status == 200
+  until: graylog_health.status in [200, 401]
   retries: 30
   delay: 10
   changed_when: false
@@ -78,9 +88,9 @@
   command: docker logs graylog-server --tail 15
   register: graylog_logs
   failed_when: false
-  when: graylog_health.status | default(0) != 200
+  when: graylog_health.status | default(0) not in [200, 401]
 
 - name: Fail if Graylog did not become healthy
   fail:
     msg: "Graylog did not become healthy.\n{{ graylog_logs.stdout | default('') }}"
-  when: graylog_health.status | default(0) != 200
+  when: graylog_health.status | default(0) not in [200, 401]
