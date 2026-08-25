@@ -1,0 +1,74 @@
+---
+- name: Install Docker engine
+  include_role:
+    name: docker_host
+
+- name: Create graylog directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ graylog_dir }}"
+    - /etc/graylog
+
+# Secrets are generated once and persisted on the LXC at {{ graylog_dir }}/.secrets
+# (not committed to git, not required as CI vars). Re-running is idempotent.
+- name: Generate Graylog secrets if not present
+  shell: |
+    set -e
+    SEC="{{ graylog_dir }}/.secrets"
+    if [ ! -f "$SEC" ]; then
+      MONGO=$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9' | head -c24)
+      OS=$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9' | head -c16)Aa1!
+      SECRET=$(openssl rand -hex 32)
+      ROOT=$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9' | head -c16)Aa1!
+      printf 'MONGO=%s\nOS=%s\nSECRET=%s\nROOT=%s\n' "$MONGO" "$OS" "$SECRET" "$ROOT" > "$SEC"
+      chmod 600 "$SEC"
+    fi
+    cat "$SEC"
+  register: graylog_secrets_raw
+  changed_when: false
+
+- name: Parse Graylog secrets into facts
+  set_fact:
+    graylog_secrets: >-
+      {{ dict(graylog_secrets_raw.stdout_lines | map('split', '=') | list) }}
+
+- name: Render Graylog environment file
+  template:
+    src: env.j2
+    dest: "{{ graylog_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Render docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ graylog_dir }}/docker-compose.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure Docker service is running
+  systemd:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Deploy Graylog stack
+  command: docker compose -f {{ graylog_dir }}/docker-compose.yml up -d --remove-orphans
+  changed_when: true
+
+- name: Wait for Graylog web UI
+  uri:
+    url: "http://127.0.0.1:9000/api/system/lbstatus"
+    status_code: 200
+  register: graylog_health
+  until: graylog_health.status == 200
+  retries: 60
+  delay: 5
+  changed_when: false

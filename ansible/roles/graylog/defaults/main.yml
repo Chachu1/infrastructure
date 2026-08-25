@@ -1,0 +1,11 @@
+---
+# Graylog stack - Docker compose deployment (Graylog + MongoDB + OpenSearch)
+# Reuses the docker_host role for the Docker engine inside the LXC.
+# Secrets live in group_vars/all/vault.yml.
+
+graylog_dir: /opt/graylog
+graylog_docker_image: "graylog/graylog:6.1"
+graylog_mongodb_image: "mongo:7.0"
+graylog_opensearch_image: "opensearch:2"
+graylog_external_uri: "https://graylog.mhlab.me/"
+graylog_elasticsearch_heap: "1g"

@@ -26,3 +26,4 @@
 - import_playbook: hosts/enrichment-worker.yml
 - import_playbook: hosts/frontend.yml
 - import_playbook: hosts/pg-backup.yml
+- import_playbook: hosts/graylog.yml

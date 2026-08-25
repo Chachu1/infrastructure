@@ -191,6 +191,18 @@ locals {
       internal_dns = "pg-backup"
     }
 
+    # Graylog log management (Graylog + MongoDB + OpenSearch via Docker compose)
+    graylog = {
+      vm_id        = 280
+      cores        = 4
+      memory       = 8192
+      disk         = 60
+      ip           = "10.0.0.72/24"
+      domain       = "graylog.mhlab.me"
+      port         = 9000
+      internal_dns = "graylog"
+    }
+
     # Example VM (uncomment to add a VM service):
     # my-vm = {
     #   type   = "vm"

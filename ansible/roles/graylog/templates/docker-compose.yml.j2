@@ -1,0 +1,52 @@
+# Managed by Ansible
+# Graylog + MongoDB + OpenSearch stack
+services:
+  mongodb:
+    image: {{ graylog_mongodb_image }}
+    container_name: graylog-mongodb
+    volumes:
+      - mongo_data:/data/db
+    env_file:
+      - {{ graylog_dir }}/.env
+    restart: unless-stopped
+
+  opensearch:
+    image: {{ graylog_opensearch_image }}
+    container_name: graylog-opensearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms{{ graylog_elasticsearch_heap }} -Xmx{{ graylog_elasticsearch_heap }}"
+    env_file:
+      - {{ graylog_dir }}/.env
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    restart: unless-stopped
+
+  graylog:
+    image: {{ graylog_docker_image }}
+    container_name: graylog-server
+    depends_on:
+      - mongodb
+      - opensearch
+    environment:
+      GRAYLOG_HTTP_BIND_ADDRESS: 0.0.0.0:9000
+      GRAYLOG_HTTP_PUBLISH_URI: {{ graylog_external_uri }}
+    env_file:
+      - {{ graylog_dir }}/.env
+    ports:
+      - "9000:9000"
+      - "1514:1514"
+      - "12201:12201/udp"
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  opensearch_data:

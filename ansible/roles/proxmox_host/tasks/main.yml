@@ -46,3 +46,14 @@
     rules
     iptables-save > /etc/iptables/rules.v4
   changed_when: false
+
+# OpenSearch (used by the Graylog LXC) requires a high mmap limit. This is a
+# host-level kernel tunable that unprivileged LXCs inherit, so setting it once
+# on the Proxmox host covers the graylog container.
+- name: Set vm.max_map_count for OpenSearch/Graylog
+  sysctl:
+    name: vm.max_map_count
+    value: "262144"
+    sysctl_set: yes
+    state: present
+    reload: yes
