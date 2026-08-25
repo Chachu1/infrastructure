@@ -63,6 +63,10 @@
   command: docker compose -f {{ graylog_dir }}/docker-compose.yml up -d --remove-orphans
   changed_when: true
 
+- name: Give Graylog/OpenSearch time to initialize
+  pause:
+    seconds: 30
+
 - name: Wait for Graylog web UI
   uri:
     url: "http://127.0.0.1:9000/api/system/lbstatus"
@@ -70,5 +74,17 @@
   register: graylog_health
   until: graylog_health.status == 200
   retries: 60
-  delay: 5
+  delay: 10
   changed_when: false
+  ignore_errors: true
+
+- name: Show Graylog stack logs if not healthy
+  command: docker compose -f {{ graylog_dir }}/docker-compose.yml logs --tail=120
+  register: graylog_logs
+  failed_when: false
+  when: graylog_health.status | default(0) != 200
+
+- name: Fail if Graylog did not become healthy
+  fail:
+    msg: "Graylog did not become healthy.\n\n{{ graylog_logs.stdout }}"
+  when: graylog_health.status | default(0) != 200
