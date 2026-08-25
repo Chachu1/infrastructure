@@ -98,6 +98,7 @@
 
         - name: Build release venv
           shell: |
+            set -eu
             cd {{ release_dir }}
             uv venv venv
             REQS="{{ app_requirements | default('requirements.txt') }}"
