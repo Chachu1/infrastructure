@@ -25,10 +25,10 @@
   tasks:
     - name: Install Node source + runtime
       shell: |
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-        apt-get install -y -qq nodejs
-      args:
-        creates: /usr/bin/node
+        if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y -qq nodejs
+        fi
 
 - name: Configure frontend
   hosts: frontend
