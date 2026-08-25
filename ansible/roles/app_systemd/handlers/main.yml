@@ -3,3 +3,4 @@
   systemd:
     name: "{{ app_name }}.service"
     state: restarted
+  when: app_current.stat.exists | default(false)
