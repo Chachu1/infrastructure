@@ -66,7 +66,7 @@
 - name: Capture Graylog diagnostics (compact)
   shell: |
     echo "max_map_count=$(sysctl -n vm.max_map_count 2>/dev/null)"
-    echo "docker_ps=$(docker ps -a --format '{{.Names}} {{.Status}}' 2>/dev/null | tr '\n' ';')"
+    echo "docker_ps=$(docker ps -a 2>/dev/null | tr '\n' ';')"
     echo "opensearch_tail=$(docker logs graylog-opensearch --tail 6 2>&1 | tail -6 | tr '\n' ' | ')"
     echo "graylog_tail=$(docker logs graylog-server --tail 6 2>&1 | tail -6 | tr '\n' ' | ')"
   register: graylog_diag
