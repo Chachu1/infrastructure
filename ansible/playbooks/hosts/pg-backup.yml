@@ -19,14 +19,30 @@
     - name: Gather facts
       setup:
 
-- name: Install postgresql-client + aws cli
+- name: Install postgresql-client-18 + aws cli
   hosts: pg-backup
   become: true
   tasks:
-    - name: Install pg_dump + aws cli
+    - name: Create APT keyrings directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Add PostgreSQL GPG key
+      shell:
+        cmd: curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /etc/apt/keyrings/postgresql.asc
+
+    - name: Add PostgreSQL APT repository
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/postgresql.asc] https://apt.postgresql.org/pub/repos/apt {{ ansible_distribution_release }}-pgdg main"
+        state: present
+        filename: pgdg
+
+    - name: Install pg_dump 18 + aws cli
       apt:
         name:
-          - postgresql-client
+          - postgresql-client-18
           - awscli
         state: present
         update_cache: yes

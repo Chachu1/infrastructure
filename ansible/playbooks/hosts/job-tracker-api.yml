@@ -39,6 +39,8 @@
       JOB_TRACKER_URL: "http://job-tracker-api:8001"
       AWS_REGION: "us-east-1"
       AWS_DEFAULT_REGION: "us-east-1"
+      SQS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-scraper-queue"
+      LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
   pre_tasks:
     - name: Check distribution is supported
       assert:

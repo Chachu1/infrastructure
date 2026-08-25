@@ -22,9 +22,10 @@ app_env_vars:
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
   AWS_REGION: "us-east-1"
   AWS_DEFAULT_REGION: "us-east-1"
+  SQS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-scraper-queue"
+  LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   API_BEARER_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
   AWS_ACCESS_KEY_ID: "{{ lookup('env', 'JOB_TRACKER_API_AWS_ACCESS_KEY_ID', default='') }}"
   AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'JOB_TRACKER_API_AWS_SECRET_ACCESS_KEY', default='') }}"
-  SQS_QUEUE_URL: "{{ lookup('env', 'SQS_QUEUE_URL', default='') }}"
