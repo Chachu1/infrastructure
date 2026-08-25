@@ -20,6 +20,8 @@ app_env_vars:
   APP_ENV: production
   JT_POLL_INTERVAL: "15"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
+  LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
+  SCRAPED_DATA_BUCKET: "price-tracker-scraped-data"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   JOB_TRACKER_API_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
