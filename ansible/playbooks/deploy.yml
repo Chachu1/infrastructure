@@ -135,6 +135,7 @@
             set -a
             . /etc/{{ service }}/env 2>/dev/null || true
             set +a
+            unset NODE_ENV
             npm ci
             npm run build
           when: not release_stat.stat.exists and (app_runtime | default('python')) == 'node'
