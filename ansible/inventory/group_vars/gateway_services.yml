@@ -32,10 +32,19 @@ caddy_hosts:
   port: 3001
   scheme: http
 dns_records:
+  backfill-ui: 10.0.0.66
   categorizer: 10.0.0.61
   coolify: 10.0.0.60
+  dashboard-api: 10.0.0.64
+  enrichment-worker: 10.0.0.69
+  frontend: 10.0.0.70
   gateway: 10.0.0.10
+  job-tracker-api: 10.0.0.63
+  local-scraper: 10.0.0.68
+  pg-backup: 10.0.0.71
   postgres: 10.0.0.20
   proxmox: 10.0.0.1
   review-api: 10.0.0.62
+  screenshot-service: 10.0.0.67
+  transform-worker: 10.0.0.65
   uptime-kuma: 10.0.0.51
