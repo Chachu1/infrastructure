@@ -68,6 +68,7 @@
     owner: "{{ app_user }}"
     group: "{{ app_group }}"
     mode: "0600"
+    force: "{{ app_force_env | default(false) }}"
 
 - name: Render systemd unit
   template:

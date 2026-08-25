@@ -50,6 +50,8 @@
         - name: Refresh systemd unit and env file
           include_role:
             name: app_systemd
+          vars:
+            app_force_env: true
 
         # --- Release deploy ---
         - name: Set release facts

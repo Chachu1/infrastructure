@@ -20,6 +20,10 @@ app_keep_releases: 3
 # Non-secret environment for the app (rendered into /etc/{{ app_name }}/env).
 app_env_vars: {}
 
+# deploy.yml force-renders the env file (it owns secret delivery); site.yml
+# only creates it if absent so provisioning never clobbers deployed secrets.
+app_force_env: false
+
 # Secret environment, normally populated per-service from GH secrets via
 # lookup('env', ...). app_secrets role keeps the rendered file permissions sane.
 app_secrets: {}
