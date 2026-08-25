@@ -94,3 +94,13 @@
   fail:
     msg: "Graylog did not become healthy.\n{{ graylog_logs.stdout | default('') }}"
   when: graylog_health.status | default(0) not in [200, 401]
+
+- name: Show Graylog setup admin password (first-time only)
+  shell: "docker logs graylog-server 2>&1 | grep -iE \"password '\" | tail -1 || true"
+  register: graylog_setup_pw
+  failed_when: false
+  ignore_errors: true
+
+- name: Report Graylog setup admin password
+  debug:
+    msg: "Graylog setup admin password line: {{ graylog_setup_pw.stdout | default('(using GRAYLOG_ROOT_PASSWORD)') }}"
