@@ -33,7 +33,11 @@
     app_service_exec: "/opt/transform-worker/current/venv/bin/python -u worker.py"
     app_env_vars:
       APP_ENV: production
+      AWS_DEFAULT_REGION: "us-east-1"
+      AWS_REGION: "us-east-1"
+      SCRAPED_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
       JT_POLL_INTERVAL: "10"
+      JOB_TRACKER_URL: "http://job-tracker-api:8001"
   pre_tasks:
     - name: Check distribution is supported
       assert:

@@ -19,10 +19,10 @@ app_service_exec: "/bin/bash -c 'while true; do /usr/bin/bash /opt/pg-backup/cur
 app_env_vars:
   APP_ENV: production
   BACKUP_INTERVAL_SECONDS: "86400"
-  AWS_DEFAULT_REGION: "eu-central-1"
+  AWS_DEFAULT_REGION: "us-east-1"
+  S3_BUCKET: "coolify-backups-s3-price-tracker"
   S3_PATH_PREFIX: "backups/postgres"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
-  S3_BUCKET: "{{ lookup('env', 'PG_BACKUP_S3_BUCKET', default='') }}"
-  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID', default='') }}"
-  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY', default='') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'PG_BACKUP_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'PG_BACKUP_AWS_SECRET_ACCESS_KEY', default='') }}"

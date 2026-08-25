@@ -22,9 +22,9 @@ app_env_vars:
   JT_POLL_INTERVAL: "15"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
   LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
-  SCRAPED_DATA_BUCKET: "price-tracker-scraped-data"
+  SCRAPED_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   JOB_TRACKER_API_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
-  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID', default='') }}"
-  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY', default='') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_SECRET_ACCESS_KEY', default='') }}"

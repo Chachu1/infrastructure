@@ -65,7 +65,7 @@
       JT_POLL_INTERVAL: "15"
       JOB_TRACKER_URL: "http://job-tracker-api:8001"
       LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
-      SCRAPED_DATA_BUCKET: "price-tracker-scraped-data"
+      SCRAPED_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
   pre_tasks:
     - name: Check distribution is supported
       assert:

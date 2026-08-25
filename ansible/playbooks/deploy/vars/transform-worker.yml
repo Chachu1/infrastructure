@@ -17,11 +17,13 @@ app_keep_releases: 3
 app_service_exec: "/opt/transform-worker/current/venv/bin/python -u worker.py"
 app_env_vars:
   APP_ENV: production
+  AWS_DEFAULT_REGION: "us-east-1"
+  AWS_REGION: "us-east-1"
+  SCRAPED_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
   JT_POLL_INTERVAL: "10"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   JOB_TRACKER_API_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
-  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'AWS_ACCESS_KEY_ID', default='') }}"
-  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'AWS_SECRET_ACCESS_KEY', default='') }}"
-  SCRAPED_DATA_BUCKET: "{{ lookup('env', 'SCRAPED_DATA_BUCKET', default='') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'TRANSFORM_WORKER_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'TRANSFORM_WORKER_AWS_SECRET_ACCESS_KEY', default='') }}"

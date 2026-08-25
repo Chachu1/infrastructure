@@ -36,6 +36,9 @@
       APP_ENV: production
       APP_PORT: "8001"
       SCHEDULER_ENABLED: "true"
+      JOB_TRACKER_URL: "http://job-tracker-api:8001"
+      AWS_REGION: "us-east-1"
+      AWS_DEFAULT_REGION: "us-east-1"
   pre_tasks:
     - name: Check distribution is supported
       assert:

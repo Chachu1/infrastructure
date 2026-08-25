@@ -83,13 +83,20 @@ jobs:
           # Secrets consumed by the new migrated services (deploy/vars/*.yml).
           # Missing secrets resolve to empty strings via lookup('env', ..., default='').
           JOB_TRACKER_API_TOKEN: ${{ secrets.JOB_TRACKER_API_TOKEN }}
-          SQS_QUEUE_URL: ${{ secrets.SQS_QUEUE_URL }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SCREENSHOT_S3_BUCKET: ${{ secrets.SCREENSHOT_S3_BUCKET }}
-          PG_BACKUP_S3_BUCKET: ${{ secrets.PG_BACKUP_S3_BUCKET }}
-          SCRAPED_DATA_BUCKET: ${{ secrets.SCRAPED_DATA_BUCKET }}
+          # Least-privilege AWS credentials, scoped per service (deploy/vars/*.yml).
+          LOCAL_SCRAPER_AWS_ACCESS_KEY_ID: ${{ secrets.LOCAL_SCRAPER_AWS_ACCESS_KEY_ID }}
+          LOCAL_SCRAPER_AWS_SECRET_ACCESS_KEY: ${{ secrets.LOCAL_SCRAPER_AWS_SECRET_ACCESS_KEY }}
+          ENRICHMENT_WORKER_AWS_ACCESS_KEY_ID: ${{ secrets.ENRICHMENT_WORKER_AWS_ACCESS_KEY_ID }}
+          ENRICHMENT_WORKER_AWS_SECRET_ACCESS_KEY: ${{ secrets.ENRICHMENT_WORKER_AWS_SECRET_ACCESS_KEY }}
+          SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID: ${{ secrets.SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID }}
+          SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY: ${{ secrets.SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY }}
+          TRANSFORM_WORKER_AWS_ACCESS_KEY_ID: ${{ secrets.TRANSFORM_WORKER_AWS_ACCESS_KEY_ID }}
+          TRANSFORM_WORKER_AWS_SECRET_ACCESS_KEY: ${{ secrets.TRANSFORM_WORKER_AWS_SECRET_ACCESS_KEY }}
+          JOB_TRACKER_API_AWS_ACCESS_KEY_ID: ${{ secrets.JOB_TRACKER_API_AWS_ACCESS_KEY_ID }}
+          JOB_TRACKER_API_AWS_SECRET_ACCESS_KEY: ${{ secrets.JOB_TRACKER_API_AWS_SECRET_ACCESS_KEY }}
+          PG_BACKUP_AWS_ACCESS_KEY_ID: ${{ secrets.PG_BACKUP_AWS_ACCESS_KEY_ID }}
+          PG_BACKUP_AWS_SECRET_ACCESS_KEY: ${{ secrets.PG_BACKUP_AWS_SECRET_ACCESS_KEY }}
           # Shared infra secrets (same set the site.yml ansible job uses).
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WIREGUARD_PRIVATE_KEY: ${{ secrets.WIREGUARD_PRIVATE_KEY }}

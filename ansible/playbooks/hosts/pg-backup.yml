@@ -48,6 +48,9 @@
     app_env_vars:
       APP_ENV: production
       BACKUP_INTERVAL_SECONDS: "86400"
+      AWS_DEFAULT_REGION: "us-east-1"
+      S3_BUCKET: "coolify-backups-s3-price-tracker"
+      S3_PATH_PREFIX: "backups/postgres"
   pre_tasks:
     - name: Check distribution is supported
       assert:

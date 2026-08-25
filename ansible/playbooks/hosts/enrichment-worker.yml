@@ -61,7 +61,11 @@
     app_browser: true
     app_env_vars:
       APP_ENV: production
+      AWS_DEFAULT_REGION: "us-east-1"
+      AWS_REGION: "us-east-1"
+      PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
       JT_POLL_INTERVAL: "15"
+      JOB_TRACKER_URL: "http://job-tracker-api:8001"
   pre_tasks:
     - name: Check distribution is supported
       assert:

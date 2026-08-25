@@ -63,6 +63,9 @@
       APP_ENV: production
       APP_PORT: "8010"
       SCREENSHOT_WORKER_ENABLED: "true"
+      AWS_DEFAULT_REGION: "us-east-1"
+      AWS_REGION: "us-east-1"
+      SCREENSHOT_S3_BUCKET: "price-tracker-screenshots-751626788293-us-east-1"
   pre_tasks:
     - name: Check distribution is supported
       assert:
