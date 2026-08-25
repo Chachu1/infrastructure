@@ -121,7 +121,6 @@
             cd {{ release_dir }}
             ./venv/bin/python -m playwright install chromium
             ./venv/bin/python -m playwright install-deps chromium || true
-            # patchright workers use patchright's own browser
             ./venv/bin/python -m patchright install chromium || true
           when: not release_stat.stat.exists and (app_browser | default(false))
           become: true
