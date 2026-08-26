@@ -32,6 +32,9 @@ id_rsa.pub
 .DS_Store
 Thumbs.db
 
+# Playwright MCP session artifacts
+.playwright-mcp/
+
 # Editor
 .vscode/
 .idea/

@@ -1,0 +1,23 @@
+# Managed by Ansible
+# Ship journald logs to Graylog (Beats input, Lumberjack protocol).
+# journald input with seek: tail ships only NEW logs (no full-history backfill).
+filebeat.inputs:
+  - type: journald
+    enabled: true
+    id: journald
+    seek: tail
+
+# Graylog's Beats input maps source from `beat.hostname` (and `source`).
+processors:
+  - add_fields:
+      target: ""
+      fields:
+        source: "{{ inventory_hostname }}"
+        beat.hostname: "{{ inventory_hostname }}"
+        agent.hostname: "{{ inventory_hostname }}"
+
+output.logstash:
+  hosts: ["{{ filebeat_graylog_host }}:{{ filebeat_graylog_port }}"]
+
+logging.level: warning
+logging.metrics.enabled: false

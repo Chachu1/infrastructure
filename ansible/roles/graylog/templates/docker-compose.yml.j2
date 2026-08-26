@@ -44,6 +44,7 @@ services:
       - {{ graylog_dir }}/.env
     ports:
       - "9000:9000"
+      - "5044:5044"
       - "1514:1514"
       - "12201:12201/udp"
     restart: unless-stopped

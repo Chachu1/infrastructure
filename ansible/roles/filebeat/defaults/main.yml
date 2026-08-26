@@ -1,0 +1,8 @@
+---
+# Filebeat - ships journald and Docker container logs to Graylog.
+# Applied to every LXC via playbooks/hosts/log-shipping.yml (group lxc_apps).
+
+filebeat_version: "8.x"
+filebeat_config_path: /etc/filebeat/filebeat.yml
+filebeat_graylog_host: "10.0.0.72"
+filebeat_graylog_port: 5044

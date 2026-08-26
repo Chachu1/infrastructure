@@ -1,0 +1,25 @@
+---
+# log-shipping - install Filebeat on every app LXC to ship logs to Graylog.
+# Target group is lxc_apps, which is generated from terraform/locals.tf so any
+# future LXC added there is automatically included.
+# Run standalone: ansible-playbook playbooks/hosts/log-shipping.yml
+
+- name: Bootstrap log shipping
+  hosts: lxc_apps
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure log shipping
+  hosts: lxc_apps
+  roles:
+    - filebeat
