@@ -81,33 +81,21 @@
 - name: Wait for Graylog web UI
   uri:
     url: "http://127.0.0.1:9000/"
-    status_code:
-      - 200
-      - 401
+    status_code: 200
   register: graylog_health
-  until: graylog_health.status in [200, 401]
-  retries: 30
+  until: graylog_health.status == 200
+  retries: 36
   delay: 10
   changed_when: false
   ignore_errors: true
 
 - name: Show Graylog logs if not healthy
-  command: docker logs graylog-server --tail 15
+  command: docker logs graylog-server --tail 30
   register: graylog_logs
   failed_when: false
-  when: graylog_health.status | default(0) not in [200, 401]
+  when: graylog_health.status | default(0) != 200
 
 - name: Fail if Graylog did not become healthy
   fail:
     msg: "Graylog did not become healthy.\n{{ graylog_logs.stdout | default('') }}"
-  when: graylog_health.status | default(0) not in [200, 401]
-
-- name: Show Graylog setup admin password (first-time only)
-  shell: "docker logs graylog-server 2>&1 | grep -iE \"password '\" | tail -1 || true"
-  register: graylog_setup_pw
-  failed_when: false
-  ignore_errors: true
-
-- name: Report Graylog setup admin password
-  debug:
-    msg: "Graylog setup admin password line: {{ graylog_setup_pw.stdout | default('(using GRAYLOG_ROOT_PASSWORD)') }}"
+  when: graylog_health.status | default(0) != 200

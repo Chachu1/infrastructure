@@ -11,4 +11,4 @@ graylog_external_uri: "https://graylog.mhlab.me/"
 graylog_elasticsearch_heap: "1g"
 
 # Set to true (and push) to wipe all Graylog data and re-run first-time setup.
-graylog_force_reset: true
+graylog_force_reset: false

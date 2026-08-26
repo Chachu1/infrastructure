@@ -17,6 +17,7 @@ services:
       - discovery.type=single-node
       - bootstrap.memory_lock=true
       - "OPENSEARCH_JAVA_OPTS=-Xms{{ graylog_elasticsearch_heap }} -Xmx{{ graylog_elasticsearch_heap }}"
+      - "DISABLE_SECURITY_PLUGIN=true"
     env_file:
       - {{ graylog_dir }}/.env
     ulimits:
