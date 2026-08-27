@@ -1,7 +1,8 @@
 # Coolify Migration: Hetzner Cloud VM → Proxmox
 
 **Created:** 2026-07-18
-**Status:** In Progress — Phase 0–5 complete, Phase 6 pending (48-hr bake-in)
+**Status:** In Progress — Coolify VM migrated (Phases 0–5); application domains cut over
+to the gateway Caddy / LXC fleet (2026-08-25); Coolify decommission pending (Phase 6).
 
 Migrate the Coolify instance running on a Hetzner Cloud VM (`price-tracker-vps`, 62.238.11.96) to
 the Proxmox server (`germany1`, 168.119.81.167), replacing the existing Coolify VM (ID 300,
@@ -642,6 +643,39 @@ ssh root@10.0.0.10 'curl -sI http://10.0.0.60:80'      # Traefik app routing
 - [ ] `https://proxmox.mhlab.me` — still works
 - [ ] `https://coolify-h.mhlab.me` — no longer exists (expected)
 
+### Phase 5b — Application cutover to gateway Caddy (2026-08-25)
+
+After the Coolify VM was stable, the application domains were moved **off** Coolify's
+Traefik and onto the dedicated LXC fleet, routed directly by the gateway Caddy. This
+removes Coolify from the public request path for all application traffic.
+
+**What changed in `terraform/locals.tf`:**
+- `coolify.app_domains` set to `[]` (empty) so Terraform no longer creates A records
+  pointing at the Coolify VM for `jobs`, `screenshots`, `backfill`.
+- `prod-match.mhlab.me` moved from the `coolify` block to the `review-api` LXC block
+  (`domain = "prod-match.mhlab.me"`, `port = 8013`).
+- The following services gained a `domain` + `port` (Caddy now routes them):
+  `job-tracker-api` (`jobs.mhlab.me:8001`), `dashboard-api`
+  (`dashboard-api.mhlab.me:8002`), `backfill-ui` (`backfill.mhlab.me:8012`),
+  `screenshot-service` (`screenshots.mhlab.me:8010`), `frontend`
+  (`frontend.mhlab.me:3000`).
+- Coolify retains only `coolify.mhlab.me` + `*.backend.mhlab.me` (wildcard for any
+  future Coolify-deployed app).
+
+**Effect on Cloudflare DNS:** the five application A records now resolve to
+`168.119.81.167` (gateway) instead of the Coolify VM. `coolify.mhlab.me` and
+`*.backend.mhlab.me` still point at the Coolify VM.
+
+**Frontend build note:** the frontend is a Next.js static/SSR build. Its API base URL
+(`NEXT_PUBLIC_DASHBOARD_API_URL`) is baked at build time, so it was changed from the
+internal `http://dashboard-api:8002` to `https://dashboard-api.mhlab.me` and the
+frontend was rebuilt. The Node build step in `ansible/playbooks/deploy.yml` sources
+`/etc/frontend/env` with `NODE_ENV` unset (otherwise `npm ci` skips `devDependencies`
+such as `@tailwindcss/postcss` and the build fails).
+
+**Rollback:** revert the `domain`/`app_domains` changes in `locals.tf` and push — one
+Terraform + Deploy cycle returns traffic to Coolify.
+
 ### Phase 6 — Cleanup
 
 #### 6a. Cancel the Hetzner Cloud VM
@@ -717,9 +751,20 @@ Update `docs/infrastructure-reference.md`:
 
 ## Rollback Plan
 
-If migration fails for any reason:
+If the application cutover fails for any reason:
 
-1. **DNS**: Point all 5 app domains back to `62.238.11.96` (Cloudflare API or manually)
+1. **IaC**: Revert the `domain`/`app_domains` changes in `terraform/locals.tf` back to
+   the Coolify routing (re-add the 5 app domains to `coolify.app_domains`, remove their
+   LXC `domain` fields), merge to `main`.
+2. **Terraform**: re-creates the Cloudflare A records pointing at the Coolify VM
+   (`10.0.0.60`); the Deploy workflow reloads Caddy. One cycle, no DNS manual edits.
+3. **Cloud VM**: only relevant if the original Hetzner Cloud VM is still running — then
+   reverting DNS there also works. Otherwise the Proxmox Coolify VM (ID 300) is the
+   fallback target.
+
+If the *original* Coolify-on-cloud migration needs rollback:
+
+1. **DNS**: Point app domains back to `62.238.11.96` (Cloudflare API or manually)
 2. **Cloud VM**: It's still running — services resume immediately
 3. **Proxmox VM 300**: Run `terraform destroy` to clean up
 4. **IaC**: Revert `terraform/locals.tf` to the old `coolify-h.mhlab.me` config, merge to main
@@ -775,10 +820,13 @@ If migration fails for any reason:
 - All 8 containers healthy: `coolify-db`, `coolify-redis`, `coolify-realtime`, `coolify-proxy`, `coolify`, `coolify-sentinel`, `jkprbb1mhpb9kvckev0318vg`, `jkprbb1mhpb9kvckev0318vg-proxy`.
 
 ### Phase 6 — Pending (waiting 48-hr bake-in)
+- [x] Cut application domains over to gateway Caddy / LXC fleet (2026-08-25)
 - [ ] Cancel Hetzner cloud VM (`price-tracker-vps`, 62.238.11.96)
 - [ ] Remove Proxmox host SSH key from cloud VM (if keeping VM for transition)
 - [ ] Remove backup files from `/mnt/backups`
-- [ ] Update `docs/infrastructure-reference.md`
+- [ ] Decommission Coolify app hosting (keep VM only for `coolify.mhlab.me` admin, or retire entirely)
+- [ ] Add `vzdump` backups for application LXCs and verify a restore
+- [x] Update `docs/infrastructure-reference.md` and `docs/coolify-migration-plan.md`
 
 ### Plan deviations
 | Deviation | Reason |

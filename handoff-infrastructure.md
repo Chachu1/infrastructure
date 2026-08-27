@@ -1,6 +1,6 @@
 # Handoff: Infrastructure Repo
 
-**Last updated:** 2026-07-11
+**Last updated:** 2026-08-25
 **Repo:** https://github.com/Chachu1/infrastructure (private)
 **Local path:** `/home/mohsin/Documents/git_repos/infrastructure/`
 
@@ -8,15 +8,27 @@
 
 ## Current State
 
-Infrastructure is fully deployed and operational:
+Infrastructure is fully deployed and operational. Application traffic is routed by the
+gateway Caddy directly to service LXCs (Coolify is out of the public path for app
+domains — see below).
 
 | Service | Status | URL |
 |---------|--------|-----|
 | Proxmox host | Running | 168.119.81.167:8006 |
-| Gateway (vm_id=100) | Running | 10.0.0.10 |
+| Gateway (vm_id=100) | Running | 10.0.0.10 (Caddy/CoreDNS/WireGuard/nftables) |
 | Uptime Kuma (vm_id=251) | Running | https://uptime.mhlab.me |
 | GitHub Runner (vm_id=200) | Running | 10.0.0.2 |
-| Cloudflare DNS | Active | uptime.mhlab.me → 168.119.81.167 (proxied) |
+| Postgres (vm_id=252) | Running | 10.0.0.20:5432 |
+| Coolify VM (vm_id=300) | Running | https://coolify.mhlab.me (admin only) |
+| App LXCs (10.0.0.61–72) | Running | jobs/screenshots/backfill/dashboard-api/frontend/prod-match/graylog |
+| Cloudflare DNS | Active | per-service A records → 168.119.81.167 (proxied) |
+
+### Routing cutover (2026-08-25)
+
+Application domains (`jobs`, `screenshots`, `backfill`, `dashboard-api`, `frontend`,
+`prod-match`) were moved off Coolify's Traefik and onto the gateway Caddy → dedicated
+LXC fleet. Coolify now only serves `coolify.mhlab.me` + `*.backend.mhlab.me`. Rollback
+is a one-line revert in `terraform/locals.tf` (`app_domains` / per-service `domain`).
 
 ---
 

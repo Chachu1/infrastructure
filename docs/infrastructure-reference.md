@@ -1,8 +1,13 @@
 # Infrastructure Reference
 
-**Last updated:** 2026-07-18
+**Last updated:** 2026-08-25
 **Proxmox host:** germany1 (168.119.81.167)
 **Domain:** mhlab.me
+
+> **Routing model (post-cutover):** public traffic now reaches application LXCs
+> through the gateway Caddy, **not** through Coolify. Coolify (10.0.0.60) only
+> serves `coolify.mhlab.me` (admin UI) and the `*.backend.mhlab.me` catch-all for
+> any future Coolify-deployed app. See [Public routing](#public-routing) below.
 
 ---
 
@@ -11,7 +16,7 @@
 ```
 Internet
    │
-   │  Public IP: 168.119.81.167
+   │  Public IP: 168.119.81.167  (Cloudflare proxy, orange cloud)
    │
 ┌──┴──────────────────────────────────────────────────────┐
 │  Proxmox Host (germany1)                                │
@@ -24,12 +29,39 @@ Internet
 │    │                            nftables, WireGuard     │
 │    ├─ postgres      (10.0.0.20) — PostgreSQL 18         │
 │    ├─ uptime-kuma   (10.0.0.51) — monitoring           │
-│    └─ github-runner (10.0.0.2)  — CI/CD                │
+│    ├─ github-runner (10.0.0.2)  — CI/CD                │
+│    ├─ coolify       (10.0.0.60) — Coolify admin only   │
+│    └─ app LXCs      (10.0.0.61–72) — Price Tracker svc │
 │                                                         │
 │  WireGuard client → home network (192.168.12.0/24)      │
 │    └─ gateway IP: 192.168.12.2                          │
 └─────────────────────────────────────────────────────────┘
 ```
+
+### Public routing (Cloudflare → gateway Caddy → service LXC)
+
+Cloudflare proxies each public domain (orange cloud) to `168.119.81.167`. The host
+DNATs 80/443 to the gateway LXC (`10.0.0.10`), where Caddy terminates TLS and
+reverse-proxies to the target LXC over the private bridge. Coolify is **no longer**
+in the public path for application services.
+
+| Public domain | Backend | Port | Served by |
+|---|---|---|---|
+| `uptime.mhlab.me` | 10.0.0.51 | 3001 | uptime-kuma LXC |
+| `proxmox.mhlab.me` | 10.0.0.1 | 8006 (https) | Proxmox host |
+| `prod-match.mhlab.me` | 10.0.0.62 | 8013 | review-api LXC |
+| `jobs.mhlab.me` | 10.0.0.63 | 8001 | job-tracker-api LXC |
+| `dashboard-api.mhlab.me` | 10.0.0.64 | 8002 | dashboard-api LXC |
+| `backfill.mhlab.me` | 10.0.0.66 | 8012 | backfill-ui LXC |
+| `screenshots.mhlab.me` | 10.0.0.67 | 8010 | screenshot-service LXC |
+| `frontend.mhlab.me` | 10.0.0.70 | 3000 | frontend LXC |
+| `graylog.mhlab.me` | 10.0.0.72 | 9000 | graylog LXC |
+| `coolify.mhlab.me` | 10.0.0.60 | 80 | Coolify VM (admin) |
+| `*.backend.mhlab.me` | 10.0.0.60 | 80 | Coolify VM (future apps) |
+
+> Routes are generated from Terraform `locals.tf` (`domain`/`port`) into
+> `ansible/inventory/group_vars/gateway_services.yml` (`caddy_hosts`), then rendered
+> by `configs/caddy/Caddyfile.j2`. Do **not** edit the Caddyfile by hand.
 
 ---
 
@@ -45,14 +77,27 @@ Internet
 ### IP Allocation
 
 
-|       IP        |      Host       |                Role                |
+|       IP        |      Host        |                Role                |
 |-----------------|-----------------|------------------------------------|
 | `10.0.0.1`      |  vmbr1 bridge   |  Proxmox host (gateway for VMs)    |
 | `10.0.0.2`      |  github-runner  |  GitHub Actions self-hosted runner |
 | `10.0.0.10`     |  gateway        |  Reverse proxy, DNS, firewall, VPN |
+| `10.0.0.20`     |  postgres       |  PostgreSQL database (VMID 252)    |
 | `10.0.0.51`     |  uptime-kuma    |  Monitoring dashboard              |
+| `10.0.0.60`     |  coolify        |  Coolify admin VM (app hosting being retired) |
+| `10.0.0.61`     |  categorizer    |  Categorizer worker (internal)     |
+| `10.0.0.62`     |  review-api     |  prod-match.mhlab.me (LXC)         |
+| `10.0.0.63`     |  job-tracker-api|  jobs.mhlab.me (LXC)               |
+| `10.0.0.64`     |  dashboard-api  |  dashboard-api.mhlab.me (LXC)      |
+| `10.0.0.65`     |  transform-worker | Transform worker (internal)      |
+| `10.0.0.66`     |  backfill-ui    |  backfill.mhlab.me (LXC)           |
+| `10.0.0.67`     |  screenshot-service | screenshots.mhlab.me (LXC)     |
+| `10.0.0.68`     |  local-scraper  |  Local scraper (internal)          |
+| `10.0.0.69`     |  enrichment-worker | Enrichment worker (internal)    |
+| `10.0.0.70`     |  frontend       |  frontend.mhlab.me (LXC)           |
+| `10.0.0.71`     |  pg-backup      |  PostgreSQL backup (internal)      |
+| `10.0.0.72`     |  graylog        |  graylog.mhlab.me (LXC)            |
 | `10.0.0.11-19`  |  —              |  Reserved for web applications     |
-| `10.0.0.20`     |  postgres       |  PostgreSQL database (VMID 252)     |
 | `10.0.0.21-29`  |  —              |  Reserved for databases            |
 | `10.0.0.30-39`  |  —              |  Reserved for monitoring           |
 | `10.0.0.50-59`  |  —              |  Reserved for utilities            |
@@ -74,13 +119,30 @@ Internet
 
 ## Current Services
 
+Publicly routed services (Cloudflare → gateway Caddy → LXC):
 
 |   Service    |     IP      |   Port    |               URL              |
 |--------------|-------------|-----------|--------------------------------|
-| Caddy        |  10.0.0.10  |  80, 443  |  https://uptime.mhlab.me       |
+| Caddy        |  10.0.0.10  |  80, 443  |  (TLS termination / reverse proxy) |
 | CoreDNS      |  10.0.0.10  |  53       |  Internal: *.internal.mhlab.me |
 | Uptime Kuma  |  10.0.0.51  |  3001     |  https://uptime.mhlab.me       |
 | Postgres     |  10.0.0.20  |  5432     |  postgres.internal.mhlab.me    |
+| Review API (prod-match) | 10.0.0.62 | 8013 | https://prod-match.mhlab.me |
+| Job Tracker API | 10.0.0.63 | 8001  | https://jobs.mhlab.me          |
+| Dashboard API | 10.0.0.64  | 8002      | https://dashboard-api.mhlab.me |
+| Backfill UI  | 10.0.0.66  | 8012      | https://backfill.mhlab.me      |
+| Screenshot Service | 10.0.0.67 | 8010 | https://screenshots.mhlab.me |
+| Frontend     | 10.0.0.70  |  3000     |  https://frontend.mhlab.me     |
+| Graylog      | 10.0.0.72  |  9000     |  https://graylog.mhlab.me      |
+| Coolify      | 10.0.0.60  |  80       |  https://coolify.mhlab.me (admin only) |
+
+Internal-only services (no public domain): categorizer (61), transform-worker
+(65), local-scraper (68), enrichment-worker (69), pg-backup (71).
+
+> **Routing ownership:** application domains listed above are routed by the gateway
+> Caddy (generated from Terraform). `coolify.mhlab.me` and `*.backend.mhlab.me`
+> remain on the Coolify VM. Keep Coolify's `app_domains` empty in `locals.tf` or
+> Caddy gets duplicate site blocks.
 
 
 
@@ -383,11 +445,25 @@ The gateway LXC connects to your home network as a WireGuard **client**.
 
 ### Public DNS (Cloudflare)
 
-Per-service A records are created automatically by Terraform (proxied through Cloudflare).
+Per-service **A records** are created automatically by Terraform from each service's
+`domain` field in `terraform/locals.tf` (proxied / orange cloud, pointing at
+`168.119.81.167`). There is **no** wildcard `*.mhlab.me` record — each public domain
+is an explicit A record. Coolify's `coolify.mhlab.me` and `*.backend.mhlab.me` are
+the only records that still point at the Coolify VM (`10.0.0.60`).
 
-| Record | Type | Content |
-|--------|------|---------|
-| `*.mhlab.me` | A | 168.119.81.167 |
+| Record | Type | Content | Proxied? |
+|--------|------|---------|----------|
+| `uptime.mhlab.me` | A | 168.119.81.167 | Yes |
+| `proxmox.mhlab.me` | A | 168.119.81.167 | Yes |
+| `prod-match.mhlab.me` | A | 168.119.81.167 | Yes |
+| `jobs.mhlab.me` | A | 168.119.81.167 | Yes |
+| `dashboard-api.mhlab.me` | A | 168.119.81.167 | Yes |
+| `backfill.mhlab.me` | A | 168.119.81.167 | Yes |
+| `screenshots.mhlab.me` | A | 168.119.81.167 | Yes |
+| `frontend.mhlab.me` | A | 168.119.81.167 | Yes |
+| `graylog.mhlab.me` | A | 168.119.81.167 | Yes |
+| `coolify.mhlab.me` | A | 168.119.81.167 | Yes |
+| `*.backend.mhlab.me` | A | 168.119.81.167 | Yes |
 
 ### Internal DNS (CoreDNS on gateway)
 

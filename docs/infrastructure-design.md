@@ -387,7 +387,7 @@ locals {
 
 ### DNS architecture
 
-- **Public DNS:** Cloudflare — points `*.mhlab.me` to Hetzner public IP
+- **Public DNS:** Cloudflare — per-service **A records** (one per `domain` in `locals.tf`) point each public domain at the Hetzner public IP (`168.119.81.167`), proxied (orange cloud). There is no wildcard `*.mhlab.me`; Coolify's `coolify.mhlab.me` / `*.backend.mhlab.me` are the only records still on the Coolify VM.
 - **Internal DNS:** CoreDNS on gateway — resolves `*.internal.mhlab.me` to `10.0.0.x`
 - **All VMs** use `10.0.0.1` as their DNS resolver
 
@@ -538,7 +538,7 @@ journalctl -xe
 #### Caddy can't get TLS certificates
 
 - Ensure port 80 is open and forwarded to the gateway (HTTP-01 challenge)
-- Cloudflare proxy must be enabled (grey cloud) for the domain
+- Cloudflare proxy must be enabled (orange cloud) for the domain
 - Check Caddy logs: `journalctl -u caddy -f`
 
 #### Cloudflare 522 (origin timeout)
