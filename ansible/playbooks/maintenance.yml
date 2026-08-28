@@ -54,17 +54,17 @@
       stat:
         path: /var/run/reboot-required
       register: reboot_required
-      when: ansible_connection != 'local'
+      when: ansible_connection | default('smart') != 'local'
 
     - name: Notify reboot required
       debug:
         msg: "Reboot required on {{ inventory_hostname }}, schedule manually"
       when:
-        - ansible_connection != 'local'
+        - ansible_connection | default('smart') != 'local'
         - reboot_required.stat.exists
 
     # Optional: re-apply common role handlers (restart ssh / fail2ban if their
     # config templates changed). Handlers only run when notified.
     - name: Re-apply common role handlers
       meta: flush_handlers
-      when: ansible_connection != 'local'
+      when: ansible_connection | default('smart') != 'local'
