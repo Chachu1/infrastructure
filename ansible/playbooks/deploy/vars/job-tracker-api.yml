@@ -20,8 +20,10 @@ app_env_vars:
   APP_PORT: "8001"
   SCHEDULER_ENABLED: "true"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
-  AWS_REGION: "us-east-1"
-  AWS_DEFAULT_REGION: "us-east-1"
+  AWS_REGION: "{{ lookup('env', 'AWS_REGION', default='us-east-1') }}"
+  AWS_DEFAULT_REGION: "{{ lookup('env', 'AWS_REGION', default='us-east-1') }}"
+  SENDER_EMAIL: "{{ lookup('env', 'SENDER_EMAIL', default='') }}"
+  RECIPIENT_EMAIL: "{{ lookup('env', 'RECIPIENT_EMAIL', default='') }}"
   SQS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-scraper-queue"
   LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
 app_secrets:

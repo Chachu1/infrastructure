@@ -95,6 +95,11 @@ jobs:
           TRANSFORM_WORKER_AWS_SECRET_ACCESS_KEY: ${{ secrets.TRANSFORM_WORKER_AWS_SECRET_ACCESS_KEY }}
           JOB_TRACKER_API_AWS_ACCESS_KEY_ID: ${{ secrets.JOB_TRACKER_API_AWS_ACCESS_KEY_ID }}
           JOB_TRACKER_API_AWS_SECRET_ACCESS_KEY: ${{ secrets.JOB_TRACKER_API_AWS_SECRET_ACCESS_KEY }}
+          # Email + region for job-tracker-api notifications. Stored in GitHub
+          # as either secrets or variables; fall back across both.
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL || vars.SENDER_EMAIL }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL || vars.RECIPIENT_EMAIL }}
+          AWS_REGION: ${{ secrets.AWS_REGION || vars.AWS_REGION }}
           PG_BACKUP_AWS_ACCESS_KEY_ID: ${{ secrets.PG_BACKUP_AWS_ACCESS_KEY_ID }}
           PG_BACKUP_AWS_SECRET_ACCESS_KEY: ${{ secrets.PG_BACKUP_AWS_SECRET_ACCESS_KEY }}
           # Shared infra secrets (same set the site.yml ansible job uses).
