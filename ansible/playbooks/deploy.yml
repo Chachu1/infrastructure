@@ -17,16 +17,6 @@
     github_token: "{{ lookup('env', 'PRICE_TRACKER_PAT') | default(lookup('env', 'GH_TOKEN'), true) | default('', true) }}"
     _repo_url: "{{ app_repo_url | replace('https://', 'https://x-access-token:' + github_token + '@') if github_token | length > 0 else app_repo_url }}"
 
-  # The filebeat role mixes deprecated `apt_key` with `apt_repository`, leaving a
-  # duplicate Elastic apt source with a conflicting Signed-By. That breaks `apt-get
-  # update` on the LXC, which fails every subsequent deploy before the env is
-  # rendered. Remove the stale Elastic source files so apt works again. filebeat
-  # is already installed, so dropping the repo source is harmless.
-  pre_tasks:
-    - name: Remove conflicting Elastic apt source (broken Signed-By)
-      ansible.builtin.shell: "rm -f /etc/apt/sources.list.d/*elastic* /etc/apt/trusted.gpg.d/elastic*; true"
-      changed_when: false
-
   tasks:
     - name: Require a commit SHA
       fail:

@@ -3,17 +3,28 @@
   apt:
     name:
       - apt-transport-https
+      - ca-certificates
+      - curl
       - gnupg
     state: present
 
+- name: Create APT keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Remove legacy Elastic apt artifacts (global keyring conflict)
+  ansible.builtin.shell: "rm -f /etc/apt/sources.list.d/elastic.list /etc/apt/trusted.gpg.d/elastic*; true"
+  changed_when: false
+
 - name: Add Elastic GPG key
-  apt_key:
-    url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
-    state: present
+  shell:
+    cmd: curl -fsSL https://artifacts.elastic.co/GPG-KEY-elasticsearch -o /etc/apt/keyrings/elastic.asc
 
 - name: Add Elastic APT repository
   apt_repository:
-    repo: "deb https://artifacts.elastic.co/packages/{{ filebeat_version }}/apt stable main"
+    repo: "deb [signed-by=/etc/apt/keyrings/elastic.asc] https://artifacts.elastic.co/packages/{{ filebeat_version }}/apt stable main"
     state: present
     filename: elastic
     update_cache: true
