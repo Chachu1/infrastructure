@@ -9,8 +9,8 @@ app_port: 8000
 app_health_path: /health
 app_health_port: 8000
 app_health_check: "systemd"
-app_working_dir: "/opt/transform-worker/current/coolify/transform-worker"
-app_requirements: "coolify/transform-worker/requirements.txt"
+app_working_dir: "/opt/transform-worker/current/services/transform-worker"
+app_requirements: "services/transform-worker/requirements.txt"
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

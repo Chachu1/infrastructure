@@ -10,8 +10,8 @@ app_health_path: /health
 app_health_port: 8000
 app_health_check: "systemd"
 app_browser: true
-app_working_dir: "/opt/enrichment-worker/current/coolify/enrichment-worker"
-app_requirements: "coolify/enrichment-worker/requirements.txt"
+app_working_dir: "/opt/enrichment-worker/current/services/enrichment-worker"
+app_requirements: "services/enrichment-worker/requirements.txt"
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

@@ -9,8 +9,8 @@ app_port: 8013
 app_health_path: /health
 app_health_port: 8013
 app_health_check: "http"
-app_working_dir: "/opt/review-api/current/coolify/review-api"
-app_requirements: "coolify/review-api/requirements.txt"
+app_working_dir: "/opt/review-api/current/services/review-api"
+app_requirements: "services/review-api/requirements.txt"
 domain: prod-match.mhlab.me
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main

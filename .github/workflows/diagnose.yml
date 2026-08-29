@@ -35,7 +35,7 @@ jobs:
           echo "=== systemd unit ==="
           ansible review-api -m shell -a 'cat /etc/systemd/system/review-api.service; echo ---; cat /etc/review-api/env | sed -E "s/(PG_DSN|TOKEN|PASSWORD|KEY).*=\".*/\1=***/" | head -n 30' 2>&1 | tail -n 100
           echo "=== current symlink and venv ==="
-          ansible review-api -m shell -a 'ls -l /opt/review-api/current 2>&1 | head -n 20; ls -l /opt/review-api/releases/ 2>&1 | head -n 20; cat /opt/review-api/current/coolify/review-api/main.py 2>&1 | head -n 20' 2>&1 | tail -n 100
+          ansible review-api -m shell -a 'ls -l /opt/review-api/current 2>&1 | head -n 20; ls -l /opt/review-api/releases/ 2>&1 | head -n 20; cat /opt/review-api/current/services/review-api/main.py 2>&1 | head -n 20' 2>&1 | tail -n 100
 
       - name: Check gateway and Caddy
         working-directory: ansible

@@ -10,8 +10,8 @@ app_health_path: /health
 app_health_port: 8000
 app_health_check: "systemd"
 app_browser: true
-app_working_dir: "/opt/local-scraper/current/coolify/local-scraper"
-app_requirements: "coolify/local-scraper/requirements.txt"
+app_working_dir: "/opt/local-scraper/current/services/local-scraper"
+app_requirements: "services/local-scraper/requirements.txt"
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

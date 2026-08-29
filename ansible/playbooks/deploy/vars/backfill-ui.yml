@@ -9,8 +9,8 @@ app_port: 8012
 app_health_path: /health
 app_health_port: 8012
 app_health_check: "http"
-app_working_dir: "/opt/backfill-ui/current/coolify/backfill-ui"
-app_requirements: "coolify/backfill-ui/requirements.txt"
+app_working_dir: "/opt/backfill-ui/current/services/backfill-ui"
+app_requirements: "services/backfill-ui/requirements.txt"
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

@@ -1,6 +1,6 @@
 ---
 # Per-service vars for pg-backup (used by playbooks/deploy.yml).
-# Native LXC: runs coolify/pg-backup/backup.sh on a loop. Mirrors hosts/pg-backup.yml.
+# Native LXC: runs services/pg-backup/backup.sh on a loop. Mirrors hosts/pg-backup.yml.
 
 app_name: pg-backup
 app_user: pg-backup
@@ -10,12 +10,12 @@ app_health_path: /health
 app_health_port: 8000
 app_health_check: "systemd"
 app_runtime: "script"
-app_working_dir: "/opt/pg-backup/current/coolify/pg-backup"
-app_requirements: "coolify/pg-backup/requirements.txt"
+app_working_dir: "/opt/pg-backup/current/services/pg-backup"
+app_requirements: "services/pg-backup/requirements.txt"
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3
-app_service_exec: "/bin/bash -c 'while true; do /usr/bin/bash /opt/pg-backup/current/coolify/pg-backup/backup.sh; echo \"[pg-backup] sleeping ${BACKUP_INTERVAL_SECONDS:-86400}s\"; sleep ${BACKUP_INTERVAL_SECONDS:-86400}; done'"
+app_service_exec: "/bin/bash -c 'while true; do /usr/bin/bash /opt/pg-backup/current/services/pg-backup/backup.sh; echo \"[pg-backup] sleeping ${BACKUP_INTERVAL_SECONDS:-86400}s\"; sleep ${BACKUP_INTERVAL_SECONDS:-86400}; done'"
 app_env_vars:
   APP_ENV: production
   BACKUP_INTERVAL_SECONDS: "86400"
