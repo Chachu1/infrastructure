@@ -24,6 +24,7 @@
 - import_playbook: hosts/screenshot-service.yml
 - import_playbook: hosts/local-scraper.yml
 - import_playbook: hosts/enrichment-worker.yml
+- import_playbook: hosts/pdp-enricher.yml
 - import_playbook: hosts/frontend.yml
 - import_playbook: hosts/pg-backup.yml
 - import_playbook: hosts/graylog.yml

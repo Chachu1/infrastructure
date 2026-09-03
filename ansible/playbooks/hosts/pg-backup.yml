@@ -1,6 +1,6 @@
 ---
 # pg-backup - PostgreSQL dump to S3 (native systemd + LXC, NO Docker).
-# Runs coolify/pg-backup/backup.sh on a loop via a systemd service.
+# Runs services/pg-backup/backup.sh on a loop via a systemd service.
 # Internal service; health checked via systemd active.
 # Run standalone: ansible-playbook playbooks/hosts/pg-backup.yml
 
@@ -59,8 +59,8 @@
     app_health_port: 8000
     app_health_check: "systemd"
     app_runtime: "script"
-    app_working_dir: "/opt/pg-backup/current/coolify/pg-backup"
-    app_service_exec: "/bin/bash -c 'while true; do /usr/bin/bash /opt/pg-backup/current/coolify/pg-backup/backup.sh; echo \"[pg-backup] sleeping ${BACKUP_INTERVAL_SECONDS:-86400}s\"; sleep ${BACKUP_INTERVAL_SECONDS:-86400}; done'"
+    app_working_dir: "/opt/pg-backup/current/services/pg-backup"
+    app_service_exec: "/bin/bash -c 'while true; do /usr/bin/bash /opt/pg-backup/current/services/pg-backup/backup.sh; echo \"[pg-backup] sleeping ${BACKUP_INTERVAL_SECONDS:-86400}s\"; sleep ${BACKUP_INTERVAL_SECONDS:-86400}; done'"
     app_env_vars:
       APP_ENV: production
       BACKUP_INTERVAL_SECONDS: "86400"

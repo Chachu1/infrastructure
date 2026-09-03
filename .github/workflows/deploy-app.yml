@@ -48,7 +48,7 @@ jobs:
           SERVICE="${{ github.event.client_payload.service }}"
           SHA="${{ github.event.client_payload.sha }}"
           case "$SERVICE" in
-            categorizer|review-api|enrichment-worker|local-scraper|screenshot-service|job-tracker-api|dashboard-api|transform-worker|backfill-ui|frontend|pg-backup)
+            categorizer|review-api|enrichment-worker|pdp-enricher|local-scraper|screenshot-service|job-tracker-api|dashboard-api|transform-worker|backfill-ui|frontend|pg-backup)
               ;;
             *)
               echo "::error::service '$SERVICE' not in allowlist"

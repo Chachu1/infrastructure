@@ -1,9 +1,12 @@
 ---
-# categorizer - price categorization worker (native systemd + venv), LXC
-# Run standalone: ansible-playbook playbooks/hosts/categorizer.yml
+# pdp-enricher - LLM enrichment worker (native systemd + venv), LXC.
+# Reads PDP JSON from S3, calls OpenRouter to fill spec gaps, writes back to PG.
+# No browser/Chromium needed. Internal worker, no HTTP listener; health checked
+# via systemd active.
+# Run standalone: ansible-playbook playbooks/hosts/pdp-enricher.yml
 
-- name: Bootstrap categorizer
-  hosts: categorizer
+- name: Bootstrap pdp-enricher
+  hosts: pdp-enricher
   gather_facts: false
   tasks:
     - name: Wait for SSH
@@ -17,23 +20,19 @@
     - name: Gather facts
       setup:
 
-- name: Configure categorizer
-  hosts: categorizer
+- name: Configure pdp-enricher
+  hosts: pdp-enricher
   vars:
     dns_configured: true
-    app_name: categorizer
-    app_user: categorizer
-    app_group: categorizer
+    app_name: pdp-enricher
+    app_user: pdp-enricher
+    app_group: pdp-enricher
     app_port: 8000
     app_health_path: /health
     app_health_port: 8000
     app_health_check: "systemd"
-    app_working_dir: "/opt/categorizer/current/services/categorizer"
-    app_service_exec: "/opt/categorizer/current/venv/bin/python -u worker.py"
-    app_env_vars:
-      APP_ENV: production
-      APP_PORT: "8000"
-      MODE: "continuous"
+    app_working_dir: "/opt/pdp-enricher/current"
+    app_service_exec: "/opt/pdp-enricher/current/venv/bin/python -u workers/pdp-enricher/worker.py"
   pre_tasks:
     - name: Check distribution is supported
       assert:

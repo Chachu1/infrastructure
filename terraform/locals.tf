@@ -171,6 +171,15 @@ locals {
       internal_dns = "enrichment-worker"
     }
 
+    pdp-enricher = {
+      vm_id        = 271
+      cores        = 2
+      memory       = 4096
+      disk         = 12
+      ip           = "10.0.0.73/24"
+      internal_dns = "pdp-enricher"
+    }
+
     frontend = {
       vm_id        = 269
       cores        = 2

@@ -30,7 +30,7 @@
     app_health_path: /health
     app_health_port: 8001
     app_health_check: "http"
-    app_working_dir: "/opt/job-tracker-api/current/coolify/job-tracker-api"
+    app_working_dir: "/opt/job-tracker-api/current/services/job-tracker-api"
     app_service_exec: "/opt/job-tracker-api/current/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8001"
     app_env_vars:
       APP_ENV: production

@@ -29,7 +29,7 @@
     app_health_path: /health
     app_health_port: 8000
     app_health_check: "systemd"
-    app_working_dir: "/opt/transform-worker/current/coolify/transform-worker"
+    app_working_dir: "/opt/transform-worker/current/services/transform-worker"
     app_service_exec: "/opt/transform-worker/current/venv/bin/python -u worker.py"
     app_env_vars:
       APP_ENV: production

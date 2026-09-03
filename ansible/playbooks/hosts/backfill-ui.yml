@@ -29,7 +29,7 @@
     app_health_path: /health
     app_health_port: 8012
     app_health_check: "http"
-    app_working_dir: "/opt/backfill-ui/current/coolify/backfill-ui"
+    app_working_dir: "/opt/backfill-ui/current/services/backfill-ui"
     app_service_exec: "/opt/backfill-ui/current/venv/bin/uvicorn app:app --host 0.0.0.0 --port 8012"
     app_env_vars:
       APP_ENV: production

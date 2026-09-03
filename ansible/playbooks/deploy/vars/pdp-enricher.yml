@@ -1,0 +1,37 @@
+---
+# Per-service vars for pdp-enricher (used by playbooks/deploy.yml).
+# Native LXC, no browser. Reads PDP JSON from S3 + OpenRouter LLM enrichment.
+# Mirrors playbooks/hosts/pdp-enricher.yml - keep both in sync.
+
+app_name: pdp-enricher
+app_user: pdp-enricher
+app_group: pdp-enricher
+app_port: 8000
+app_health_path: /health
+app_health_port: 8000
+app_health_check: "systemd"
+app_browser: false
+# Repo-root working dir: worker.py imports `src.transform.models` and the
+# shared lib is installed from shared/python by the deploy venv build.
+app_working_dir: "/opt/pdp-enricher/current"
+app_requirements: "workers/pdp-enricher/requirements.txt"
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/opt/pdp-enricher/current/venv/bin/python -u workers/pdp-enricher/worker.py"
+app_env_vars:
+  APP_ENV: production
+  MODE: continuous
+  AWS_DEFAULT_REGION: "us-east-1"
+  AWS_REGION: "us-east-1"
+  PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
+  PDP_ENRICHER_BATCH_SIZE: "5"
+  PDP_ENRICHER_POLL_INTERVAL: "30"
+  PDP_ENRICHER_MAX_CHARS: "12000"
+  ENRICHER_LLM_RATE_LIMIT: "39"
+  PDP_ENRICHER_LLM_MODEL: "nvidia/nemotron-3-super-120b-a12b"
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  OPENROUTER_API_KEY: "{{ lookup('env', 'OPENROUTER_API_KEY', default='') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_SECRET_ACCESS_KEY', default='') }}"
