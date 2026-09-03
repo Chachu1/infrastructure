@@ -33,5 +33,5 @@ app_env_vars:
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   OPENROUTER_API_KEY: "{{ lookup('env', 'OPENROUTER_API_KEY', default='') }}"
-  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_ACCESS_KEY_ID', default='') }}"
-  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_SECRET_ACCESS_KEY', default='') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'PDP_ENRICHER_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'PDP_ENRICHER_AWS_SECRET_ACCESS_KEY', default='') }}"
