@@ -54,6 +54,7 @@ dns_records:
   graylog: 10.0.0.72
   job-tracker-api: 10.0.0.63
   local-scraper: 10.0.0.68
+  pdp-enricher: 10.0.0.73
   pg-backup: 10.0.0.71
   postgres: 10.0.0.20
   proxmox: 10.0.0.1
