@@ -84,6 +84,7 @@ jobs:
           # Missing secrets resolve to empty strings via lookup('env', ..., default='').
           JOB_TRACKER_API_TOKEN: ${{ secrets.JOB_TRACKER_API_TOKEN }}
           OPENROUTER_ENRICHMENT_KEY: ${{ secrets.OPENROUTER_ENRICHMENT_KEY }}
+          OPENROUTER_QUALITY_KEY: ${{ secrets.OPENROUTER_QUALITY_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           # Least-privilege AWS credentials, scoped per service (deploy/vars/*.yml).
           LOCAL_SCRAPER_AWS_ACCESS_KEY_ID: ${{ secrets.LOCAL_SCRAPER_AWS_ACCESS_KEY_ID }}
