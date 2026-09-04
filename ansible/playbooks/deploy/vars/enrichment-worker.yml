@@ -28,4 +28,4 @@ app_secrets:
   JOB_TRACKER_API_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
   AWS_ACCESS_KEY_ID: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_ACCESS_KEY_ID', default='') }}"
   AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_SECRET_ACCESS_KEY', default='') }}"
-  OPENROUTER_API_KEY: "{{ lookup('env', 'OPENROUTER_API_KEY', default='') }}"
+  OPENROUTER_ENRICHMENT_KEY: "{{ lookup('env', 'OPENROUTER_ENRICHMENT_KEY', default='') }}"
