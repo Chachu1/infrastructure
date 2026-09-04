@@ -21,6 +21,8 @@ app_env_vars:
   AWS_DEFAULT_REGION: "us-east-1"
   AWS_REGION: "us-east-1"
   PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
+  PDP_SCRAPE_CONCURRENT: "10"
+  PDP_SCRAPE_BATCH_SIZE: "10"
   JT_POLL_INTERVAL: "15"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
 app_secrets:

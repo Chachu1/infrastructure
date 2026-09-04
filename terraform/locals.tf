@@ -164,8 +164,8 @@ locals {
 
     enrichment-worker = {
       vm_id        = 268
-      cores        = 2
-      memory       = 4096
+      cores        = 4
+      memory       = 8192
       disk         = 12
       ip           = "10.0.0.69/24"
       internal_dns = "enrichment-worker"
