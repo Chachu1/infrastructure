@@ -204,7 +204,7 @@ locals {
     graylog = {
       vm_id        = 280
       cores        = 4
-      memory       = 8192
+      memory       = 16384
       disk         = 60
       ip           = "10.0.0.72/24"
       domain       = "graylog.mhlab.me"

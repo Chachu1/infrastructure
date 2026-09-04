@@ -8,6 +8,8 @@ services:
       - mongo_data:/data/db
     env_file:
       - {{ graylog_dir }}/.env
+    security_opt:
+      - apparmor:unconfined
     restart: unless-stopped
 
   opensearch:
@@ -29,6 +31,8 @@ services:
         hard: 65536
     volumes:
       - opensearch_data:/usr/share/opensearch/data
+    security_opt:
+      - apparmor:unconfined
     restart: unless-stopped
 
   graylog:
@@ -47,6 +51,8 @@ services:
       - "5044:5044"
       - "1514:1514"
       - "12201:12201/udp"
+    security_opt:
+      - apparmor:unconfined
     restart: unless-stopped
 
 volumes:
