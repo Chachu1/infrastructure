@@ -9,6 +9,9 @@ app_port: 8000
 app_health_path: /health
 app_health_port: 8000
 app_health_check: "systemd"
+# Worker pings WATCHDOG=1 after each batch; a wedged batch (Playwright page
+# that never settles) stops pings → systemd restarts the service.
+app_watchdog_sec: "15m"
 app_browser: true
 app_working_dir: "/opt/enrichment-worker/current/services/enrichment-worker"
 app_requirements: "services/enrichment-worker/requirements.txt"

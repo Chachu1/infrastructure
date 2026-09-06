@@ -58,6 +58,7 @@
     app_health_check: "systemd"
     app_working_dir: "/opt/enrichment-worker/current/services/enrichment-worker"
     app_service_exec: "/opt/enrichment-worker/current/venv/bin/python -u worker.py"
+    app_watchdog_sec: "15m"
     app_browser: true
     app_env_vars:
       APP_ENV: production

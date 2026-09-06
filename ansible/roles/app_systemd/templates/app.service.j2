@@ -12,6 +12,9 @@ EnvironmentFile=/etc/{{ app_name }}/env
 ExecStart={{ app_service_exec }}
 Restart=on-failure
 RestartSec=5
+{% if app_watchdog_sec | default('') %}
+WatchdogSec={{ app_watchdog_sec }}
+{% endif %}
 TimeoutStopSec=30
 KillSignal=SIGTERM
 StandardOutput=journal

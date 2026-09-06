@@ -44,4 +44,9 @@ app_working_dir: "/opt/{{ app_name }}/current"
 # Workers like categorizer have no HTTP endpoint.
 app_health_check: "http"
 
+# systemd watchdog (optional). When set (e.g. "15m"), the unit gets WatchdogSec=
+# and the app must send WATCHDOG=1 pings via NOTIFY_SOCKET or systemd restarts
+# it. Only enable for workers that implement _sd_watchdog_ping().
+app_watchdog_sec: ""
+
 app_description: "{{ app_name }} service"
