@@ -26,6 +26,12 @@ app_env_vars:
   PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
   PDP_SCRAPE_CONCURRENT: "10"
   PDP_SCRAPE_BATCH_SIZE: "10"
+  # Retailers whose PDPs are IP-blocked (Cloudflare challenges the datacenter
+  # egress) are routed through a no-auth residential SOCKS5 proxy on the docker
+  # host (192.168.1.207:1080, home LAN). See Price_Tracker
+  # .agents/docs/enrichment-status.md → "Bot Protection / Proxy Routing".
+  # Note: Swas is listed here historically but its 403 is retailer-side (swsg.co
+  # bot protection, not IP-based) — it stays failed; see the same doc.
   PROXY_RETAILERS: "SharafDG,Swas,Emax"
   JT_POLL_INTERVAL: "15"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
