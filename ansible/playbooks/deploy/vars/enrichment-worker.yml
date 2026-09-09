@@ -26,6 +26,7 @@ app_env_vars:
   PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
   PDP_SCRAPE_CONCURRENT: "10"
   PDP_SCRAPE_BATCH_SIZE: "10"
+  PROXY_RETAILERS: "SharafDG,Swas,Emax"
   JT_POLL_INTERVAL: "15"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
 app_secrets:
@@ -35,3 +36,4 @@ app_secrets:
   AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_SECRET_ACCESS_KEY', default='') }}"
   OPENROUTER_ENRICHMENT_KEY: "{{ lookup('env', 'OPENROUTER_ENRICHMENT_KEY', default='') }}"
   OPENROUTER_QUALITY_KEY: "{{ lookup('env', 'OPENROUTER_QUALITY_KEY', default='') }}"
+  SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
