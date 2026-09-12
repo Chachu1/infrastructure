@@ -50,11 +50,4 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
-          ansible 'carrefour-scraper:local-scraper' -m shell -a 'svc=$(hostname); envf=/etc/$svc/env; echo "== $svc =="; grep -E "^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY)=" "$envf" | awk -F= "{v=\$2; printf \"%s len=%d last4=%s\n\", \$1, length(v), substr(v,length(v)-3)}"' 2>&1 | tail -n 20
-
-      - name: AWS credential live test
-        working-directory: ansible
-        env:
-          ANSIBLE_HOST_KEY_CHECKING: "False"
-        run: |
-          ansible 'carrefour-scraper:local-scraper' -m shell -a 'svc=$(hostname); echo "== $svc =="; set -a; . /etc/$svc/env; set +a; P=/opt/$svc/current/venv/bin/python; $P -c "import boto3; print(\"STS\", boto3.client(\"sts\", region_name=\"us-east-1\").get_caller_identity()[\"Arn\"])"; $P -c "import boto3; print(\"SQS\", list(boto3.client(\"sqs\", region_name=\"us-east-1\").list_queues().get(\"QueueUrls\", []))[:2])"' 2>&1 | tail -n 20
+          ansible 'carrefour-scraper:local-scraper' -m shell -a 'svc=$(hostname); echo "== $svc date=$(date -u +%FT%TZ) =="; file_keys=$(grep -c "^AWS_" /etc/$svc/env); echo "env lines=$file_keys"; set -a; . /etc/$svc/env; set +a; P=/opt/$svc/current/venv/bin/python; $P -c "import boto3; c=boto3.Session().get_credentials(); print(\"cred\", c.method, c.access_key[:8]+\"...\"+c.access_key[-4:], \"secretlen\", len(c.secret_key))"' 2>&1
