@@ -1,0 +1,46 @@
+name: Diagnose Service
+
+# Ad-hoc inspection of a deployed app host: systemd status + journal tail.
+# Manual only. Example:
+#   gh workflow run diagnose-service.yml -f service=carrefour-scraper -f lines=300
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: Inventory host / systemd service to inspect
+        required: true
+        default: carrefour-scraper
+      lines:
+        description: journalctl lines to tail
+        required: false
+        default: "200"
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p /home/runner/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /home/runner/.ssh/id_ed25519
+          chmod 600 /home/runner/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PUBLIC_KEY }}" > /home/runner/.ssh/id_ed25519.pub
+
+      - name: Inspect service
+        working-directory: ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          SVC="${{ inputs.service }}"
+          LINES="${{ inputs.lines }}"
+          echo "=== systemctl status ${SVC} ==="
+          ansible "$SVC" -m shell -a "systemctl status ${SVC} --no-pager -l || true" 2>&1 | tail -n 80
+          echo
+          echo "=== journalctl -u ${SVC} -n ${LINES} ==="
+          ansible "$SVC" -m shell -a "journalctl -u ${SVC} -n ${LINES} --no-pager || true" 2>&1 | tail -n 400
