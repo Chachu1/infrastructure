@@ -28,6 +28,11 @@ app_force_env: false
 # lookup('env', ...). app_secrets role keeps the rendered file permissions sane.
 app_secrets: {}
 
+# Extra OS packages the app needs (e.g. xvfb + Chromium libs for a headed
+# browser worker). Installed during provisioning and on every deploy, so a
+# service deploy is self-contained and does not depend on site.yml.
+app_packages: []
+
 # Merged env written to /etc/{{ app_name }}/env (app_env_vars win over secrets
 # on key collisions).
 app_env: "{{ app_env_vars | combine(app_secrets) }}"

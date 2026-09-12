@@ -56,6 +56,12 @@
     update_cache: yes
     cache_valid_time: 3600
 
+- name: Install extra application packages
+  apt:
+    name: "{{ app_packages }}"
+    state: present
+  when: app_packages | length > 0
+
 - name: Install uv
   shell: curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
   args:
