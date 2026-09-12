@@ -44,3 +44,10 @@ jobs:
           echo
           echo "=== journalctl -u ${SVC} -n ${LINES} ==="
           ansible "$SVC" -m shell -a "journalctl -u ${SVC} -n ${LINES} --no-pager || true" 2>&1 | tail -n 400
+
+      - name: AWS credential fingerprint (masked)
+        working-directory: ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+        run: |
+          ansible 'carrefour-scraper:local-scraper' -m shell -a 'svc=$(hostname); envf=/etc/$svc/env; echo "== $svc =="; grep -E "^AWS_(ACCESS_KEY_ID|SECRET_ACCESS_KEY)=" "$envf" | awk -F= "{v=\$2; printf \"%s len=%d last4=%s\n\", \$1, length(v), substr(v,length(v)-3)}"' 2>&1 | tail -n 20
