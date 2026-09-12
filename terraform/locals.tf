@@ -162,6 +162,19 @@ locals {
       internal_dns = "local-scraper"
     }
 
+    # Dedicated Carrefour scraper. Same services/local-scraper code as
+    # local-scraper, but runs headed under Xvfb because Carrefour's Akamai
+    # protection rejects headless browsers, and on its own queue so Carrefour
+    # traffic never competes with the Swas local scraper.
+    carrefour-scraper = {
+      vm_id        = 272
+      cores        = 2
+      memory       = 4096
+      disk         = 12
+      ip           = "10.0.0.74/24"
+      internal_dns = "carrefour-scraper"
+    }
+
     enrichment-worker = {
       vm_id        = 268
       cores        = 4

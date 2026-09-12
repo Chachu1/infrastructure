@@ -1,0 +1,36 @@
+---
+# Per-service vars for carrefour-scraper (used by playbooks/deploy.yml).
+#
+# Carrefour runs on its own LXC because Akamai rejects the Lambda HTTP client
+# and headless browsers. It deploys the same source tree as local-scraper
+# (services/local-scraper) but runs the worker headed under Xvfb and polls the
+# dedicated Carrefour queue. Mirrors hosts/carrefour-scraper.yml.
+
+app_name: carrefour-scraper
+app_user: carrefour-scraper
+app_group: carrefour-scraper
+app_port: 8000
+app_health_path: /health
+app_health_port: 8000
+app_health_check: "systemd"
+app_browser: true
+app_working_dir: "/opt/carrefour-scraper/current/services/local-scraper"
+app_requirements: "services/local-scraper/requirements.txt"
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+# Headed scrape under a virtual display; the worker uses BROWSER_HEADLESS=false.
+app_service_exec: "xvfb-run -a /opt/carrefour-scraper/current/venv/bin/python -u worker.py"
+app_env_vars:
+  APP_ENV: production
+  AWS_DEFAULT_REGION: "us-east-1"
+  JT_POLL_INTERVAL: "15"
+  JOB_TRACKER_URL: "http://job-tracker-api:8001"
+  LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-carrefour-scrape-queue"
+  SCRAPED_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
+  BROWSER_HEADLESS: "false"
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  JOB_TRACKER_API_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_SECRET_ACCESS_KEY', default='') }}"

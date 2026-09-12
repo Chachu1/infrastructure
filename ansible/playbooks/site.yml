@@ -23,6 +23,7 @@
 - import_playbook: hosts/backfill-ui.yml
 - import_playbook: hosts/screenshot-service.yml
 - import_playbook: hosts/local-scraper.yml
+- import_playbook: hosts/carrefour-scraper.yml
 - import_playbook: hosts/enrichment-worker.yml
 - import_playbook: hosts/pdp-enricher.yml
 - import_playbook: hosts/frontend.yml
