@@ -45,6 +45,7 @@ caddy_hosts:
   scheme: http
 dns_records:
   backfill-ui: 10.0.0.66
+  carrefour-scraper: 10.0.0.74
   categorizer: 10.0.0.61
   coolify: 10.0.0.60
   dashboard-api: 10.0.0.64
