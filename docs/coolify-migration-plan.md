@@ -1,8 +1,13 @@
 # Coolify Migration: Hetzner Cloud VM → Proxmox
 
+> **DECOMMISSIONED (2026-09-14):** Coolify VM 300 (`10.0.0.60`) has been deleted. Its
+> `coolify.mhlab.me` and `*.backend.mhlab.me` Cloudflare DNS records and the gateway
+> Caddy site blocks were removed with it. This document is retained as a historical
+> record of the migration; nothing here describes running infrastructure.
+
 **Created:** 2026-07-18
-**Status:** In Progress — Coolify VM migrated (Phases 0–5); application domains cut over
-to the gateway Caddy / LXC fleet (2026-08-25); Coolify decommission pending (Phase 6).
+**Status:** Complete — Coolify decommissioned and VM 300 destroyed (2026-09-14).
+Application domains were cut over to the gateway Caddy / LXC fleet (2026-08-25).
 
 Migrate the Coolify instance running on a Hetzner Cloud VM (`price-tracker-vps`, 62.238.11.96) to
 the Proxmox server (`germany1`, 168.119.81.167), replacing the existing Coolify VM (ID 300,
@@ -743,7 +748,7 @@ Update `docs/infrastructure-reference.md`:
 | Phase 3 (provision) | ~5 min | ~3 min | CI completed in ~90s (Terraform 17s + Ansible 66s) |
 | Phase 4 (restore) | ~15–20 min | ~45 min | App DB restore (14GB uncompressed → 11GB) took ~30 min; SSH key + server fixes added time |
 | Phase 5 (verify) | ~10 min | ~5 min | All services verified green |
-| Phase 6 (cleanup) | After 48 hr bake-in | Pending | |
+| Phase 6 (cleanup) | After 48 hr bake-in | Complete (2026-09-14) | VM 300 removed from `locals.tf`; Terraform destroyed the VM and its DNS records; Ansible removed the Caddy site blocks |
 
 **Actual migration window:** ~1.5 hours (excluding 48-hr bake-in).
 

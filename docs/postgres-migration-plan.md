@@ -1,7 +1,13 @@
 # Postgres Migration: Coolify-managed DB → Standalone LXC
 
+> **SOURCE DECOMMISSIONED (2026-09-14):** The Coolify VM (`10.0.0.60`, VMID 300) that
+> hosted the source standalone PostgreSQL has been deleted. The migration to the
+> standalone Postgres LXC (`10.0.0.20`, VMID 252) is complete. This document is retained
+> as a historical record; the source tables below no longer describe existing hosts.
+
 **Created:** 2026-07-18
-**Status:** Planned
+**Status:** Complete — migrated to the standalone Postgres LXC; source Coolify VM deleted
+(2026-09-14).
 
 Migrate the Coolify-managed standalone PostgreSQL (container `jkprbb1mhpb9kvckev0318vg`,
 postgres:18-alpine, 11 GB `postgres` DB owned by `pricetracker`) off the Coolify VM
@@ -9,8 +15,8 @@ postgres:18-alpine, 11 GB `postgres` DB owned by `pricetracker`) off the Coolify
 migration all 7 Coolify apps reach the database at `postgres.internal.mhlab.me:5432`.
 
 **Out of scope:** `coolify-db` (postgres:15-alpine, the Coolify application's own internal
-metadata database — servers, applications, env vars, sessions) stays on the Coolify VM
-untouched.
+metadata database — servers, applications, env vars, sessions) stayed on the Coolify VM
+untouched (the VM has since been deleted).
 
 ---
 
