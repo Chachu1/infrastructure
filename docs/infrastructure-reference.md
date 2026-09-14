@@ -92,11 +92,13 @@ in the public path for application services.
 | `10.0.0.65`     |  transform-worker | Transform worker (internal)      |
 | `10.0.0.66`     |  backfill-ui    |  backfill.mhlab.me (LXC)           |
 | `10.0.0.67`     |  screenshot-service | screenshots.mhlab.me (LXC)     |
-| `10.0.0.68`     |  local-scraper  |  Local scraper (internal)          |
+| `10.0.0.68`     |  local-scraper  |  Local scraper (internal, headless) |
 | `10.0.0.69`     |  enrichment-worker | Enrichment worker (internal)    |
 | `10.0.0.70`     |  frontend       |  frontend.mhlab.me (LXC)           |
 | `10.0.0.71`     |  pg-backup      |  PostgreSQL backup (internal)      |
 | `10.0.0.72`     |  graylog        |  graylog.mhlab.me (LXC)            |
+| `10.0.0.73`     |  pdp-enricher   |  PDP enrichment worker (internal)  |
+| `10.0.0.74`     |  carrefour-scraper | Carrefour scraper (internal, headed/xvfb) |
 | `10.0.0.11-19`  |  —              |  Reserved for web applications     |
 | `10.0.0.21-29`  |  —              |  Reserved for databases            |
 | `10.0.0.30-39`  |  —              |  Reserved for monitoring           |
@@ -137,7 +139,18 @@ Publicly routed services (Cloudflare → gateway Caddy → LXC):
 | Coolify      | 10.0.0.60  |  80       |  https://coolify.mhlab.me (admin only) |
 
 Internal-only services (no public domain): categorizer (61), transform-worker
-(65), local-scraper (68), enrichment-worker (69), pg-backup (71).
+(65), local-scraper (68), enrichment-worker (69), pg-backup (71), pdp-enricher
+(73), **carrefour-scraper (74)**.
+
+> **`carrefour-scraper` (10.0.0.74)** deploys the `services/local-scraper` code
+> from `Chachu1/Price_Tracker` but is provisioned separately because Carrefour's
+> Akamai protection requires a **headed** browser under `xvfb-run`
+> (`BROWSER_HEADLESS=false`) and its own queue
+> (`price-tracker-carrefour-scrape-queue`). Its AWS keys come from this repo's
+> `LOCAL_SCRAPER_AWS_*` secrets (IAM user `pt-coolify`). See
+> `.agents/playbooks/carrefour-scraper.md` in Price_Tracker.
+> The deploy allowlist lives in `.github/workflows/deploy-app.yml`
+> (`carrefour-scraper`).
 
 > **Routing ownership:** application domains listed above are routed by the gateway
 > Caddy (generated from Terraform). `coolify.mhlab.me` and `*.backend.mhlab.me`
