@@ -56,24 +56,6 @@ locals {
       scheme = "https"
     }
 
-    coolify = {
-      type        = "vm"
-      vm_id       = 300
-      cores       = 8
-      memory      = 8192
-      disk        = 100
-      ip          = "10.0.0.60/24"
-      domain      = "coolify.mhlab.me"
-      port        = 80
-      app_domains = []
-      # prod-match.mhlab.me moved to review-api LXC (native systemd) during
-      # Docker-in-LXC migration - do not re-add here or Caddy gets a duplicate
-      # site block.
-      # jobs/screenshots/backfill cut over to their LXCs (PRD §8) - do not
-      # re-add to app_domains or Caddy gets duplicate site blocks.
-      wildcard_domain = "*.backend.mhlab.me"
-    }
-
     # App LXCs - 10.0.0.61-69 reserved for application LXCs
     categorizer = {
       vm_id        = 260

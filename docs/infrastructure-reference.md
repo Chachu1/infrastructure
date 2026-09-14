@@ -4,10 +4,10 @@
 **Proxmox host:** germany1 (168.119.81.167)
 **Domain:** mhlab.me
 
-> **Routing model (post-cutover):** public traffic now reaches application LXCs
-> through the gateway Caddy, **not** through Coolify. Coolify (10.0.0.60) only
-> serves `coolify.mhlab.me` (admin UI) and the `*.backend.mhlab.me` catch-all for
-> any future Coolify-deployed app. See [Public routing](#public-routing) below.
+> **Routing model:** public traffic reaches application LXCs through the gateway
+> Caddy. Coolify (VM 300, `10.0.0.60`) has been decommissioned, along with its
+> `coolify.mhlab.me` and `*.backend.mhlab.me` records. See
+> [Public routing](#public-routing) below.
 
 ---
 
@@ -30,7 +30,6 @@ Internet
 │    ├─ postgres      (10.0.0.20) — PostgreSQL 18         │
 │    ├─ uptime-kuma   (10.0.0.51) — monitoring           │
 │    ├─ github-runner (10.0.0.2)  — CI/CD                │
-│    ├─ coolify       (10.0.0.60) — Coolify admin only   │
 │    └─ app LXCs      (10.0.0.61–72) — Price Tracker svc │
 │                                                         │
 │  WireGuard client → home network (192.168.12.0/24)      │
@@ -56,8 +55,6 @@ in the public path for application services.
 | `screenshots.mhlab.me` | 10.0.0.67 | 8010 | screenshot-service LXC |
 | `frontend.mhlab.me` | 10.0.0.70 | 3000 | frontend LXC |
 | `graylog.mhlab.me` | 10.0.0.72 | 9000 | graylog LXC |
-| `coolify.mhlab.me` | 10.0.0.60 | 80 | Coolify VM (admin) |
-| `*.backend.mhlab.me` | 10.0.0.60 | 80 | Coolify VM (future apps) |
 
 > Routes are generated from Terraform `locals.tf` (`domain`/`port`) into
 > `ansible/inventory/group_vars/gateway_services.yml` (`caddy_hosts`), then rendered
@@ -84,7 +81,7 @@ in the public path for application services.
 | `10.0.0.10`     |  gateway        |  Reverse proxy, DNS, firewall, VPN |
 | `10.0.0.20`     |  postgres       |  PostgreSQL database (VMID 252)    |
 | `10.0.0.51`     |  uptime-kuma    |  Monitoring dashboard              |
-| `10.0.0.60`     |  coolify        |  Coolify admin VM (app hosting being retired) |
+| `10.0.0.60`     |  —              |  Free (Coolify VM 300 decommissioned) |
 | `10.0.0.61`     |  categorizer    |  Categorizer worker (internal)     |
 | `10.0.0.62`     |  review-api     |  prod-match.mhlab.me (LXC)         |
 | `10.0.0.63`     |  job-tracker-api|  jobs.mhlab.me (LXC)               |
@@ -136,7 +133,6 @@ Publicly routed services (Cloudflare → gateway Caddy → LXC):
 | Screenshot Service | 10.0.0.67 | 8010 | https://screenshots.mhlab.me |
 | Frontend     | 10.0.0.70  |  3000     |  https://frontend.mhlab.me     |
 | Graylog      | 10.0.0.72  |  9000     |  https://graylog.mhlab.me      |
-| Coolify      | 10.0.0.60  |  80       |  https://coolify.mhlab.me (admin only) |
 
 Internal-only services (no public domain): categorizer (61), transform-worker
 (65), local-scraper (68), enrichment-worker (69), pg-backup (71), pdp-enricher
@@ -152,10 +148,9 @@ Internal-only services (no public domain): categorizer (61), transform-worker
 > The deploy allowlist lives in `.github/workflows/deploy-app.yml`
 > (`carrefour-scraper`).
 
-> **Routing ownership:** application domains listed above are routed by the gateway
-> Caddy (generated from Terraform). `coolify.mhlab.me` and `*.backend.mhlab.me`
-> remain on the Coolify VM. Keep Coolify's `app_domains` empty in `locals.tf` or
-> Caddy gets duplicate site blocks.
+> **Routing ownership:** all application domains listed above are routed by the
+> gateway Caddy (generated from Terraform). Coolify has been decommissioned, so
+> there are no Coolify-owned site blocks.
 
 
 
@@ -461,8 +456,7 @@ The gateway LXC connects to your home network as a WireGuard **client**.
 Per-service **A records** are created automatically by Terraform from each service's
 `domain` field in `terraform/locals.tf` (proxied / orange cloud, pointing at
 `168.119.81.167`). There is **no** wildcard `*.mhlab.me` record — each public domain
-is an explicit A record. Coolify's `coolify.mhlab.me` and `*.backend.mhlab.me` are
-the only records that still point at the Coolify VM (`10.0.0.60`).
+is an explicit A record.
 
 | Record | Type | Content | Proxied? |
 |--------|------|---------|----------|
@@ -475,8 +469,6 @@ the only records that still point at the Coolify VM (`10.0.0.60`).
 | `screenshots.mhlab.me` | A | 168.119.81.167 | Yes |
 | `frontend.mhlab.me` | A | 168.119.81.167 | Yes |
 | `graylog.mhlab.me` | A | 168.119.81.167 | Yes |
-| `coolify.mhlab.me` | A | 168.119.81.167 | Yes |
-| `*.backend.mhlab.me` | A | 168.119.81.167 | Yes |
 
 ### Internal DNS (CoreDNS on gateway)
 

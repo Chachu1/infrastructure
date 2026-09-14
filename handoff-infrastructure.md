@@ -19,7 +19,6 @@ domains — see below).
 | Uptime Kuma (vm_id=251) | Running | https://uptime.mhlab.me |
 | GitHub Runner (vm_id=200) | Running | 10.0.0.2 |
 | Postgres (vm_id=252) | Running | 10.0.0.20:5432 |
-| Coolify VM (vm_id=300) | Running | https://coolify.mhlab.me (admin only) |
 | App LXCs (10.0.0.61–72) | Running | jobs/screenshots/backfill/dashboard-api/frontend/prod-match/graylog |
 | Cloudflare DNS | Active | per-service A records → 168.119.81.167 (proxied) |
 
@@ -27,8 +26,11 @@ domains — see below).
 
 Application domains (`jobs`, `screenshots`, `backfill`, `dashboard-api`, `frontend`,
 `prod-match`) were moved off Coolify's Traefik and onto the gateway Caddy → dedicated
-LXC fleet. Coolify now only serves `coolify.mhlab.me` + `*.backend.mhlab.me`. Rollback
-is a one-line revert in `terraform/locals.tf` (`app_domains` / per-service `domain`).
+LXC fleet.
+
+**Coolify decommissioned:** VM 300 (`10.0.0.60`) was removed from
+`terraform/locals.tf`, taking `coolify.mhlab.me` and `*.backend.mhlab.me` with it.
+The gateway's Caddy no longer has any Coolify site blocks.
 
 ---
 

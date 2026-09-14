@@ -14,7 +14,6 @@
 - import_playbook: hosts/gateway.yml
 - import_playbook: hosts/uptime-kuma.yml
 - import_playbook: hosts/postgres.yml
-- import_playbook: hosts/coolify.yml
 - import_playbook: hosts/categorizer.yml
 - import_playbook: hosts/review-api.yml
 - import_playbook: hosts/job-tracker-api.yml
