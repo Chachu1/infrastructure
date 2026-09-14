@@ -3,14 +3,6 @@ caddy_hosts:
   domain: backfill.mhlab.me
   port: 8012
   scheme: http
-- backend: 10.0.0.60
-  domain: coolify.mhlab.me
-  port: 80
-  scheme: http
-- backend: 10.0.0.60
-  domain: '*.backend.mhlab.me'
-  port: 80
-  scheme: http
 - backend: 10.0.0.64
   domain: dashboard-api.mhlab.me
   port: 8002
@@ -47,7 +39,6 @@ dns_records:
   backfill-ui: 10.0.0.66
   carrefour-scraper: 10.0.0.74
   categorizer: 10.0.0.61
-  coolify: 10.0.0.60
   dashboard-api: 10.0.0.64
   enrichment-worker: 10.0.0.69
   frontend: 10.0.0.70
