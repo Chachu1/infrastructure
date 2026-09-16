@@ -27,8 +27,19 @@ app_env_vars:
   SQS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-scraper-queue"
   LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
   CARREFOUR_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-carrefour-scrape-queue"
+  # Matcher V3 (standalone GPU container on the LAN). The legacy v1 matcher
+  # trigger must stay disabled. MATCHER_V3_MIN_COMPLETED_AT suppresses the
+  # historical pipeline_runs backlog on (re-)enable; the scheduler also gates
+  # on the last successful run in code.
+  MATCHER_TRIGGER_ENABLED: "false"
+  MATCHER_V3_ENABLED: "true"
+  MATCHER_V3_DRY_RUN: "false"
+  MATCHER_V3_API_URL: "http://192.168.1.171:8010"
+  MATCHER_V3_HTTP_TIMEOUT_S: "3600"
+  MATCHER_V3_MIN_COMPLETED_AT: "2026-09-16T10:45:00Z"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   API_BEARER_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
   AWS_ACCESS_KEY_ID: "{{ lookup('env', 'JOB_TRACKER_API_AWS_ACCESS_KEY_ID', default='') }}"
   AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'JOB_TRACKER_API_AWS_SECRET_ACCESS_KEY', default='') }}"
+  MATCHER_V3_API_TOKEN: "{{ lookup('env', 'MATCHER_V3_API_TOKEN', default='') }}"

@@ -44,6 +44,13 @@
       SQS_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-scraper-queue"
       LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-local-scrape-queue"
       CARREFOUR_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-carrefour-scrape-queue"
+      # Matcher V3 (standalone GPU container on the LAN); legacy v1 disabled.
+      MATCHER_TRIGGER_ENABLED: "false"
+      MATCHER_V3_ENABLED: "true"
+      MATCHER_V3_DRY_RUN: "false"
+      MATCHER_V3_API_URL: "http://192.168.1.171:8010"
+      MATCHER_V3_HTTP_TIMEOUT_S: "3600"
+      MATCHER_V3_MIN_COMPLETED_AT: "2026-09-16T10:45:00Z"
   pre_tasks:
     - name: Check distribution is supported
       assert:

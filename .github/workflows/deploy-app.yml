@@ -83,6 +83,7 @@ jobs:
           # Secrets consumed by the new migrated services (deploy/vars/*.yml).
           # Missing secrets resolve to empty strings via lookup('env', ..., default='').
           JOB_TRACKER_API_TOKEN: ${{ secrets.JOB_TRACKER_API_TOKEN }}
+          MATCHER_V3_API_TOKEN: ${{ secrets.MATCHER_V3_API_TOKEN }}
           OPENROUTER_ENRICHMENT_KEY: ${{ secrets.OPENROUTER_ENRICHMENT_KEY }}
           OPENROUTER_QUALITY_KEY: ${{ secrets.OPENROUTER_QUALITY_KEY }}
           SCRAPE_PROXY_URL: ${{ secrets.SCRAPE_PROXY_URL }}
