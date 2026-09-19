@@ -28,3 +28,7 @@ app_secrets:
   JOB_TRACKER_API_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
   AWS_ACCESS_KEY_ID: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_ACCESS_KEY_ID', default='') }}"
   AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_SECRET_ACCESS_KEY', default='') }}"
+  # Residential SOCKS5 proxy for tasks flagged proxy=true (scrape_job_catalog.proxy).
+  # Sourced from the SCRAPE_PROXY_URL GitHub variable; see Price_Tracker
+  # .agents/docs/enrichment-status.md -> "Bot Protection / Proxy Routing".
+  SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
