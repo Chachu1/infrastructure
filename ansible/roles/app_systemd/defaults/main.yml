@@ -49,6 +49,23 @@ app_working_dir: "/opt/{{ app_name }}/current"
 # Workers like categorizer have no HTTP endpoint.
 app_health_check: "http"
 
+# systemd restart policy for the unit. "always" keeps worker processes that
+# exit cleanly coming back (e.g. a self-recycling browser worker); the default
+# "on-failure" suits web services that should stay down on a clean exit.
+app_restart: "on-failure"
+
+# Optional cgroup memory limits for the unit (systemd MemoryHigh/MemoryMax).
+# Empty disables. Use "2G"/"3G" style values to bound a leaking worker before
+# it saturates the container cgroup.
+app_memory_high: ""
+app_memory_max: ""
+
+# Optional additional systemd units to provision on the same host (e.g. a
+# second worker running from the same release). Each entry is a dict:
+#   name, description, working_dir, exec, restart, memory_high, memory_max,
+#   env (non-secret), env_secrets (secret).
+app_extra_units: []
+
 # systemd watchdog (optional). When set (e.g. "15m"), the unit gets WatchdogSec=
 # and the app must send WATCHDOG=1 pings via NOTIFY_SOCKET or systemd restarts
 # it. Only enable for workers that implement _sd_watchdog_ping().

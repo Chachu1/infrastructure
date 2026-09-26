@@ -162,6 +162,14 @@
             enabled: true
           become: true
 
+        - name: Restart extra units
+          systemd:
+            name: "{{ item.name }}.service"
+            state: restarted
+            enabled: true
+          become: true
+          loop: "{{ app_extra_units | default([]) }}"
+
         - name: Wait for health endpoint (http)
           uri:
             url: "http://127.0.0.1:{{ app_health_port }}{{ app_health_path }}"
@@ -183,6 +191,19 @@
           delay: 2
           become: true
           when: app_health_check | default('http') != 'http'
+
+        - name: Wait for extra units active (worker)
+          shell: |
+            for u in {{ app_extra_units | map(attribute='name') | join(' ') }}; do
+              systemctl is-active --quiet "$u.service" || exit 1
+            done
+          register: extra_active
+          until: extra_active.rc == 0
+          retries: 15
+          delay: 2
+          changed_when: false
+          become: true
+          when: app_extra_units | default([]) | length > 0
 
         - name: Prune old releases
           shell: |

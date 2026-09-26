@@ -29,6 +29,7 @@ resource "proxmox_virtual_environment_container" "app" {
 
   memory {
     dedicated = each.value.memory
+    swap      = try(each.value.swap, 0)
   }
 
   disk {

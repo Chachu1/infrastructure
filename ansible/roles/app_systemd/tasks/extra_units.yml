@@ -1,0 +1,44 @@
+---
+# Extra systemd units (e.g. a second worker on the same host). Each unit shares
+# the main service's user and release dir; only its ExecStart and env differ.
+
+- name: Create extra unit config directories
+  file:
+    path: "/etc/{{ item.name }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ app_extra_units }}"
+
+- name: Render extra unit env files
+  template:
+    src: extra_unit.env.j2
+    dest: "/etc/{{ item.name }}/env"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0600"
+    force: "{{ app_force_env | default(false) }}"
+  loop: "{{ app_extra_units }}"
+
+- name: Render extra unit files
+  template:
+    src: extra_unit.service.j2
+    dest: "/etc/systemd/system/{{ item.name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ app_extra_units }}"
+  register: _extra_units
+
+- name: Reload systemd for extra units
+  systemd:
+    daemon_reload: true
+  when: _extra_units.changed
+
+- name: Enable extra units
+  systemd:
+    name: "{{ item.name }}.service"
+    state: "{{ 'started' if app_current.stat.exists else 'stopped' }}"
+    enabled: true
+  loop: "{{ app_extra_units }}"

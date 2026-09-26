@@ -1,0 +1,27 @@
+[Unit]
+Description={{ item.description | default(item.name) }}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ item.working_dir | default(app_working_dir) }}
+EnvironmentFile=/etc/{{ item.name }}/env
+ExecStart={{ item.exec }}
+Restart={{ item.restart | default('always') }}
+RestartSec=5
+{% if item.memory_high | default('') %}
+MemoryHigh={{ item.memory_high }}
+{% endif %}
+{% if item.memory_max | default('') %}
+MemoryMax={{ item.memory_max }}
+{% endif %}
+TimeoutStopSec=30
+KillSignal=SIGTERM
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

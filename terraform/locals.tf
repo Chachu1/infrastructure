@@ -148,10 +148,16 @@ locals {
     # local-scraper, but runs headed under Xvfb because Carrefour's Akamai
     # protection rejects headless browsers, and on its own queue so Carrefour
     # traffic never competes with the Swas local scraper.
+    #
+    # Runs TWO headed workers (search scraper + PDP fetcher), each capped at
+    # 3 GiB by its systemd unit, hence memory is 6 GiB with 2 GiB swap so a
+    # Chromium leak degrades to paging instead of stalling the node on I/O
+    # (see Price_Tracker .agents/playbooks/carrefour-lxc-memory.md).
     carrefour-scraper = {
       vm_id        = 272
       cores        = 2
-      memory       = 4096
+      memory       = 6144
+      swap         = 2048
       disk         = 12
       ip           = "10.0.0.74/24"
       internal_dns = "carrefour-scraper"

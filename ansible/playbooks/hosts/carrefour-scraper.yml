@@ -74,6 +74,9 @@
     # Headed scrape under a virtual display; the worker uses BROWSER_HEADLESS=false.
     app_service_exec: "xvfb-run -a /opt/carrefour-scraper/current/venv/bin/python -u worker.py"
     app_browser: true
+    app_restart: always
+    app_memory_high: "2G"
+    app_memory_max: "3G"
     app_env_vars:
       APP_ENV: production
       AWS_DEFAULT_REGION: "us-east-1"
@@ -82,6 +85,28 @@
       LOCAL_SCRAPE_QUEUE_URL: "https://sqs.us-east-1.amazonaws.com/751626788293/price-tracker-carrefour-scrape-queue"
       SCRAPED_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
       BROWSER_HEADLESS: "false"
+      MAX_BROWSER_AGE_SECONDS: "3600"
+      MAX_TASKS_PER_BROWSER: "50"
+    # Second worker on the same LXC: the headed Carrefour PDP fetcher. Secrets
+    # (PG_DSN / AWS keys) are added by deploy/vars/carrefour-scraper.yml.
+    app_extra_units:
+      - name: carrefour-pdp
+        description: "Carrefour PDP fetch worker (headed)"
+        working_dir: "/opt/carrefour-scraper/current/services/local-scraper"
+        exec: "xvfb-run -a /opt/carrefour-scraper/current/venv/bin/python -u pdp_worker.py"
+        restart: always
+        memory_high: "2G"
+        memory_max: "3G"
+        env:
+          APP_ENV: production
+          AWS_DEFAULT_REGION: "us-east-1"
+          BROWSER_HEADLESS: "false"
+          PDP_MODE: continuous
+          PDP_POLL_INTERVAL: "60"
+          PDP_BATCH_SIZE: "10"
+          PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
+          MAX_BROWSER_AGE_SECONDS: "3600"
+          MAX_PDP_PER_FETCHER: "20"
   pre_tasks:
     - name: Check distribution is supported
       assert:

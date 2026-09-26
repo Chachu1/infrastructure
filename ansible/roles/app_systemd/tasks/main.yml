@@ -110,3 +110,7 @@
 - name: Ensure env file ownership and permissions
   include_role:
     name: app_secrets
+
+- name: Provision extra systemd units
+  include_tasks: extra_units.yml
+  when: app_extra_units | length > 0

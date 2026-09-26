@@ -10,8 +10,14 @@ Group={{ app_group }}
 WorkingDirectory={{ app_working_dir }}
 EnvironmentFile=/etc/{{ app_name }}/env
 ExecStart={{ app_service_exec }}
-Restart=on-failure
+Restart={{ app_restart }}
 RestartSec=5
+{% if app_memory_high | default('') %}
+MemoryHigh={{ app_memory_high }}
+{% endif %}
+{% if app_memory_max | default('') %}
+MemoryMax={{ app_memory_max }}
+{% endif %}
 {% if app_watchdog_sec | default('') %}
 WatchdogSec={{ app_watchdog_sec }}
 {% endif %}
