@@ -1,4 +1,35 @@
 ---
+- name: Create APT keyrings directory
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+- name: Add HashiCorp GPG key
+  get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /etc/apt/keyrings/hashicorp.asc
+    mode: "0644"
+    force: yes
+
+- name: Remove legacy HashiCorp keyring
+  file:
+    path: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+    state: absent
+
+- name: Configure HashiCorp APT source
+  copy:
+    dest: /etc/apt/sources.list.d/hashicorp.list
+    content: "deb [signed-by=/etc/apt/keyrings/hashicorp.asc] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main\n"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
 - name: Deploy cloud image update script
   ansible.builtin.copy:
     src: update-cloud-images.sh
