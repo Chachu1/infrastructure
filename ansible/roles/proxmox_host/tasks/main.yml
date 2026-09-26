@@ -6,11 +6,8 @@
     mode: "0755"
 
 - name: Add HashiCorp GPG key
-  get_url:
-    url: https://apt.releases.hashicorp.com/gpg
-    dest: /etc/apt/keyrings/hashicorp.asc
-    mode: "0644"
-    force: yes
+  shell:
+    cmd: curl -fsSL https://apt.releases.hashicorp.com/gpg -o /etc/apt/keyrings/hashicorp.asc
 
 - name: Remove legacy HashiCorp keyring
   file:
