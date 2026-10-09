@@ -21,3 +21,6 @@ app_env_vars:
   ALLOWED_ORIGINS: "*"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  # Bearer guard for brand-review decision POSTs (require_bearer in
+  # services/dashboard-api/main.py). Same secret review-api uses.
+  REVIEW_API_BEARER_TOKEN: "{{ lookup('env', 'REVIEW_API_BEARER_TOKEN', default='') }}"

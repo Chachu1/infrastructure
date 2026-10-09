@@ -21,4 +21,8 @@ app_env_vars:
   NODE_ENV: production
   APP_PORT: "3000"
   NEXT_PUBLIC_DASHBOARD_API_URL: "https://dashboard-api.mhlab.me"
+  # Baked into the JS bundle at build time (inherently public). Must match
+  # dashboard-api's REVIEW_API_BEARER_TOKEN so brand-review decision POSTs
+  # pass the require_bearer guard.
+  NEXT_PUBLIC_REVIEW_BEARER_TOKEN: "{{ lookup('env', 'REVIEW_API_BEARER_TOKEN', default='') }}"
 app_secrets: {}
