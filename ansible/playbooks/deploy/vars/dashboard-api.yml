@@ -24,3 +24,6 @@ app_secrets:
   # Bearer guard for brand-review decision POSTs (require_bearer in
   # services/dashboard-api/main.py). Same secret review-api uses.
   REVIEW_API_BEARER_TOKEN: "{{ lookup('env', 'REVIEW_API_BEARER_TOKEN', default='') }}"
+  # Dedicated OpenRouter key for brand-review AI checks (_api_key() in
+  # shared/.../brand_cleanup.py; falls back to OPENROUTER_ENRICHMENT_KEY).
+  OPENROUTER_BRAND_REVIEW_KEY: "{{ lookup('env', 'OPENROUTER_BRAND_REVIEW_KEY', default='') }}"
