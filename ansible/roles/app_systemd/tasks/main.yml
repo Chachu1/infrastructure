@@ -64,10 +64,19 @@
     state: present
   when: app_packages | length > 0
 
-- name: Install uv
+# emSign CA incident (Oct 2026): uv < 0.13.4 trusts the compromised roots.
+# The old `creates` guard left existing installs at 0.12.x forever, which also
+# makes repos declaring `[tool.uv].required-version` fail to deploy.
+- name: Check installed uv version
+  command: /usr/local/bin/uv --version
+  register: uv_version
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install or upgrade uv
   shell: curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
-  args:
-    creates: /usr/local/bin/uv
+  when: uv_version.rc != 0 or (uv_version.stdout.split()[1] is version('0.13.4', '<'))
 
 - name: Render app env file
   template:
