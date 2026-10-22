@@ -26,5 +26,5 @@ jobs:
         run: |
           ansible 'categorizer:review-api:job-tracker-api:dashboard-api:backfill-ui:screenshot-service:transform-worker:enrichment-worker:pdp-enricher:local-scraper:carrefour-scraper' \
             -m shell \
-            -a 'svc=$(hostname); uv=$(/usr/local/bin/uv --version 2>/dev/null | cut -d" " -f2); p=/opt/$svc/current/venv/bin/python; if [ -x "$p" ]; then cert=$($p -c "import certifi; print(certifi.__version__)" 2>/dev/null || echo missing); else cert=no-venv; fi; echo "RESULT $svc uv=$uv certifi=$cert"' \
+            -a 'svc=$(hostname); uv=$(/usr/local/bin/uv --version 2>/dev/null | cut -d" " -f2); state=$(systemctl is-active "$svc.service" 2>/dev/null || true); p=/opt/$svc/current/venv/bin/python; if [ -x "$p" ]; then cert=$($p -c "import certifi; print(certifi.__version__)" 2>/dev/null || echo missing); else cert=no-venv; fi; echo "RESULT $svc uv=$uv certifi=$cert state=$state"' \
             2>&1 | grep -E 'RESULT|UNREACHABLE|failed=' || true
