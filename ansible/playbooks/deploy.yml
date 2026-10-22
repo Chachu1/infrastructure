@@ -64,6 +64,14 @@
             path: "{{ release_dir }}"
           register: release_stat
 
+        # A previous deploy can leave the release directory behind without a
+        # usable venv (e.g. it failed during dependency installation). Treat
+        # that as incomplete instead of skipping the build forever.
+        - name: Check if release venv is already built
+          stat:
+            path: "{{ release_dir }}/venv/bin/python"
+          register: release_venv_stat
+
         - name: Remove invalid bare repo left by previous failed clone
           shell: "if [ -d {{ repo_bare }} ] && ! git --git-dir={{ repo_bare }} rev-parse --is-bare-repository >/dev/null 2>&1; then rm -rf {{ repo_bare }}; echo removed; else echo ok; fi"
           changed_when: false
@@ -115,7 +123,7 @@
             if [ -d shared/python ] && [ -f shared/python/pyproject.toml ]; then
               uv pip install --python venv/bin/python -e shared/python || true
             fi
-          when: not release_stat.stat.exists and (app_runtime | default('python')) == 'python'
+          when: not release_venv_stat.stat.exists and (app_runtime | default('python')) == 'python'
           become: true
           become_user: "{{ app_user }}"
 
@@ -125,7 +133,7 @@
             ./venv/bin/python -m playwright install chromium
             ./venv/bin/python -m playwright install-deps chromium || true
             ./venv/bin/python -m patchright install chromium || true
-          when: not release_stat.stat.exists and (app_browser | default(false))
+          when: not release_venv_stat.stat.exists and (app_browser | default(false))
           become: true
           become_user: "{{ app_user }}"
 
