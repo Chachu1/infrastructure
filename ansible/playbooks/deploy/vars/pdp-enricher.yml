@@ -29,8 +29,9 @@ app_env_vars:
   PDP_ENRICHER_POLL_INTERVAL: "10"
   PDP_ENRICHER_CONCURRENT: "8"
   PDP_ENRICHER_MAX_CHARS: "18000"
+  PDP_ENRICHER_ENABLE_THINKING: "false"
   ENRICHER_LLM_RATE_LIMIT: "39"
-  PDP_ENRICHER_LLM_MODEL: "nvidia/nemotron-3-super-120b-a12b"
+  PDP_ENRICHER_LLM_MODEL: "nvidia/nemotron-3.5-super-vl-120b-a12b"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   OPENROUTER_API_KEY: "{{ lookup('env', 'OPENROUTER_API_KEY', default='') }}"
