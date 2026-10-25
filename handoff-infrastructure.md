@@ -19,7 +19,7 @@ domains — see below).
 | Uptime Kuma (vm_id=251) | Running | https://uptime.mhlab.me |
 | GitHub Runner (vm_id=200) | Running | 10.0.0.2 |
 | Postgres (vm_id=252) | Running | 10.0.0.20:5432 |
-| App LXCs (10.0.0.61–72) | Running | jobs/screenshots/backfill/dashboard-api/frontend/prod-match/graylog |
+| App LXCs (10.0.0.61–75) | Running | jobs/screenshots/backfill/dashboard-api/frontend/prod-match/graylog/tailor |
 | Cloudflare DNS | Active | per-service A records → 168.119.81.167 (proxied) |
 
 ### Routing cutover (2026-08-25)

@@ -1,0 +1,25 @@
+---
+# Per-service vars for tailoring-erp (used by playbooks/deploy.yml).
+# Mirrors playbooks/hosts/tailoring-erp.yml - keep both in sync.
+
+app_name: tailoring-erp
+app_user: tailoring-erp
+app_group: tailoring-erp
+app_port: 8004
+app_health_path: /health
+app_health_port: 8004
+app_health_check: "http"
+app_working_dir: "/opt/tailoring-erp/current"
+app_requirements: "requirements.txt"
+app_repo_url: "https://github.com/Chachu1/tailoring-system.git"
+app_branch: main
+app_keep_releases: 3
+# No Postgres in this stack - SQLite inside /opt/tailoring-erp/shared.
+app_requires_pg: false
+app_service_exec: "/opt/tailoring-erp/current/venv/bin/waitress-serve --listen=0.0.0.0:8004 wsgi:app"
+app_env_vars:
+  APP_ENV: production
+  # Release dirs are pruned; keep shop.db + backups in shared/.
+  TAILOR_ERP_DATA_DIR: "/opt/tailoring-erp/shared"
+app_secrets:
+  SECRET_KEY: "{{ lookup('env', 'TAILOR_SECRET_KEY', default='') }}"

@@ -28,4 +28,5 @@
 - import_playbook: hosts/frontend.yml
 - import_playbook: hosts/pg-backup.yml
 - import_playbook: hosts/graylog.yml
+- import_playbook: hosts/tailoring-erp.yml
 - import_playbook: hosts/log-shipping.yml

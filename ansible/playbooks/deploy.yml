@@ -14,7 +14,10 @@
   vars:
     service: "{{ lookup('env', 'SERVICE', default='categorizer') }}"
     sha: "{{ lookup('env', 'DEPLOY_SHA', default='') }}"
-    github_token: "{{ lookup('env', 'PRICE_TRACKER_PAT') | default(lookup('env', 'GH_TOKEN'), true) | default('', true) }}"
+    github_token: >-
+      {{ lookup('env', 'APP_GIT_TOKEN', default='')
+         or lookup('env', 'PRICE_TRACKER_PAT', default='')
+         or lookup('env', 'GH_TOKEN', default='') }}
     _repo_url: "{{ app_repo_url | replace('https://', 'https://x-access-token:' + github_token + '@') if github_token | length > 0 else app_repo_url }}"
 
   tasks:
@@ -45,7 +48,9 @@
         - name: Require PG_DSN
           fail:
             msg: "PG_DSN is empty - set secrets.PG_DSN in Chachu1/infrastructure (single DSN for all services)"
-          when: lookup('env', 'PG_DSN') | length == 0
+          when:
+            - app_requires_pg | default(true)
+            - lookup('env', 'PG_DSN') | length == 0
 
         - name: Refresh systemd unit and env file
           include_role:

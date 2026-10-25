@@ -30,7 +30,7 @@ Internet
 │    ├─ postgres      (10.0.0.20) — PostgreSQL 18         │
 │    ├─ uptime-kuma   (10.0.0.51) — monitoring           │
 │    ├─ github-runner (10.0.0.2)  — CI/CD                │
-│    └─ app LXCs      (10.0.0.61–72) — Price Tracker svc │
+│    └─ app LXCs      (10.0.0.61–75) — Price Tracker + ERP svc│
 │                                                         │
 │  WireGuard client → home network (192.168.12.0/24)      │
 │    └─ gateway IP: 192.168.12.2                          │
@@ -55,6 +55,7 @@ in the public path for application services.
 | `screenshots.mhlab.me` | 10.0.0.67 | 8010 | screenshot-service LXC |
 | `frontend.mhlab.me` | 10.0.0.70 | 3000 | frontend LXC |
 | `graylog.mhlab.me` | 10.0.0.72 | 9000 | graylog LXC |
+| `tailor.mhlab.me` | 10.0.0.75 | 8004 | tailoring-erp LXC |
 
 > Routes are generated from Terraform `locals.tf` (`domain`/`port`) into
 > `ansible/inventory/group_vars/gateway_services.yml` (`caddy_hosts`), then rendered
@@ -96,6 +97,7 @@ in the public path for application services.
 | `10.0.0.72`     |  graylog        |  graylog.mhlab.me (LXC)            |
 | `10.0.0.73`     |  pdp-enricher   |  PDP enrichment worker (internal)  |
 | `10.0.0.74`     |  carrefour-scraper | Carrefour scraper (internal, headed/xvfb) |
+| `10.0.0.75`     |  tailoring-erp  |  tailor.mhlab.me (LXC)             |
 | `10.0.0.11-19`  |  —              |  Reserved for web applications     |
 | `10.0.0.21-29`  |  —              |  Reserved for databases            |
 | `10.0.0.30-39`  |  —              |  Reserved for monitoring           |
@@ -133,6 +135,7 @@ Publicly routed services (Cloudflare → gateway Caddy → LXC):
 | Screenshot Service | 10.0.0.67 | 8010 | https://screenshots.mhlab.me |
 | Frontend     | 10.0.0.70  |  3000     |  https://frontend.mhlab.me     |
 | Graylog      | 10.0.0.72  |  9000     |  https://graylog.mhlab.me      |
+| Tailoring ERP | 10.0.0.75 | 8004      |  https://tailor.mhlab.me       |
 
 Internal-only services (no public domain): categorizer (61), transform-worker
 (65), local-scraper (68), enrichment-worker (69), pg-backup (71), pdp-enricher
@@ -469,6 +472,7 @@ is an explicit A record.
 | `screenshots.mhlab.me` | A | 168.119.81.167 | Yes |
 | `frontend.mhlab.me` | A | 168.119.81.167 | Yes |
 | `graylog.mhlab.me` | A | 168.119.81.167 | Yes |
+| `tailor.mhlab.me` | A | 168.119.81.167 | Yes |
 
 ### Internal DNS (CoreDNS on gateway)
 

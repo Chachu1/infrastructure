@@ -48,7 +48,7 @@ jobs:
           SERVICE="${{ github.event.client_payload.service }}"
           SHA="${{ github.event.client_payload.sha }}"
           case "$SERVICE" in
-            categorizer|review-api|enrichment-worker|pdp-enricher|local-scraper|carrefour-scraper|screenshot-service|job-tracker-api|dashboard-api|transform-worker|backfill-ui|frontend|pg-backup)
+            categorizer|review-api|enrichment-worker|pdp-enricher|local-scraper|carrefour-scraper|screenshot-service|job-tracker-api|dashboard-api|transform-worker|backfill-ui|frontend|pg-backup|tailoring-erp)
               ;;
             *)
               echo "::error::service '$SERVICE' not in allowlist"
@@ -73,6 +73,10 @@ jobs:
           # (Contents: Read) and add as PRICE_TRACKER_PAT in this repo.
           PRICE_TRACKER_PAT: ${{ secrets.PRICE_TRACKER_PAT }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          # Read-only clone token for Chachu1/tailoring-system (private).
+          APP_GIT_TOKEN: ${{ secrets.TAILORING_SYSTEM_PAT }}
+          # Flask session signing key for tailoring-erp.
+          TAILOR_SECRET_KEY: ${{ secrets.TAILOR_SECRET_KEY }}
           # App secrets are read by playbooks/deploy/vars/<service>.yml via
           # lookup('env', ...). PG_DSN is the single Postgres DSN for all
           # services (10.0.0.20). Per-service DSN secrets removed.
