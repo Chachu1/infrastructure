@@ -213,6 +213,18 @@ locals {
       internal_dns = "graylog"
     }
 
+    # Tailoring shop ERP (Flask + SQLite) - tailor.mhlab.me
+    tailoring-erp = {
+      vm_id        = 273
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.75/24"
+      domain       = "tailor.mhlab.me"
+      port         = 8004
+      internal_dns = "tailor"
+    }
+
     # Example VM (uncomment to add a VM service):
     # my-vm = {
     #   type   = "vm"
