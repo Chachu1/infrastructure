@@ -31,6 +31,10 @@ caddy_hosts:
   domain: screenshots.mhlab.me
   port: 8010
   scheme: http
+- backend: 10.0.0.75
+  domain: tailor.mhlab.me
+  port: 8004
+  scheme: http
 - backend: 10.0.0.51
   domain: uptime.mhlab.me
   port: 3001
@@ -52,5 +56,7 @@ dns_records:
   proxmox: 10.0.0.1
   review-api: 10.0.0.62
   screenshot-service: 10.0.0.67
+  tailor: 10.0.0.75
+  tailoring-erp: 10.0.0.75
   transform-worker: 10.0.0.65
   uptime-kuma: 10.0.0.51
