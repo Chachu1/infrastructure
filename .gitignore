@@ -28,6 +28,10 @@ id_rsa.pub
 .env.*
 *.env
 
+# Python
+__pycache__/
+*.py[cod]
+
 # OS
 .DS_Store
 Thumbs.db

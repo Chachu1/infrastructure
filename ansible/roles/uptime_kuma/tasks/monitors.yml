@@ -1,0 +1,76 @@
+---
+- name: Ensure Uptime Kuma monitor config directory
+  file:
+    path: /etc/uptime-kuma
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy Uptime Kuma push monitor definitions
+  template:
+    src: monitors.json.j2
+    dest: /etc/uptime-kuma/monitors.json
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Deploy Uptime Kuma monitor sync script
+  copy:
+    src: ensure-monitors.py
+    dest: /usr/local/sbin/uptime-kuma-ensure-monitors.py
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Wait for Uptime Kuma database schema
+  # On a fresh install the service has just been started and creates its
+  # SQLite database asynchronously; writing to it before the schema exists
+  # would fail the play.
+  command:
+    argv:
+      - /usr/bin/python3
+      - -c
+      - |
+        import os
+        import sqlite3
+        connection = sqlite3.connect(
+            "file:" + os.environ["KUMA_DB"] + "?mode=ro",
+            uri=True,
+            timeout=15,
+        )
+        connection.execute("SELECT 1 FROM monitor LIMIT 1")
+        connection.execute("SELECT 1 FROM notification LIMIT 1")
+  environment:
+    KUMA_DB: "{{ uptime_kuma_dir }}/data/kuma.db"
+  register: uptime_kuma_db_ready
+  until: uptime_kuma_db_ready.rc == 0
+  retries: 30
+  delay: 2
+  changed_when: false
+
+- name: Check whether Uptime Kuma monitors need changes
+  command: /usr/bin/python3 /usr/local/sbin/uptime-kuma-ensure-monitors.py --check
+  environment:
+    KUMA_DB: "{{ uptime_kuma_dir }}/data/kuma.db"
+  register: uptime_kuma_monitor_check
+  changed_when: false
+  failed_when: uptime_kuma_monitor_check.rc not in [0, 10]
+
+- name: Apply Uptime Kuma monitor changes
+  when: uptime_kuma_monitor_check.rc == 10
+  block:
+    - name: Stop Uptime Kuma while its database is updated
+      systemd:
+        name: uptime-kuma
+        state: stopped
+
+    - name: Insert/update Uptime Kuma push monitors
+      command: /usr/bin/python3 /usr/local/sbin/uptime-kuma-ensure-monitors.py --apply
+      environment:
+        KUMA_DB: "{{ uptime_kuma_dir }}/data/kuma.db"
+  always:
+    - name: Start Uptime Kuma
+      systemd:
+        name: uptime-kuma
+        state: started

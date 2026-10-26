@@ -4,7 +4,7 @@
 **Status:** Live
 **Database:** `postgres` LXC (VMID 252, `10.0.0.20`) — PostgreSQL 18.6, stanza `pt`
 **Repository:** `pgbackrest-repo` LXC (VMID 150, `192.168.1.150`) on the home Proxmox host (`pve1`)
-**Tooling:** pgBackRest 2.59.1 (must be identical on both ends, installed from PGDG)
+**Tooling:** pgBackRest 2.59.1 (pinned on the DB host by Ansible; must be identical on both ends, installed from PGDG)
 
 > This is the DR runbook for the Price Tracker PostgreSQL database. Read the
 > [Important caveats](#important-caveats) before running any restore.
@@ -81,6 +81,63 @@ pct exec 252 -- runuser -u postgres -- pgbackrest --stanza=pt verify
 
 `info` should show *at least* one `full backup` and a `status: ok`. A healthy `check`
 exits `0` and reports a WAL segment archived to `repo1`.
+
+---
+
+## Automated health monitoring
+
+Ansible deploys `pgbackrest-health.service` / `pgbackrest-health.timer` on LXC 252.
+The timer runs every **5 minutes** and pushes a heartbeat to the Uptime Kuma push
+monitor **`postgres-backup-health`**. Uptime Kuma alerts both on `status=down` and
+on a **missing heartbeat** — so a dead timer, broken WireGuard tunnel, or failed
+SSH key cannot be silent.
+
+The check covers:
+
+| Check | Failure threshold |
+|---|---|
+| pgBackRest version on 252 vs repo host | any mismatch (would have caught the 2026-10 incident immediately) |
+| Latest completed backup age | > 26 hours |
+| `pgbackrest --stanza=pt check` (end-to-end repo + WAL archive) | non-zero exit (runs hourly, skipped while a backup/verify is running) |
+| Root filesystem usage on 252 | > 85% |
+| Repository filesystem usage on 192.168.1.150 | > 85% |
+| `pg_wal` segment count | > 32 segments |
+| Async archive spool (`/var/spool/pgbackrest`) | > 1024 MB |
+| `pg_stat_archiver` | last archive > 2 h old, or last failure newer than last success |
+
+Manual run / inspect:
+
+```bash
+ssh root@10.0.0.20 systemctl start pgbackrest-health.service
+ssh root@10.0.0.20 journalctl -u pgbackrest-health.service -n 50 --no-pager
+ssh root@10.0.0.20 systemctl list-timers pgbackrest-health.timer
+```
+
+The monitor is defined in `ansible/roles/uptime_kuma/defaults/main.yml` and
+created/updated idempotently by the `uptime_kuma` role. The heartbeat token is in
+`ansible/inventory/group_vars/all/main.yml`.
+
+### Version pinning
+
+The `postgresql` role installs `pgbackrest` at `pgbackrest_version`
+(`2.59.1-1.pgdg24.04+1`), writes an APT pin, and `apt-mark hold`s it. The weekly
+`maintenance.yml` `dist-upgrade` (and unattended-upgrades) therefore cannot move
+the DB side on its own.
+
+To upgrade:
+
+1. Upgrade the repo host (LXC 150) to the new version.
+2. Bump `pgbackrest_version` in `ansible/roles/postgresql/defaults/main.yml`.
+3. Run `ansible-playbook playbooks/hosts/postgres.yml` — the role unholds,
+   installs the pinned version, then holds it again.
+4. Verify `pgbackrest --stanza=pt check` and a fresh backup.
+
+Never upgrade only one side: a mismatch stops WAL archiving and backups with
+`ProtocolError [039]`.
+
+> The repo host (LXC 150) is outside this repository. If it runs
+> unattended-upgrades, also `apt-mark hold pgbackrest` there, or upgrade both
+> sides together.
 
 ---
 
@@ -251,8 +308,8 @@ repo1-path=/var/lib/pgbackrest
 ## Important caveats
 
 - **Version pinning:** the pgBackRest version on LXC 252 and LXC 150 must match **exactly**
-  (`2.59.1`). A mismatch stops WAL archiving and backups with a `ProtocolError`. Upgrade
-  both together.
+  (`2.59.1`). A mismatch stops WAL archiving and backups with a `ProtocolError`. The DB
+  side is now pinned/held by Ansible; upgrade the repo host and the pin together.
 - **`data_directory` trap:** Debian's `/etc/postgresql/18/main/postgresql.conf` contains
   `data_directory = '/var/lib/postgresql/18/main'`. If you copy that file into an
   alternate restore path and start a second instance, PostgreSQL will try to open the
@@ -283,7 +340,8 @@ this repository.
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `ERROR: [087]: archive_mode must be enabled` | archiving not active | check `SHOW archive_mode;` — requires PG restart after config change |
-| `ProtocolError ... expected value '2.x' ... got '2.y'` | pgBackRest version mismatch 252 vs 150 | install identical versions on both |
+| `ProtocolError ... expected value '2.x' ... got '2.y'` | pgBackRest version mismatch 252 vs 150 | install identical versions on both; check `pgbackrest-health.service` alert |
+| `postgres-backup-health` monitor down | see `journalctl -u pgbackrest-health.service` | fix the reported disk/WAL/backup/version failure, then start the service |
 | `check` fails reaching repo | tunnel down / SSH key issue | `ping 192.168.1.150` from 252; verify key in `pgbackrest@.ssh/authorized_keys` |
 | `pg_wal` / spool growing | WAL archiving failing | `pgbackrest --stanza=pt check`; resolve archive errors, old WAL is re-pushed automatically |
 | Restore fails: `pg1-path is not empty` | missing `--delta` | re-run with `--delta` |

@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+#
+# Checks PostgreSQL backup/archive health and reports to an Uptime Kuma push
+# monitor. A missing heartbeat also alerts (push monitor), so a dead timer,
+# broken WireGuard tunnel, or failed SSH key is not silent.
+set -uo pipefail
+
+ENV_FILE="/etc/pgbackrest/health.env"
+STATE_DIR="/var/lib/pgbackrest-health"
+CHECK_STAMP="$STATE_DIR/last-check"
+CHECK_STATE="$STATE_DIR/check-state"
+
+# shellcheck disable=SC1090
+[ -r "$ENV_FILE" ] && . "$ENV_FILE"
+
+: "${PUSH_URL:?PUSH_URL is not set}"
+STANZA="${STANZA:-pt}"
+PGDATA="${PGDATA:-/var/lib/postgresql/18/main}"
+DISK_WARN_PCT="${DISK_WARN_PCT:-85}"
+REPO_DISK_WARN_PCT="${REPO_DISK_WARN_PCT:-85}"
+BACKUP_MAX_AGE_HOURS="${BACKUP_MAX_AGE_HOURS:-26}"
+WAL_MAX_SEGMENTS="${WAL_MAX_SEGMENTS:-32}"
+SPOOL_MAX_MB="${SPOOL_MAX_MB:-1024}"
+CHECK_INTERVAL_SECONDS="${CHECK_INTERVAL_SECONDS:-3600}"
+CHECK_RETRY_SECONDS="${CHECK_RETRY_SECONDS:-900}"
+REPO_HOST="${REPO_HOST:-192.168.1.150}"
+REPO_PATH="${REPO_PATH:-/var/lib/pgbackrest}"
+WAL_MAX_AGE_SECONDS="${WAL_MAX_AGE_SECONDS:-7200}"
+
+FAILURES=()
+fail() { FAILURES+=("$1"); }
+
+mkdir -p "$STATE_DIR"
+
+# --- pgBackRest version must match the repository host -----------------------
+local_version=$(runuser -u postgres -- pgbackrest version 2>/dev/null | awk '{print $2}')
+repo_version=$(runuser -u postgres -- ssh -o BatchMode=yes -o ConnectTimeout=5 \
+  -o StrictHostKeyChecking=accept-new "$REPO_HOST" 'pgbackrest version' 2>/dev/null | awk '{print $2}')
+
+if [[ -z "$local_version" ]]; then
+  fail "pgBackRest not installed"
+fi
+if [[ -z "$repo_version" ]]; then
+  fail "repo host $REPO_HOST unreachable"
+elif [[ -n "$local_version" && "$local_version" != "$repo_version" ]]; then
+  fail "pgBackRest version mismatch db=$local_version repo=$repo_version"
+fi
+
+# --- Most recent completed backup -------------------------------------------
+info_json=$(runuser -u postgres -- pgbackrest --stanza="$STANZA" \
+  --io-timeout=30 --protocol-timeout=120 info --output=json 2>/dev/null)
+if [[ -z "$info_json" ]]; then
+  fail "pgbackrest info failed"
+else
+  info_code=$(jq -r '.[0].status.code // 0' <<<"$info_json" 2>/dev/null)
+  info_message=$(jq -r '.[0].status.message // "unknown"' <<<"$info_json" 2>/dev/null)
+  if [[ "$info_code" != "0" ]]; then
+    fail "stanza status ${info_code}: ${info_message}"
+  fi
+  latest=$(jq -r '[.[0].backup[]?.timestamp.stop] | max // empty' <<<"$info_json" 2>/dev/null)
+  if [[ -z "$latest" || "$latest" == "null" ]]; then
+    fail "no completed backups"
+  else
+    backup_age=$(( $(date +%s) - latest ))
+    backup_age_h=$(( backup_age / 3600 ))
+    if (( backup_age > BACKUP_MAX_AGE_HOURS * 3600 )); then
+      fail "last backup ${backup_age_h}h old (>${BACKUP_MAX_AGE_HOURS}h)"
+    fi
+  fi
+fi
+
+# --- Disk usage -------------------------------------------------------------
+disk_pct=$(df --output=pcent / | tail -1 | tr -dc '0-9')
+if [[ -z "$disk_pct" ]]; then
+  fail "cannot read root disk usage"
+elif (( disk_pct > DISK_WARN_PCT )); then
+  fail "root disk ${disk_pct}% (>${DISK_WARN_PCT}%)"
+fi
+
+repo_disk_pct=$(runuser -u postgres -- ssh -o BatchMode=yes -o ConnectTimeout=5 \
+  -o StrictHostKeyChecking=accept-new "$REPO_HOST" \
+  "df --output=pcent $REPO_PATH" 2>/dev/null | tail -1 | tr -dc '0-9')
+if [[ -z "$repo_disk_pct" ]]; then
+  fail "cannot read repo disk usage"
+elif (( repo_disk_pct > REPO_DISK_WARN_PCT )); then
+  fail "repo disk ${repo_disk_pct}% (>${REPO_DISK_WARN_PCT}%)"
+fi
+
+# --- WAL / spool backlog ----------------------------------------------------
+wal_segments=$(find "$PGDATA/pg_wal" -maxdepth 1 -type f -printf '%f\n' 2>/dev/null \
+  | grep -cE '^[0-9A-F]{24}$')
+if (( wal_segments > WAL_MAX_SEGMENTS )); then
+  fail "pg_wal has ${wal_segments} segments (>${WAL_MAX_SEGMENTS})"
+fi
+
+spool_mb=$(du -sm /var/spool/pgbackrest 2>/dev/null | awk '{print $1}')
+if [[ -n "$spool_mb" ]] && (( spool_mb > SPOOL_MAX_MB )); then
+  fail "archive spool ${spool_mb}MB (>${SPOOL_MAX_MB}MB)"
+fi
+
+# --- End-to-end pgBackRest check (hourly) -----------------------------------
+now=$(date +%s)
+last_check=0
+[[ -r "$CHECK_STAMP" ]] && last_check=$(cat "$CHECK_STAMP" 2>/dev/null || echo 0)
+[[ "$last_check" =~ ^[0-9]+$ ]] || last_check=0
+
+backup_busy=false
+if systemctl is-active --quiet pgbackrest-backup.service \
+   || systemctl is-active --quiet pgbackrest-verify.service \
+   || systemctl is-active --quiet pgbackrest-check.service \
+   || pgrep -f '^/usr/bin/pgbackrest .* (backup|verify)( |$)' >/dev/null; then
+  backup_busy=true
+fi
+
+if (( now - last_check >= CHECK_INTERVAL_SECONDS )) && [[ "$backup_busy" == "false" ]]; then
+  if check_out=$(runuser -u postgres -- pgbackrest --stanza="$STANZA" \
+      --io-timeout=30 --protocol-timeout=120 --archive-timeout=60 check 2>&1); then
+    echo "ok" > "$CHECK_STATE"
+    echo "$now" > "$CHECK_STAMP"
+  else
+    check_msg=$(grep -E 'ERROR|WARN' <<<"$check_out" | tail -1 | tr -s ' ')
+    [[ -z "$check_msg" ]] && check_msg=$(tail -1 <<<"$check_out" | tr -s ' ')
+    echo "fail: pgbackrest check failed: $check_msg" > "$CHECK_STATE"
+    fail "pgbackrest check failed: $check_msg"
+    # Retry sooner than the normal hourly cadence while failing.
+    echo $(( now - CHECK_INTERVAL_SECONDS + CHECK_RETRY_SECONDS )) > "$CHECK_STAMP"
+  fi
+elif [[ -r "$CHECK_STATE" ]] && grep -q '^fail:' "$CHECK_STATE"; then
+  # Keep the monitor down until the next hourly check succeeds.
+  fail "$(sed 's/^fail: //' "$CHECK_STATE")"
+fi
+
+# --- WAL archiver state -----------------------------------------------------
+archive_stats=$(runuser -u postgres -- psql -tAqc "
+  SELECT coalesce(extract(epoch FROM now() - last_archived_time), -1)::bigint,
+         CASE WHEN last_failed_time IS NOT NULL
+                   AND (last_archived_time IS NULL OR last_failed_time > last_archived_time)
+              THEN 1 ELSE 0 END,
+         coalesce(last_failed_wal, '')
+  FROM pg_stat_archiver" 2>/dev/null | tail -1)
+
+if [[ -z "$archive_stats" ]]; then
+  fail "cannot read pg_stat_archiver"
+else
+  IFS='|' read -r last_archive_age archive_failing failed_wal <<<"$archive_stats"
+  if [[ "$last_archive_age" == "-1" ]]; then
+    fail "no WAL archived yet"
+  elif (( last_archive_age > WAL_MAX_AGE_SECONDS )); then
+    fail "last WAL archive ${last_archive_age}s ago (>${WAL_MAX_AGE_SECONDS}s)"
+  fi
+  if [[ "$archive_failing" == "1" ]]; then
+    fail "WAL archive failing (${failed_wal:-unknown})"
+  fi
+fi
+
+# --- Report -----------------------------------------------------------------
+failure_count=0
+for _ in "${FAILURES[@]}"; do
+  failure_count=$((failure_count + 1))
+done
+
+if (( failure_count > 0 )); then
+  status="down"
+  msg="DOWN: $(IFS='; '; echo "${FAILURES[*]}")"
+  rc=1
+else
+  status="up"
+  msg="OK: backup ${backup_age_h:-?}h old, disk ${disk_pct}%, repo ${repo_disk_pct}%, wal ${wal_segments} seg, pgBackRest ${local_version:-?}"
+  rc=0
+fi
+
+# Uptime Kuma accepts status=up|down and an optional message.
+msg="${msg:0:250}"
+if ! curl -fsS --max-time 15 --get \
+    --data-urlencode "status=$status" \
+    --data-urlencode "msg=$msg" \
+    "$PUSH_URL" >/dev/null; then
+  echo "ERROR: failed to push health status to Uptime Kuma" >&2
+  rc=1
+fi
+
+echo "$msg"
+exit "$rc"

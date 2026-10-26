@@ -11,6 +11,13 @@ dns_servers:
 # Timezone
 timezone: "UTC"
 
+# Monitoring
+# Uptime Kuma push monitors. The token is a heartbeat identifier, not a
+# credential to another service; it is used by the DB host to report backup
+# and disk health. Rotate it here and redeploy both hosts.
+uptime_kuma_internal_url: "http://10.0.0.51:3001"
+pgbackrest_health_push_token: "4ef978428912f0afffd4162dac94563c2ed97d71c1094ff8"
+
 # Admin user (base_user role) - SSH public key for key-only sudo access.
 mohsin_ssh_public_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMz/z3teYrXid/cPA6VBTEW6BcObOE9/u9aENFP7lXAH mohsin@infra"
 

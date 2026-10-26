@@ -277,6 +277,23 @@ Alert if Data% exceeds 80%. To add capacity, extend the pool:
 lvextend -L +1T vg0/thin_pool
 ```
 
+### PostgreSQL Backup Monitoring
+
+LXC 252 (postgres, `10.0.0.20`) runs `pgbackrest-health.timer` every 5 minutes.
+It checks pgBackRest version parity with the offsite repo host, backup
+freshness, WAL archiving (`pgbackrest check` + `pg_stat_archiver`), `pg_wal`
+growth, spool size, and disk usage on both the DB and repo hosts. Results are
+pushed to the Uptime Kuma monitor **`postgres-backup-health`**; a missing
+heartbeat also alerts.
+
+```bash
+ssh root@10.0.0.20 systemctl status pgbackrest-health.timer
+ssh root@10.0.0.20 journalctl -u pgbackrest-health.service -n 50 --no-pager
+```
+
+See `docs/pgbackrest-restore.md` for thresholds and the version-pinning
+procedure.
+
 ---
 
 ## Managing Services

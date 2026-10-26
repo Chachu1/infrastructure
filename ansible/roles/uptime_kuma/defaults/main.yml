@@ -4,3 +4,15 @@ uptime_kuma_dir: /opt/uptime-kuma
 uptime_kuma_node_version: "22"
 uptime_kuma_github_repo: "louislam/uptime-kuma"
 uptime_kuma_version: "latest"
+
+# Push monitors are created directly in Uptime Kuma's SQLite database because
+# its HTTP API only exposes push heartbeats, not monitor management. The role
+# only stops the service when a monitor actually needs to be inserted/updated.
+uptime_kuma_push_monitors:
+  - name: "postgres-backup-health"
+    token: "{{ pgbackrest_health_push_token }}"
+    # Heartbeat every 5 min; allow ~2 min of jitter before alerting.
+    interval: 420
+    retry_interval: 60
+    maxretries: 2
+    description: "pgBackRest check, backup freshness, WAL archive, disk on postgres (10.0.0.20)"

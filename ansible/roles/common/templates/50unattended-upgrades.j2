@@ -19,4 +19,7 @@ Unattended-Upgrade::Package-Blacklist {
     "docker-compose-plugin";
     "containerd";
     "containerd.io";
+    // pgBackRest must match the offsite repo host exactly; the postgresql
+    // role pins and holds it.
+    "pgbackrest";
 };

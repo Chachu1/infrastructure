@@ -33,6 +33,55 @@
     update_cache: yes
   notify: restart postgresql
 
+# pgBackRest talks to the offsite repo host over SSH and refuses to run when
+# the two ends are on different versions. Pin the DB side so unattended
+# upgrades / the weekly maintenance dist-upgrade cannot move it on its own.
+- name: Pin pgBackRest to the repository host version
+  copy:
+    dest: /etc/apt/preferences.d/pgbackrest.pref
+    content: |
+      Package: pgbackrest
+      Pin: version {{ pgbackrest_version }}
+      Pin-Priority: 1001
+    mode: "0644"
+
+# APT only reads preferences.d files ending in .pref. Remove the old
+# non-effective filename from earlier revisions of this role.
+- name: Remove ineffective pgBackRest pin filename
+  file:
+    path: /etc/apt/preferences.d/pgbackrest.pin
+    state: absent
+
+- name: Read installed pgBackRest version
+  command: dpkg-query -W -f='${Version}' pgbackrest
+  register: pgbackrest_installed
+  changed_when: false
+  failed_when: false
+
+- name: Unhold pgBackRest when the pinned version differs
+  dpkg_selections:
+    name: pgbackrest
+    selection: install
+  when:
+    - pgbackrest_installed.rc == 0
+    - pgbackrest_installed.stdout != pgbackrest_version
+
+- name: Install pinned pgBackRest
+  apt:
+    name: "pgbackrest={{ pgbackrest_version }}"
+    state: present
+    allow_downgrade: true
+    update_cache: true
+  when: pgbackrest_installed.rc != 0 or pgbackrest_installed.stdout != pgbackrest_version
+
+- name: Hold pgBackRest
+  dpkg_selections:
+    name: pgbackrest
+    selection: hold
+
+- name: Install pgBackRest health check
+  import_tasks: pgbackrest-health.yml
+
 - name: Reinit cluster as UTF8 if currently SQL_ASCII
   block:
     - name: Check current cluster encoding

@@ -1,0 +1,22 @@
+---
+# pgBackRest is installed on both the database host (this role) and the
+# offsite repository host (192.168.1.150). The two versions must match
+# exactly or WAL archiving/backups fail with a ProtocolError [039].
+#
+# The DB host is Ubuntu 24.04 (PGDG "noble"). When upgrading, change this
+# version and upgrade the repository host in the same maintenance window.
+pgbackrest_version: "2.59.1-1.pgdg24.04+1"
+pgbackrest_stanza: "pt"
+pgbackrest_pgdata: "/var/lib/postgresql/18/main"
+pgbackrest_repo_host: "192.168.1.150"
+pgbackrest_repo_path: "/var/lib/pgbackrest"
+
+# Health check thresholds (see templates/pgbackrest-health.sh.j2)
+pgbackrest_disk_warn_pct: 85
+pgbackrest_repo_disk_warn_pct: 85
+pgbackrest_backup_max_age_hours: 26
+pgbackrest_wal_max_segments: 32
+pgbackrest_spool_max_mb: 1024
+pgbackrest_check_interval_seconds: 3600
+pgbackrest_check_retry_seconds: 900
+pgbackrest_health_push_url: "{{ uptime_kuma_internal_url }}/api/push/{{ pgbackrest_health_push_token }}"

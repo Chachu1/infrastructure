@@ -1,0 +1,53 @@
+---
+# Disk + WAL archive + backup freshness monitoring.
+#
+# The script pushes a heartbeat to Uptime Kuma every 5 minutes. Uptime Kuma
+# alerts on status=down AND on a missing heartbeat (so a dead timer or a
+# failed SSH/tunnel cannot be silent).
+
+- name: Ensure pgBackRest health state directory
+  file:
+    path: /var/lib/pgbackrest-health
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy pgBackRest health check script
+  template:
+    src: pgbackrest-health.sh.j2
+    dest: /usr/local/sbin/pgbackrest-health.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy pgBackRest health check configuration
+  template:
+    src: pgbackrest-health.env.j2
+    dest: /etc/pgbackrest/health.env
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Deploy pgBackRest health check service
+  template:
+    src: pgbackrest-health.service.j2
+    dest: /etc/systemd/system/pgbackrest-health.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy pgBackRest health check timer
+  template:
+    src: pgbackrest-health.timer.j2
+    dest: /etc/systemd/system/pgbackrest-health.timer
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable and start pgBackRest health check timer
+  systemd:
+    name: pgbackrest-health.timer
+    state: started
+    enabled: true
+    daemon_reload: true

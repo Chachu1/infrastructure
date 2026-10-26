@@ -119,3 +119,6 @@
     state: started
     enabled: true
     daemon_reload: true
+
+- name: Ensure push monitors
+  import_tasks: monitors.yml
