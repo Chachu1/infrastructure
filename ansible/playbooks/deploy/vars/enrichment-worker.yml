@@ -30,9 +30,13 @@ app_env_vars:
   # egress) are routed through a no-auth residential SOCKS5 proxy on the docker
   # host (192.168.1.207:1080, home LAN). See Price_Tracker
   # .agents/docs/enrichment-status.md → "Bot Protection / Proxy Routing".
-  # Note: Swas is listed here historically but its 403 is retailer-side (swsg.co
-  # bot protection, not IP-based) — it stays failed; see the same doc.
+  # Swas PDPs sit behind a Cloudflare managed challenge; they are fetched
+  # through FlareSolverr (on the docker host) with the same residential proxy.
   PROXY_RETAILERS: "SharafDG,Swas,Emax"
+  FLARESOLVERR_URL: "http://192.168.1.207:8191"
+  FLARESOLVERR_RETAILERS: "Swas"
+  FLARESOLVERR_MAX_CONCURRENCY: "2"
+  FLARESOLVERR_TIMEOUT_MS: "120000"
   JT_POLL_INTERVAL: "15"
   JOB_TRACKER_URL: "http://job-tracker-api:8001"
 app_secrets:
