@@ -32,9 +32,11 @@ app_env_vars:
   # .agents/docs/enrichment-status.md → "Bot Protection / Proxy Routing".
   # Swas PDPs sit behind a Cloudflare managed challenge; they are fetched
   # through FlareSolverr (on the docker host) with the same residential proxy.
+  # Lulu PDPs also serve a Cloudflare "Attention Required" shell from the
+  # datacenter egress; FlareSolverr's residential egress fetches them cleanly.
   PROXY_RETAILERS: "SharafDG,Swas,Emax"
   FLARESOLVERR_URL: "http://192.168.1.207:8191"
-  FLARESOLVERR_RETAILERS: "Swas"
+  FLARESOLVERR_RETAILERS: "Swas,Lulu"
   FLARESOLVERR_MAX_CONCURRENCY: "2"
   FLARESOLVERR_TIMEOUT_MS: "120000"
   JT_POLL_INTERVAL: "15"
