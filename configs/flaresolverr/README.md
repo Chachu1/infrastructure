@@ -1,7 +1,7 @@
 # FlareSolverr (Docker host)
 
-FlareSolverr solves Cloudflare managed challenges for retailers whose category
-pages reject patchright (currently **Swas / swsg.co**).
+FlareSolverr solves Cloudflare managed challenges for retailers whose pages
+reject patchright (currently **Swas / swsg.co** and **Lulu / luluhypermarket.com**).
 
 ## Where it runs
 
@@ -41,6 +41,6 @@ Expected: `ok`, `200`.
   uses a 120s `maxTimeout` and a 135s socket timeout.
 - `local-scraper` still applies its PostgreSQL rate limiter around proxy-backed
   FlareSolverr calls.
-- If Swas starts getting challenged even through FlareSolverr, the egress IP is
-  flagged; route FlareSolverr through a residential proxy instead of changing
-  the scraper.
+- If Swas/Lulu start getting challenged even through FlareSolverr, the egress
+  IP is flagged; route FlareSolverr through a residential proxy instead of
+  changing the scraper.
