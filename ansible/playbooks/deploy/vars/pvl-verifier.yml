@@ -22,6 +22,9 @@ app_env_vars:
   AWS_DEFAULT_REGION: "us-east-1"
   AWS_REGION: "us-east-1"
   PVL_PROOF_BUCKET: "price-tracker-screenshots-751626788293-us-east-1"
+  PVL_PROOF_PREFIX: "screenshots/price-proof/"
+  PVL_EVIDENCE_BUCKET: "price-tracker-screenshots-751626788293-us-east-1"
+  PVL_EVIDENCE_PREFIX: "screenshots/price-proof/"
   PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
   PVL_POLL_SECONDS: "15"
   PVL_BATCH_SIZE: "5"
@@ -32,9 +35,10 @@ app_env_vars:
   PVL_PROXY_RETAILERS: "SharafDG,Swas,Emax"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
-  # Default session = evidence HTML into pdp-data (same principal as the
-  # enrichment worker). Proofs use the screenshot-service principal below.
-  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_ACCESS_KEY_ID', default='') }}"
-  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_SECRET_ACCESS_KEY', default='') }}"
+  # The evidence bundle (proof PNG + HTML) lives in the screenshots bucket
+  # under its allowed prefix, so the screenshot-service principal is used for
+  # both the default session and the explicit proof client.
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
   PVL_PROOF_AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
   PVL_PROOF_AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"

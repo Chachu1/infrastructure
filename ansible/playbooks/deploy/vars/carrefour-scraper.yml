@@ -65,6 +65,7 @@ app_env_vars:
   BROWSER_HEADLESS: "false"
   MAX_BROWSER_AGE_SECONDS: "3600"
   MAX_TASKS_PER_BROWSER: "50"
+  PVL_PROOF_PREFIX: "screenshots/price-proof/"
   PVL_PROOF_AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
   PVL_PROOF_AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
 # Second worker on the same LXC: the headed Carrefour PDP fetcher. Previously

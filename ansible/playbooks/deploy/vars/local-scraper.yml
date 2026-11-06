@@ -27,6 +27,7 @@ app_env_vars:
   # FlareSolverr on the docker host instead of patchright. See
   # Price_Tracker services/local-scraper/scrapers/swas_KSA.py.
   FLARESOLVERR_URL: "http://192.168.1.207:8191"
+  PVL_PROOF_PREFIX: "screenshots/price-proof/"
   PVL_PROOF_AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
   PVL_PROOF_AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
 app_secrets:
