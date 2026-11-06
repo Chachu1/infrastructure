@@ -1,0 +1,36 @@
+---
+# Per-service vars for pvl-verifier (used by playbooks/deploy.yml).
+# Native LXC + system Chromium (no Docker). Mirrors hosts/pvl-verifier.yml.
+# Internal worker (no HTTP listener); health checked via systemd active.
+
+app_name: pvl-verifier
+app_user: pvl-verifier
+app_group: pvl-verifier
+app_port: 8000
+app_health_path: /health
+app_health_port: 8000
+app_health_check: "systemd"
+app_browser: true
+app_working_dir: "/opt/pvl-verifier/current/services/pvl-verifier"
+app_requirements: "services/pvl-verifier/requirements.txt"
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 3
+app_service_exec: "/opt/pvl-verifier/current/venv/bin/python -u worker.py"
+app_env_vars:
+  APP_ENV: production
+  AWS_DEFAULT_REGION: "us-east-1"
+  AWS_REGION: "us-east-1"
+  PVL_PROOF_BUCKET: "price-tracker-screenshots-751626788293-us-east-1"
+  PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
+  PVL_POLL_SECONDS: "15"
+  PVL_BATCH_SIZE: "5"
+  PVL_WORKER_NAME: "pvl-verifier"
+  # Retailers whose PDPs are IP-blocked from the datacenter egress are routed
+  # through the no-auth residential SOCKS5 proxy on the home LAN.
+  PVL_PROXY_URL: "socks5://192.168.1.207:1080"
+  PVL_PROXY_RETAILERS: "SharafDG,Swas,Emax"
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'PVL_VERIFIER_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'PVL_VERIFIER_AWS_SECRET_ACCESS_KEY', default='') }}"
