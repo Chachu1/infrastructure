@@ -32,5 +32,9 @@ app_env_vars:
   PVL_PROXY_RETAILERS: "SharafDG,Swas,Emax"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
-  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'PVL_VERIFIER_AWS_ACCESS_KEY_ID', default='') }}"
-  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'PVL_VERIFIER_AWS_SECRET_ACCESS_KEY', default='') }}"
+  # Default session = evidence HTML into pdp-data (same principal as the
+  # enrichment worker). Proofs use the screenshot-service principal below.
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'ENRICHMENT_WORKER_AWS_SECRET_ACCESS_KEY', default='') }}"
+  PVL_PROOF_AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
+  PVL_PROOF_AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
