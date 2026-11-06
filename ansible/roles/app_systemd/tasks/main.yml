@@ -74,9 +74,37 @@
   failed_when: false
   check_mode: false
 
-- name: Install or upgrade uv
-  shell: curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
+# NOTE: `curl | sh` hides download failures (sh exits 0 on empty stdin), which
+# left freshly-created LXCs without uv. Use pipefail + retries and verify.
+- name: Install or upgrade uv (official installer)
+  shell: |
+    set -o pipefail
+    curl -fsSL --retry 3 --retry-delay 3 https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
+  args:
+    executable: /bin/bash
   when: uv_version.rc != 0 or (uv_version.stdout.split()[1] is version('0.13.4', '<'))
+  register: uv_install
+  failed_when: false
+
+- name: Verify uv installation
+  command: /usr/local/bin/uv --version
+  register: uv_verify
+  changed_when: false
+  failed_when: false
+  when: uv_install is not skipped
+
+- name: Install uv from PyPI (fallback when the installer endpoint is unreachable)
+  shell: |
+    apt-get update -qq
+    apt-get install -y -qq python3-pip
+    pip3 install --break-system-packages "uv>=0.13.4"
+  when:
+    - uv_install is not skipped
+    - uv_verify.rc != 0
+
+- name: Fail clearly if uv is still missing
+  command: /usr/local/bin/uv --version
+  when: uv_install is not skipped
 
 - name: Render app env file
   template:
