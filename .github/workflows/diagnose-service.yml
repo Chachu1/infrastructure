@@ -49,7 +49,7 @@ jobs:
           ansible "$SVC" -m shell -a "systemctl status ${UNIT} --no-pager -l || true" 2>&1 | tail -n 80
           echo
           echo "=== journalctl -u ${UNIT} -n ${LINES} (host ${SVC}) ==="
-          ansible "$SVC" -m shell -a "journalctl -u ${SVC} -n ${LINES} --no-pager || true" 2>&1 | tail -n 400
+          ansible "$SVC" -m shell -a "journalctl -u ${UNIT} -n ${LINES} --no-pager || true" 2>&1 | tail -n 400
 
       - name: AWS credential fingerprint (masked)
         working-directory: ansible
