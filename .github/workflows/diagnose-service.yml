@@ -8,9 +8,13 @@ on:
   workflow_dispatch:
     inputs:
       service:
-        description: Inventory host / systemd service to inspect
+        description: Inventory host to inspect
         required: true
         default: carrefour-scraper
+      unit:
+        description: systemd unit to inspect (defaults to the service name)
+        required: false
+        default: ""
       lines:
         description: journalctl lines to tail
         required: false
@@ -38,11 +42,13 @@ jobs:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
           SVC="${{ inputs.service }}"
+          UNIT="${{ inputs.unit }}"
+          if [ -z "$UNIT" ]; then UNIT="$SVC"; fi
           LINES="${{ inputs.lines }}"
-          echo "=== systemctl status ${SVC} ==="
-          ansible "$SVC" -m shell -a "systemctl status ${SVC} --no-pager -l || true" 2>&1 | tail -n 80
+          echo "=== systemctl status ${UNIT} (host ${SVC}) ==="
+          ansible "$SVC" -m shell -a "systemctl status ${UNIT} --no-pager -l || true" 2>&1 | tail -n 80
           echo
-          echo "=== journalctl -u ${SVC} -n ${LINES} ==="
+          echo "=== journalctl -u ${UNIT} -n ${LINES} (host ${SVC}) ==="
           ansible "$SVC" -m shell -a "journalctl -u ${SVC} -n ${LINES} --no-pager || true" 2>&1 | tail -n 400
 
       - name: AWS credential fingerprint (masked)
