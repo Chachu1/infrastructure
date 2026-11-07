@@ -37,6 +37,12 @@ Expected: `ok`, `200`.
 
 ## Notes
 
+- A **second, local** FlareSolverr runs on the `pvl-verifier` LXC
+  (`127.0.0.1:8191`, pinned 3.5.2, systemd) for the PVL verifier's
+  Swas/Lulu/Carrefour fetches (issue #107). It is provisioned by
+  `ansible/playbooks/hosts/pvl-verifier.yml` and does **not** replace this
+  docker-host instance, which keeps serving `local-scraper` /
+  `enrichment-worker`.
 - The request takes 10-30s while the challenge is solved; the local-scraper
   uses a 120s `maxTimeout` and a 135s socket timeout.
 - `local-scraper` still applies its PostgreSQL rate limiter around proxy-backed

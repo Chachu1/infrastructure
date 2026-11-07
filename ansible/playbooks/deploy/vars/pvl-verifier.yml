@@ -29,10 +29,23 @@ app_env_vars:
   PVL_POLL_SECONDS: "15"
   PVL_BATCH_SIZE: "5"
   PVL_WORKER_NAME: "pvl-verifier"
-  # Retailers whose PDPs are IP-blocked from the datacenter egress are routed
-  # through the no-auth residential SOCKS5 proxy on the home LAN.
-  PVL_PROXY_URL: "socks5://192.168.1.207:1080"
-  PVL_PROXY_RETAILERS: "SharafDG,Swas,Emax"
+  # Local FlareSolverr (provisioned on this LXC; see hosts/pvl-verifier.yml).
+  # Swas/Lulu/Carrefour are challenge-protected past what an IP change solves.
+  PVL_FLARESOLVERR_URL: "http://127.0.0.1:8191"
+  PVL_FLARESOLVERR_RETAILERS: "Carrefour%,Swas,Lulu"
+  PVL_FLARESOLVERR_TIMEOUT_MS: "120000"
+  PVL_FLARESOLVERR_WAIT_SECONDS: "2"
+  # Proxy pool for retailers where residential egress is enough (SharafDG,
+  # Emax). No-auth SOCKS5: Chromium cannot do SOCKS auth.
+  PVL_PROXY_NODES: "socks5://192.168.1.207:1080"
+  PVL_PROXY_RETAILERS: "SharafDG,Emax"
+  PVL_PROXY_STRATEGY: "sticky"
+  PVL_PROXY_FAILOVER: "true"
+  PVL_PROXY_COOLDOWN_SECONDS: "300"
+  # Two engines' worst-case timeouts exceed the old 600s lease.
+  PVL_LEASE_SECONDS: "1800"
+  # Carrefour stays on the headed LXC until its FlareSolverr smoke test passes.
+  PVL_EXCLUDE_CARREFOUR: "true"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   # The evidence bundle (proof PNG + HTML) lives in the screenshots bucket

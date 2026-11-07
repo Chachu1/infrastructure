@@ -227,13 +227,15 @@ locals {
 
     # PVL price-verification worker (issue #106). Internal worker: no public
     # domain/port; it claims price_verification_jobs, re-fetches suspicious
-    # PDPs in headless Chromium, and writes proof PNGs to the screenshots
-    # bucket (price-proof/ prefix).
+    # PDPs (Playwright + local FlareSolverr, issue #107), and writes proof PNGs
+    # to the screenshot bucket (price-proof/ prefix). 8 cores / 16 GiB keeps
+    # two Chromium instances (Playwright + FlareSolverr) comfortable.
     pvl-verifier = {
       vm_id        = 274
-      cores        = 2
-      memory       = 4096
-      disk         = 10
+      cores        = 8
+      memory       = 16384
+      swap         = 2048
+      disk         = 24
       ip           = "10.0.0.76/24"
       internal_dns = "pvl-verifier"
     }

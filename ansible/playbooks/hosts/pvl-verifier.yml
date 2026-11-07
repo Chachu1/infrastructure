@@ -45,6 +45,132 @@
         state: present
         update_cache: yes
 
+# Local FlareSolverr (issue #107). The verifier must not depend on the
+# docker-host instance: Swas/Lulu/Carrefour PDPs are fetched here, with the
+# proxy pool providing the residential egress on a per-request basis.
+# Docker-free on purpose: Debian chromium + Xvfb + a pinned upstream release.
+- name: Provision local FlareSolverr
+  hosts: pvl-verifier
+  become: true
+  vars:
+    flaresolverr_version: "3.5.2"
+    flaresolverr_root: "/opt/flaresolverr"
+    flaresolverr_src: "/opt/flaresolverr/src"
+    flaresolverr_venv: "/opt/flaresolverr/venv"
+  tasks:
+    - name: Install FlareSolverr OS dependencies
+      apt:
+        name:
+          - chromium
+          - chromium-driver
+          - xvfb
+          - git
+          - python3
+          - python3-venv
+          - python3-pip
+          - ca-certificates
+        state: present
+        update_cache: yes
+
+    - name: Create FlareSolverr service user
+      user:
+        name: flaresolverr
+        home: "{{ flaresolverr_root }}"
+        shell: /usr/sbin/nologin
+        system: true
+
+    - name: Create FlareSolverr directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: flaresolverr
+        group: flaresolverr
+        mode: "0755"
+      loop:
+        - "{{ flaresolverr_root }}"
+        - "{{ flaresolverr_src }}"
+
+    - name: Clone pinned FlareSolverr release
+      git:
+        repo: https://github.com/FlareSolverr/FlareSolverr.git
+        dest: "{{ flaresolverr_src }}"
+        version: "v{{ flaresolverr_version }}"
+        force: true
+
+    - name: Create FlareSolverr virtualenv
+      command:
+        cmd: "python3 -m venv {{ flaresolverr_venv }}"
+        creates: "{{ flaresolverr_venv }}/bin/python"
+
+    - name: Install FlareSolverr Python requirements
+      command:
+        cmd: "{{ flaresolverr_venv }}/bin/pip install --no-cache-dir -r requirements.txt"
+        chdir: "{{ flaresolverr_src }}"
+
+    # FlareSolverr skips its chromedriver download when /app/chromedriver
+    # exists. Point it at the Debian chromedriver so the LXC needs no runtime
+    # download and the driver always matches the installed chromium.
+    - name: Create /app for the chromedriver compatibility link
+      file:
+        path: /app
+        state: directory
+        mode: "0755"
+
+    - name: Expose the system chromedriver at FlareSolverr's expected path
+      file:
+        path: /app/chromedriver
+        src: /usr/bin/chromedriver
+        state: link
+        force: true
+
+    - name: Install FlareSolverr systemd unit
+      copy:
+        dest: /etc/systemd/system/flaresolverr.service
+        mode: "0644"
+        content: |
+          [Unit]
+          Description=FlareSolverr (local PVL instance)
+          After=network-online.target
+          Wants=network-online.target
+
+          [Service]
+          Type=simple
+          User=flaresolverr
+          Group=flaresolverr
+          WorkingDirectory={{ flaresolverr_src }}
+          Environment=HOME={{ flaresolverr_root }}
+          Environment=LOG_LEVEL=info
+          Environment=LOG_HTML=false
+          Environment=CAPTCHA_SOLVER=none
+          Environment=HEADLESS=true
+          Environment=HOST=127.0.0.1
+          Environment=PORT=8191
+          Environment=TZ=Asia/Riyadh
+          ExecStart={{ flaresolverr_venv }}/bin/python -u flaresolverr.py
+          Restart=always
+          RestartSec=5
+          # Two engines (Playwright + FlareSolverr) share a 16 GiB container;
+          # cap FlareSolverr before it can starve the verifier.
+          MemoryMax=6G
+          PrivateTmp=true
+
+          [Install]
+          WantedBy=multi-user.target
+      notify: Restart FlareSolverr
+
+    - name: Enable and start FlareSolverr
+      systemd:
+        name: flaresolverr
+        enabled: true
+        state: started
+        daemon_reload: true
+  handlers:
+    - name: Restart FlareSolverr
+      systemd:
+        name: flaresolverr
+        state: restarted
+        daemon_reload: true
+
 - name: Configure pvl-verifier
   hosts: pvl-verifier
   vars:
@@ -68,8 +194,17 @@
       PVL_POLL_SECONDS: "15"
       PVL_BATCH_SIZE: "5"
       PVL_WORKER_NAME: "pvl-verifier"
-      PVL_PROXY_URL: "socks5://192.168.1.207:1080"
-      PVL_PROXY_RETAILERS: "SharafDG,Swas,Emax"
+      PVL_FLARESOLVERR_URL: "http://127.0.0.1:8191"
+      PVL_FLARESOLVERR_RETAILERS: "Carrefour%,Swas,Lulu"
+      PVL_FLARESOLVERR_TIMEOUT_MS: "120000"
+      PVL_FLARESOLVERR_WAIT_SECONDS: "2"
+      PVL_PROXY_NODES: "socks5://192.168.1.207:1080"
+      PVL_PROXY_RETAILERS: "SharafDG,Emax"
+      PVL_PROXY_STRATEGY: "sticky"
+      PVL_PROXY_FAILOVER: "true"
+      PVL_PROXY_COOLDOWN_SECONDS: "300"
+      PVL_LEASE_SECONDS: "1800"
+      PVL_EXCLUDE_CARREFOUR: "true"
   pre_tasks:
     - name: Check distribution is supported
       assert:
