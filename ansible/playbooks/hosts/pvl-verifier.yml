@@ -88,7 +88,19 @@
         mode: "0755"
       loop:
         - "{{ flaresolverr_root }}"
-        - "{{ flaresolverr_src }}"
+
+    # A previous interrupted run (or a pre-created empty destination) makes
+    # the git module fail with "origin does not appear to be a git repository".
+    - name: Check for an existing FlareSolverr checkout
+      stat:
+        path: "{{ flaresolverr_src }}/.git"
+      register: flaresolverr_git_dir
+
+    - name: Remove an incomplete FlareSolverr checkout
+      file:
+        path: "{{ flaresolverr_src }}"
+        state: absent
+      when: not flaresolverr_git_dir.stat.exists
 
     - name: Clone pinned FlareSolverr release
       git:
