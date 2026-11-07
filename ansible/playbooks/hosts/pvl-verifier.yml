@@ -159,7 +159,7 @@
           Type=simple
           User=flaresolverr
           Group=flaresolverr
-          WorkingDirectory={{ flaresolverr_src }}
+          WorkingDirectory={{ flaresolverr_src }}/src
           Environment=HOME={{ flaresolverr_root }}
           Environment=LOG_LEVEL=info
           Environment=LOG_HTML=false
