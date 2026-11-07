@@ -130,20 +130,35 @@
         chdir: "{{ flaresolverr_src }}"
 
     # FlareSolverr skips its chromedriver download when /app/chromedriver
-    # exists. Point it at the Debian chromedriver so the LXC needs no runtime
-    # download and the driver always matches the installed chromium.
-    - name: Create /app for the chromedriver compatibility link
+    # exists, but undetected-chromedriver patches that file in place. Copy the
+    # Debian driver (rather than symlink it) and make it writable by the
+    # service user, exactly like the upstream image does.
+    - name: Create /app for the chromedriver compatibility copy
       file:
         path: /app
         state: directory
         mode: "0755"
 
-    - name: Expose the system chromedriver at FlareSolverr's expected path
+    - name: Check for an old chromedriver symlink
+      stat:
+        path: /app/chromedriver
+        follow: false
+      register: flaresolverr_chromedriver
+
+    - name: Remove the old chromedriver symlink
       file:
         path: /app/chromedriver
+        state: absent
+      when: flaresolverr_chromedriver.stat.islnk | default(false)
+
+    - name: Install the system chromedriver at FlareSolverr's expected path
+      copy:
         src: /usr/bin/chromedriver
-        state: link
-        force: true
+        dest: /app/chromedriver
+        remote_src: true
+        mode: "0755"
+        owner: flaresolverr
+        group: flaresolverr
 
     - name: Install FlareSolverr systemd unit
       copy:
