@@ -35,6 +35,12 @@
       APP_ENV: production
       APP_PORT: "8002"
       ALLOWED_ORIGINS: "*"
+      AWS_REGION: "us-east-1"
+      AWS_DEFAULT_REGION: "us-east-1"
+    app_secrets:
+      PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+      AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
+      AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
   pre_tasks:
     - name: Check distribution is supported
       assert:

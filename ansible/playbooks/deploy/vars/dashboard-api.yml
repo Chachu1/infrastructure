@@ -19,8 +19,15 @@ app_env_vars:
   APP_ENV: production
   APP_PORT: "8002"
   ALLOWED_ORIGINS: "*"
+  AWS_REGION: "us-east-1"
+  AWS_DEFAULT_REGION: "us-east-1"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  # Presign price-proof PNGs for /api/price-proof/<uuid>/<date>. The proof
+  # bucket lives under the screenshot-service principal, which already has
+  # head/get/put access to the screenshots prefix.
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
   # Bearer guard for brand-review decision POSTs (require_bearer in
   # services/dashboard-api/main.py). Same secret review-api uses.
   REVIEW_API_BEARER_TOKEN: "{{ lookup('env', 'REVIEW_API_BEARER_TOKEN', default='') }}"
