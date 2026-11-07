@@ -15,6 +15,10 @@ on:
         description: systemd unit to inspect (defaults to the service name)
         required: false
         default: ""
+      command:
+        description: Optional shell command to run on the host after inspection
+        required: false
+        default: ""
       lines:
         description: journalctl lines to tail
         required: false
@@ -50,6 +54,14 @@ jobs:
           echo
           echo "=== journalctl -u ${UNIT} -n ${LINES} (host ${SVC}) ==="
           ansible "$SVC" -m shell -a "journalctl -u ${UNIT} -n ${LINES} --no-pager || true" 2>&1 | tail -n 400
+
+      - name: Run extra command
+        if: inputs.command != ''
+        working-directory: ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: "False"
+          EXTRA_COMMAND: ${{ inputs.command }}
+        run: ansible "${{ inputs.service }}" -m shell -a "$EXTRA_COMMAND"
 
       - name: AWS credential fingerprint (masked)
         working-directory: ansible
