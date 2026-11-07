@@ -186,6 +186,15 @@
         enabled: true
         state: started
         daemon_reload: true
+
+    - name: Wait for FlareSolverr health endpoint
+      uri:
+        url: http://127.0.0.1:8191/health
+        status_code: 200
+      register: flaresolverr_health
+      retries: 18
+      delay: 5
+      until: flaresolverr_health.status == 200
   handlers:
     - name: Restart FlareSolverr
       systemd:
