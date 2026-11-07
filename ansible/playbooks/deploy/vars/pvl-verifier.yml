@@ -32,13 +32,13 @@ app_env_vars:
   # Local FlareSolverr (provisioned on this LXC; see hosts/pvl-verifier.yml).
   # Swas/Lulu/Carrefour are challenge-protected past what an IP change solves.
   PVL_FLARESOLVERR_URL: "http://127.0.0.1:8191"
-  PVL_FLARESOLVERR_RETAILERS: "Carrefour%,Swas,Lulu"
+  PVL_FLARESOLVERR_RETAILERS: "Carrefour%,Swas,Lulu,Extra,SharafDG"
   PVL_FLARESOLVERR_TIMEOUT_MS: "120000"
   PVL_FLARESOLVERR_WAIT_SECONDS: "2"
   # Proxy pool for retailers where residential egress is enough (SharafDG,
   # Emax). No-auth SOCKS5: Chromium cannot do SOCKS auth.
   PVL_PROXY_NODES: "socks5://192.168.1.207:1080"
-  PVL_PROXY_RETAILERS: "SharafDG,Emax"
+  PVL_PROXY_RETAILERS: "SharafDG,Emax,Extra"
   PVL_PROXY_STRATEGY: "sticky"
   PVL_PROXY_FAILOVER: "true"
   PVL_PROXY_COOLDOWN_SECONDS: "300"
