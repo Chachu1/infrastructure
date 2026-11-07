@@ -89,18 +89,20 @@
       loop:
         - "{{ flaresolverr_root }}"
 
-    # A previous interrupted run (or a pre-created empty destination) makes
-    # the git module fail with "origin does not appear to be a git repository".
-    - name: Check for an existing FlareSolverr checkout
+    # Clone once per pinned version. A failed/interrupted clone leaves no
+    # marker, so the next run starts from a clean destination (this also
+    # avoids git's "dubious ownership" error when the directory was created by
+    # a previous bootstrap task as the service user).
+    - name: Check the FlareSolverr source marker
       stat:
-        path: "{{ flaresolverr_src }}/.git"
-      register: flaresolverr_git_dir
+        path: "{{ flaresolverr_root }}/.flaresolverr-{{ flaresolverr_version }}"
+      register: flaresolverr_marker
 
     - name: Remove an incomplete FlareSolverr checkout
       file:
         path: "{{ flaresolverr_src }}"
         state: absent
-      when: not flaresolverr_git_dir.stat.exists
+      when: not flaresolverr_marker.stat.exists
 
     - name: Clone pinned FlareSolverr release
       git:
@@ -108,6 +110,14 @@
         dest: "{{ flaresolverr_src }}"
         version: "v{{ flaresolverr_version }}"
         force: true
+      when: not flaresolverr_marker.stat.exists
+
+    - name: Mark the pinned FlareSolverr source as installed
+      copy:
+        dest: "{{ flaresolverr_root }}/.flaresolverr-{{ flaresolverr_version }}"
+        content: "{{ flaresolverr_version }}\n"
+        mode: "0644"
+      when: not flaresolverr_marker.stat.exists
 
     - name: Create FlareSolverr virtualenv
       command:
