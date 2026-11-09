@@ -87,6 +87,14 @@
       BROWSER_HEADLESS: "false"
       MAX_BROWSER_AGE_SECONDS: "3600"
       MAX_TASKS_PER_BROWSER: "50"
+      # Akamai: UAE must egress through the residential proxy; pace requests.
+      # deploy/vars/carrefour-scraper.yml is authoritative and force-renders
+      # the env on every app deploy; these keep first-provision parity.
+      SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
+      INTER_TASK_DELAY_SECONDS: "90"
+      BOT_BLOCK_COOLDOWN_SECONDS: "600"
+      CARREFOUR_REQUEST_DELAY_MIN: "4"
+      CARREFOUR_REQUEST_DELAY_MAX: "7"
     # Second worker on the same LXC: the headed Carrefour PDP fetcher. Secrets
     # (PG_DSN / AWS keys) are added by deploy/vars/carrefour-scraper.yml.
     app_extra_units:
@@ -107,6 +115,9 @@
           PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
           MAX_BROWSER_AGE_SECONDS: "3600"
           MAX_PDP_PER_FETCHER: "20"
+          SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
+          PDP_PROXY_COUNTRIES: "UAE"
+          PDP_FETCH_DELAY_SECONDS: "15"
   pre_tasks:
     - name: Check distribution is supported
       assert:

@@ -102,7 +102,7 @@ app_extra_units:
       MAX_PDP_PER_FETCHER: "20"
       SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
       PDP_PROXY_COUNTRIES: "UAE"
-      PDP_FETCH_DELAY_SECONDS: "5"
+      PDP_FETCH_DELAY_SECONDS: "15"
     env_secrets:
       PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
       AWS_ACCESS_KEY_ID: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_ACCESS_KEY_ID', default='') }}"
