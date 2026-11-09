@@ -42,7 +42,7 @@ app_packages:
   - libx11-xcb1
   - libxcb1
 app_working_dir: "/opt/carrefour-scraper/current/services/local-scraper"
-app_requirements: "services/local-scraper/requirements.txt"
+app_requirements: "services/local-scraper/requirements-carrefour.txt"
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3
@@ -68,6 +68,18 @@ app_env_vars:
   PVL_PROOF_PREFIX: "screenshots/price-proof/"
   PVL_PROOF_AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
   PVL_PROOF_AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
+  # Carrefour requests must egress through the residential SOCKS5 proxy when
+  # the catalog row sets proxy=true (currently UAE): the fleet's datacenter IP
+  # is blocked by Akamai. Requests are paced (90s between queue tasks, 4-7s
+  # between paginated API calls) so the residential IP is not flag-banned. The
+  # Chromium pin lives in requirements-carrefour.txt (patchright 1.61.2 ->
+  # Chromium 1228 / Chrome 149); newer builds are rejected by Carrefour UAE's
+  # Akamai rules.
+  SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
+  INTER_TASK_DELAY_SECONDS: "90"
+  BOT_BLOCK_COOLDOWN_SECONDS: "600"
+  CARREFOUR_REQUEST_DELAY_MIN: "4"
+  CARREFOUR_REQUEST_DELAY_MAX: "7"
 # Second worker on the same LXC: the headed Carrefour PDP fetcher. Previously
 # hand-created on the container (drifted across deploys); now managed here.
 app_extra_units:
@@ -88,6 +100,9 @@ app_extra_units:
       PDP_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
       MAX_BROWSER_AGE_SECONDS: "3600"
       MAX_PDP_PER_FETCHER: "20"
+      SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
+      PDP_PROXY_COUNTRIES: "UAE"
+      PDP_FETCH_DELAY_SECONDS: "5"
     env_secrets:
       PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
       AWS_ACCESS_KEY_ID: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_ACCESS_KEY_ID', default='') }}"
