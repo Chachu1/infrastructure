@@ -30,6 +30,11 @@ app_env_vars:
   PVL_PROOF_PREFIX: "screenshots/price-proof/"
   PVL_PROOF_AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
   PVL_PROOF_AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
+  # Swas KSA shares the home SOCKS5 proxy with Carrefour UAE (search + PDP), so
+  # their bursts hit one residential IP together. The 10s global limiter and the
+  # 30s task gap reduce the combined burst.
+  SCRAPE_MIN_INTERVAL_S: "10"
+  INTER_TASK_DELAY_SECONDS: "30"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   JOB_TRACKER_API_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"

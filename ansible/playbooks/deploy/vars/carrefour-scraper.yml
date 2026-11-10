@@ -70,16 +70,18 @@ app_env_vars:
   PVL_PROOF_AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
   # Carrefour requests must egress through the residential SOCKS5 proxy when
   # the catalog row sets proxy=true (currently UAE): the fleet's datacenter IP
-  # is blocked by Akamai. Requests are paced (90s between queue tasks, 4-7s
-  # between paginated API calls) so the residential IP is not flag-banned. The
-  # Chromium pin lives in requirements-carrefour.txt (patchright 1.61.2 ->
-  # Chromium 1228 / Chrome 149); newer builds are rejected by Carrefour UAE's
-  # Akamai rules.
+  # is blocked by Akamai. Carrefour search, Carrefour PDP and Swas KSA all share
+  # the same residential exit, so their bursts add up on one IP. Pacing was
+  # raised after the 2026-11-10 shared-IP 403s (5/11 UAE categories hit Akamai
+  # blocks): 180s between queue tasks, 8-12s between paginated API calls, and a
+  # 30-minute cooldown when a block is detected. The Chromium pin lives in
+  # requirements-carrefour.txt (patchright 1.61.2 -> Chromium 1228 / Chrome 149);
+  # newer builds are rejected by Carrefour UAE's Akamai rules.
   SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
-  INTER_TASK_DELAY_SECONDS: "90"
-  BOT_BLOCK_COOLDOWN_SECONDS: "600"
-  CARREFOUR_REQUEST_DELAY_MIN: "4"
-  CARREFOUR_REQUEST_DELAY_MAX: "7"
+  INTER_TASK_DELAY_SECONDS: "180"
+  BOT_BLOCK_COOLDOWN_SECONDS: "1800"
+  CARREFOUR_REQUEST_DELAY_MIN: "8"
+  CARREFOUR_REQUEST_DELAY_MAX: "12"
 # Second worker on the same LXC: the headed Carrefour PDP fetcher. Previously
 # hand-created on the container (drifted across deploys); now managed here.
 app_extra_units:
@@ -102,7 +104,8 @@ app_extra_units:
       MAX_PDP_PER_FETCHER: "20"
       SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
       PDP_PROXY_COUNTRIES: "UAE"
-      PDP_FETCH_DELAY_SECONDS: "15"
+      # PDP shares the residential exit with Carrefour search + Swas KSA.
+      PDP_FETCH_DELAY_SECONDS: "30"
     env_secrets:
       PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
       AWS_ACCESS_KEY_ID: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_ACCESS_KEY_ID', default='') }}"
