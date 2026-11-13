@@ -265,7 +265,7 @@
               vars:
                 app_maintenance_check_deploy_lock: false
                 app_maintenance_dry_run: false
-                app_maintenance_keep_releases: "{{ app_keep_releases | default(3) }}"
+                app_maintenance_keep_releases: "{{ app_keep_releases | default(2) }}"
           rescue:
             - name: Warn that release cleanup failed
               debug:

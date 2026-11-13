@@ -15,7 +15,7 @@ app_requirements: "services/pg-backup/requirements.txt"
 app_archive_paths: ["services/pg-backup", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
-app_keep_releases: 3
+app_keep_releases: 2
 app_service_exec: "/bin/bash -c 'while true; do /usr/bin/bash /opt/pg-backup/current/services/pg-backup/backup.sh; echo \"[pg-backup] sleeping ${BACKUP_INTERVAL_SECONDS:-86400}s\"; sleep ${BACKUP_INTERVAL_SECONDS:-86400}; done'"
 app_env_vars:
   APP_ENV: production

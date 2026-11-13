@@ -14,7 +14,7 @@ app_requirements: "services/dashboard-api/requirements.txt"
 app_archive_paths: ["services/dashboard-api", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
-app_keep_releases: 3
+app_keep_releases: 2
 app_service_exec: "/opt/dashboard-api/current/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8002"
 app_env_vars:
   APP_ENV: production

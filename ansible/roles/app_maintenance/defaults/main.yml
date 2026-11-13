@@ -35,7 +35,7 @@ app_maintenance_prune_release_payload: true
 # Aggressive mode only.
 app_maintenance_git_gc: false
 app_maintenance_prune_releases: false
-app_maintenance_keep_releases: 3
+app_maintenance_keep_releases: 2
 
 # Used by deploy.yml's pre-flight check (kept here as the documented default).
 app_maintenance_min_free_gb: 2

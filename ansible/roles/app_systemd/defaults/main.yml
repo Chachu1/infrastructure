@@ -15,7 +15,7 @@ app_health_port: "{{ app_port }}"
 
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: "main"
-app_keep_releases: 3
+app_keep_releases: 2
 
 # Pathspecs for the immutable release export. Empty means "export the whole
 # repository"; production services should set the service path + shared/python

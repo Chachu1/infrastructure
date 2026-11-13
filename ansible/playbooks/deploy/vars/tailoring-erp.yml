@@ -14,7 +14,7 @@ app_requirements: "requirements.txt"
 app_archive_paths: []
 app_repo_url: "https://github.com/Chachu1/tailoring-system.git"
 app_branch: main
-app_keep_releases: 3
+app_keep_releases: 2
 # No Postgres in this stack - SQLite inside /opt/tailoring-erp/shared.
 app_requires_pg: false
 app_service_exec: "/opt/tailoring-erp/current/venv/bin/waitress-serve --listen=0.0.0.0:8004 wsgi:app"

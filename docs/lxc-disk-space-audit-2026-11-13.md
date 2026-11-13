@@ -243,9 +243,9 @@ since logs are already shipped to Graylog by filebeat. A 200 MB cap reclaims
 
 ### 3.5 Release artifacts — 17.7 GB, and ~12.4 GB is unrelated monorepo payload
 
-The deploy model keeps 3 immutable releases per app. That is reasonable, but
-each release is a `git archive` of the **entire repository**, not just the
-service being deployed.
+At audit time the deploy model kept 3 immutable releases per app; the fleet now
+retains **2** (current + one rollback). Each release used to be a `git archive`
+of the **entire repository**, not just the service being deployed.
 
 For `categorizer`, the current release is 540 MB:
 
@@ -533,7 +533,7 @@ intentionally held.
 |---|---|---|
 | `SystemMaxUse=200M`, `SystemMaxFileSize=50M` | `common` role via `group_vars/apps.yml` | Bounds local journals; Graylog remains the long-term store |
 | `APT::Periodic::AutocleanInterval "7";` | `common/templates/20auto-upgrades.j2` | Removes obsolete `.deb` weekly |
-| Release retention | `app_maintenance_keep_releases` (default 3) | Current + two rollback candidates |
+| Release retention | `app_maintenance_keep_releases` (default 2) | Current + one rollback candidate |
 | Free-space pre-flight | `deploy.yml` | Requires 2 GiB free before a release |
 | Rollback-safe browser prune | `app_maintenance/files/prune-playwright.sh` | Keeps revisions used by retained releases |
 | npm cache cleanup | `app_maintenance/tasks/npm.yml` | Frees ~1 GB on the frontend |

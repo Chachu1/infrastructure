@@ -14,7 +14,7 @@ app_requirements: "services/transform-worker/requirements.txt"
 app_archive_paths: ["services/transform-worker", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
-app_keep_releases: 3
+app_keep_releases: 2
 app_service_exec: "/opt/transform-worker/current/venv/bin/python -u worker.py"
 app_env_vars:
   APP_ENV: production
