@@ -541,19 +541,40 @@ intentionally held.
 | Deploy-lock guard | `app_maintenance/tasks/facts.yml` | Periodic cleanup skips a host with an in-flight deploy |
 | Non-app host guards | `app_maintenance` stat checks | Safe on postgres, uptime-kuma, graylog, pg-backup |
 
-### 5.6 First rollout
+### 5.6 Execution record (2026-11-13)
 
-The code is in place but **not yet applied to the hosts**. The first run should be:
+The process is deployed and has been run on the fleet:
 
-1. `workflow_dispatch` with `mode=report`, no limit: verify the daily table.
-2. `mode=clean`, `dry_run=true`, `limit=tailoring-erp`: verify the dry-run
-   output on one low-risk host.
-3. `mode=clean`, `limit=review-api,transform-worker,categorizer,screenshot-service,enrichment-worker`:
-   apply the first cleanup to the five pressured containers.
-4. Verify `df -h /`, `systemctl is-active`, and the health endpoint on each.
-5. Let the weekly schedule take over; run `mode=aggressive` monthly (or wait for
-   the 1st). The next normal `site.yml` run applies the journald/APT caps and
-   creates the Uptime Kuma monitor and Proxmox timer.
+- Feature commit `37bbfea`, pre-apt fix `95040b2`, path-limited release/npm
+  commit `5eb69d3`.
+- Cleanup applied first to `review-api`, `transform-worker`, `categorizer`, then
+  to `screenshot-service`, `enrichment-worker`, `pvl-verifier`,
+  `carrefour-scraper`, `job-tracker-api`, and `frontend`.
+- `Price_Tracker` commit `982f6c6` externalized `pipelines/matcher/data` and
+  moved numpy/scipy/pandas/sentence-transformers to the `ml` extra.
+
+Current root filesystem usage on the affected hosts:
+
+| LXC | Used | Use |
+|---|---:|---:|
+| pvl-verifier | 4.2 GB | 19% |
+| job-tracker-api | 2.4 GB | 26% |
+| screenshot-service | 3.2 GB | 29% |
+| categorizer | 2.8 GB | 30% |
+| review-api | 3.0 GB | 32% |
+| transform-worker | 3.1 GB | 34% |
+| carrefour-scraper | 4.2 GB | 38% |
+| enrichment-worker | 4.3 GB | 39% |
+| frontend | 4.8 GB | 43% |
+
+Path-limited release validation: deploying `categorizer` at `982f6c6`
+produced a **71 MB** release containing only `services/`, `shared/`, `sql/`
+and `venv/`; `pipelines/` and `legacy/` were absent and the service stayed
+`active`.
+
+The Proxmox health push returned `{"ok":true}` and the Uptime Kuma monitor is
+green. The first unattended weekly run is Sunday 03:00 UTC; the monthly
+aggressive run (release retention + git gc + fstrim) is still ahead.
 
 ---
 
