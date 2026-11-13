@@ -14,7 +14,7 @@
 [6. Structural fixes](#6-structural-fixes-app-repo--deploy-artifact) ·
 [7. What not to delete](#7-what-not-to-delete) ·
 [8. Appendix](#8-appendix--method-and-raw-numbers) ·
-[9. Security observation](#9-additional-observation-not-disk-related)
+[9. Security observation](#9-security-observation-resolved)
 
 ---
 
@@ -743,27 +743,32 @@ crashed yet. But any deploy, package update, or log write can fail now.
 
 ---
 
-## 9. Additional observation (not disk-related)
+## 9. Security observation (resolved)
 
-While inspecting the deploy clones, I found that `repo.git/config` stores a
-GitHub PAT in plaintext in `remote.origin.url`:
+At audit time, `shared/repo.git/config` stored a GitHub PAT in plaintext in
+`remote.origin.url` on every app LXC. The file was mode `0644`, owned by the app
+user, so any process in the container could recover the token.
 
-```
-https://x-access-token:github_pat_…@github.com/Chachu1/Price_Tracker.git
-```
+**Resolved on 2026-11-13:**
 
-The file is mode `0644`, owned by the app user, on every app LXC. Any process
-running as that user — or anyone who can read a container backup or a process
-environment — can recover the token. The deploy passes it as an environment
-variable and then writes it into the clone.
+- Replaced the PAT with repo-scoped **read-only deploy keys**:
+  `lxc-fleet-2026-11-13` on `Chachu1/Price_Tracker` and
+  `Chachu1/tailoring-system`.
+- Private halves are stored as GitHub Actions secrets
+  `PRICE_TRACKER_DEPLOY_KEY` and `TAILORING_SYSTEM_DEPLOY_KEY`.
+- `deploy.yml` writes the key to `/opt/<app>/shared/deploy_key` (mode `0600`),
+  fetches over SSH, and rewrites `origin` to the tokenless SSH URL.
+- All 15 app LXCs were scrubbed and verified with `git ls-remote origin HEAD`.
+- A real `categorizer` deploy at `b1944a7` succeeded over the deploy key:
+  71 MB release, no `pipelines/` or `legacy/`, service `active`.
+- The old `PRICE_TRACKER_PAT` and `TAILORING_SYSTEM_PAT` Actions secrets were
+  deleted from `Chachu1/infrastructure`; no workflow references them.
 
-This is outside the disk cleanup, but worth fixing:
+**Remaining manual step:** the old fine-grained PATs are still valid until
+revoked in GitHub. Deleting the Actions secret does **not** revoke the token.
+Revoke `PRICE_TRACKER_PAT` (created 2026-08-21) and
+`TAILORING_SYSTEM_PAT` (created 2026-10-25) under
+**Settings → Developer settings → Personal access tokens → Fine-grained tokens**.
 
-- Rotate the PAT if this audit or any shell output has been shared.
-- Use a GitHub App installation token or a per-repo read-only deploy key, not a
-  long-lived PAT embedded in the URL.
-- Scrub the remote URL after cloning (`git remote set-url origin
-  https://github.com/Chachu1/Price_Tracker.git`) and authenticate from a
-  short-lived credential helper or an SSH key.
-- Restrict the token to `Contents: Read` on `Chachu1/Price_Tracker` only.
-
+The existing `docker-host-runner` deploy key on `Chachu1/Price_Tracker` was left
+in place.
