@@ -5,5 +5,8 @@
 - name: Prune obsolete Playwright browser revisions
   ansible.builtin.include_tasks: playwright.yml
 
+- name: Reclaim the npm build cache
+  ansible.builtin.include_tasks: npm.yml
+
 - name: Remove leaked browser temp profiles
   ansible.builtin.include_tasks: tmp.yml

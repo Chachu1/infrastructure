@@ -15,6 +15,7 @@ app_watchdog_sec: "15m"
 app_browser: true
 app_working_dir: "/opt/enrichment-worker/current/services/enrichment-worker"
 app_requirements: "services/enrichment-worker/requirements.txt"
+app_archive_paths: ["services/enrichment-worker", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

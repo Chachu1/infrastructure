@@ -462,6 +462,8 @@ steady-state usage stays around 3–5 GB on a 10–12 GB rootfs.
 | Disk alert | `proxmox_host` role (`lxc-disk-health.timer`) | every 15 minutes |
 | Journald + APT caps | `common` role + `group_vars/apps.yml` | site run |
 | Uptime Kuma monitor | `uptime_kuma/defaults/main.yml` | site run |
+| Release payload prune | `app_maintenance/tasks/release-payload.yml` | weekly clean/aggressive |
+| npm cache cleanup | `app_maintenance/tasks/npm.yml` | deploy + weekly |
 
 ### 5.2 Deploy-time cleanup
 
@@ -534,6 +536,8 @@ intentionally held.
 | Release retention | `app_maintenance_keep_releases` (default 3) | Current + two rollback candidates |
 | Free-space pre-flight | `deploy.yml` | Requires 2 GiB free before a release |
 | Rollback-safe browser prune | `app_maintenance/files/prune-playwright.sh` | Keeps revisions used by retained releases |
+| npm cache cleanup | `app_maintenance/tasks/npm.yml` | Frees ~1 GB on the frontend |
+| Release payload prune | `app_maintenance/tasks/release-payload.yml` | Removes `pipelines/` and `legacy/` from existing releases |
 | Deploy-lock guard | `app_maintenance/tasks/facts.yml` | Periodic cleanup skips a host with an in-flight deploy |
 | Non-app host guards | `app_maintenance` stat checks | Safe on postgres, uptime-kuma, graylog, pg-backup |
 
@@ -553,14 +557,15 @@ The code is in place but **not yet applied to the hosts**. The first run should 
 
 ---
 
-## 6. Structural fixes (app repo / deploy artifact)
+## 6. Structural fixes (implemented where noted)
 
 These are the changes that remove the root causes rather than just cleaning up.
+Items 1–4 are now implemented; item 5's history rewrite remains optional.
 
-1. **Stop exporting the whole monorepo into every release.**
-   `git archive <sha>` currently exports everything, including the 462 MB
-   `pipelines/matcher` tree and 25 MB `legacy/`. The deployed services are 1–2 MB
-   each and do not import `pipelines`. Export only:
+1. **Path-limited release export (implemented).**
+   `deploy.yml` now exports only the pathspecs in `app_archive_paths` instead of
+   the whole repository. The deployed services are 1–2 MB each and do not import
+   `pipelines`. The per-service pathsets export:
    - `services/<service>` (or `workers/<worker>` for `pdp-enricher`)
    - `shared/python`
    - `sql/` where the service runs migrations (`review-api`,
@@ -573,24 +578,25 @@ These are the changes that remove the root causes rather than just cleaning up.
    services. This alone removes ~12.4 GB of current release payload and prevents
    ~1.4 GB per LXC of future growth.
 
-2. **Remove large data from git, or keep it out of the deploy path.**
-   `pipelines/matcher/data/faiss` and `data/encodings` are model artifacts, not
-   source. They already have an S3 home (`ml-models` prefix). Store them in S3
-   and fetch on the matcher host; do not check them into the deploy repo.
-   `legacy/hetzner/.terraform/providers/...` is a 25 MB vendored provider that
-   has no place in a deploy artifact either.
+2. **Stop tracking large data (implemented; history rewrite optional).**
+   `pipelines/matcher/data/` is no longer tracked in `Price_Tracker` (see
+   `pipelines/matcher/DATA.md`). The runtime copy is the ML host's `/opt/pt-ml`
+   mount and FAISS indexes live in S3. The local working tree keeps its copy;
+   new clones are smaller. The **existing commit history still contains the
+   blobs**, so a `git filter-repo` history rewrite is still required if the
+   ~500 MB pack size itself must shrink. That rewrite is intentionally not part
+   of this change.
 
-3. **Move ML dependencies out of the root base dependencies.**
-   `sentence-transformers`, `numpy`, `scipy`, `pandas` should be in the `ml`
-   extra, not `[project].dependencies`. This prevents any accidental
-   `uv pip install .` from pulling 5 GB of CUDA wheels. Also audit the fallback
-   in the deploy helper: `uv pip install .` at the repo root is never the right
-   action for a service LXC.
+3. **Move ML dependencies out of the root base dependencies (implemented).**
+   `sentence-transformers`, `numpy`, `scipy`, `pandas` are now in the `ml`
+   extra, not `[project].dependencies`. A stray root install no longer pulls
+   torch/CUDA. The deploy playbook and helper also refuse to fall back to
+   `uv pip install .`; they require the service-specific requirements file.
 
-4. **Prefer `uv pip install --no-cache` for deploys, or a bounded cache.**
-   If deploy speed matters, keep a cache but clear it after the release is
-   healthy. `uv cache clean` is the simplest. `UV_NO_CACHE=1` is viable for
-   services with small requirements (most of these venvs are 70–250 MB).
+4. **Bounded cache (implemented).**
+   Deploys clear `uv`, npm and Playwright caches after the release is healthy;
+   the weekly maintenance run is the safety net. `UV_NO_CACHE=1` remains an
+   option for services with small requirements.
 
 5. **Fix the 500 MB bare clones by removing the matcher data, not by
    branch-pruning.** On a current repo, `main` holds 655 MB of blobs and all

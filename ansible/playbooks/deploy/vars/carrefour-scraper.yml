@@ -43,6 +43,7 @@ app_packages:
   - libxcb1
 app_working_dir: "/opt/carrefour-scraper/current/services/local-scraper"
 app_requirements: "services/local-scraper/requirements-carrefour.txt"
+app_archive_paths: ["services/local-scraper", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

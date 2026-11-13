@@ -38,6 +38,13 @@
     - app_maintenance_root_stat.stat.exists
     - app_maintenance_mode in ['clean', 'aggressive']
 
+- name: Remove unrelated monorepo payload from existing releases
+  ansible.builtin.include_tasks: release-payload.yml
+  when:
+    - app_maintenance_root_stat.stat.exists
+    - app_maintenance_prune_release_payload | bool
+    - app_maintenance_mode in ['clean', 'aggressive']
+
 - name: Garbage-collect deploy repositories
   ansible.builtin.include_tasks: git.yml
   when:

@@ -11,6 +11,7 @@ app_health_port: 8002
 app_health_check: "http"
 app_working_dir: "/opt/dashboard-api/current/services/dashboard-api"
 app_requirements: "services/dashboard-api/requirements.txt"
+app_archive_paths: ["services/dashboard-api", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

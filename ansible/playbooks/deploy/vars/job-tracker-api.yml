@@ -11,6 +11,7 @@ app_health_port: 8001
 app_health_check: "http"
 app_working_dir: "/opt/job-tracker-api/current/services/job-tracker-api"
 app_requirements: "services/job-tracker-api/requirements.txt"
+app_archive_paths: ["services/job-tracker-api", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

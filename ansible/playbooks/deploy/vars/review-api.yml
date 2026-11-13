@@ -11,6 +11,7 @@ app_health_port: 8013
 app_health_check: "http"
 app_working_dir: "/opt/review-api/current/services/review-api"
 app_requirements: "services/review-api/requirements.txt"
+app_archive_paths: ["services/review-api", "shared/python", "sql"]
 domain: prod-match.mhlab.me
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main

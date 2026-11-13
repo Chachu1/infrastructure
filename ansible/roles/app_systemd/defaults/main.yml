@@ -17,6 +17,11 @@ app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: "main"
 app_keep_releases: 3
 
+# Pathspecs for the immutable release export. Empty means "export the whole
+# repository"; production services should set the service path + shared/python
+# (+ sql where needed) so the release does not include the matcher data.
+app_archive_paths: []
+
 # Non-secret environment for the app (rendered into /etc/{{ app_name }}/env).
 app_env_vars: {}
 

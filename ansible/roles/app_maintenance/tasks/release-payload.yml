@@ -1,0 +1,29 @@
+---
+# Deploy releases used to export the entire monorepo. The deployed services do
+# not import `pipelines/` or read `legacy/`; the matcher tree is build/runtime
+# data for the matcher host (which mounts /opt/pt-ml). Removing these from
+# existing releases reclaims the historical payload and keeps rollback releases
+# useful.
+#
+# New releases are path-limited by deploy.yml and never contain these trees.
+
+- name: Check for the releases directory
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}/releases"
+  register: app_maintenance_releases_payload
+
+- name: Remove unrelated monorepo payload from releases
+  ansible.builtin.shell: |
+    set -euo pipefail
+    for d in "{{ app_maintenance_root }}"/releases/*/; do
+      [ -d "$d" ] || continue
+      rm -rf -- "$d/pipelines" "$d/legacy"
+    done
+  args:
+    executable: /bin/bash
+  become: true
+  when:
+    - app_maintenance_releases_payload.stat.exists
+    - app_maintenance_allowed | bool
+    - not app_maintenance_dry_run | bool
+  changed_when: false

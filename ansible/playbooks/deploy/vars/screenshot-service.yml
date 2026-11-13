@@ -12,6 +12,7 @@ app_health_check: "http"
 app_browser: true
 app_working_dir: "/opt/screenshot-service/current/services/screenshot-service"
 app_requirements: "services/screenshot-service/requirements.txt"
+app_archive_paths: ["services/screenshot-service", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

@@ -28,6 +28,10 @@ app_maintenance_tmp_patterns:
   - "playwright_chromiumdev_profile-*"
 app_maintenance_tmp_age_days: 1
 
+# Remove the monorepo payload (pipelines/, legacy/) that old releases still
+# carry. The deployed service never uses it; new releases are path-limited.
+app_maintenance_prune_release_payload: true
+
 # Aggressive mode only.
 app_maintenance_git_gc: false
 app_maintenance_prune_releases: false

@@ -11,6 +11,7 @@ app_health_port: 8004
 app_health_check: "http"
 app_working_dir: "/opt/tailoring-erp/current"
 app_requirements: "requirements.txt"
+app_archive_paths: []
 app_repo_url: "https://github.com/Chachu1/tailoring-system.git"
 app_branch: main
 app_keep_releases: 3

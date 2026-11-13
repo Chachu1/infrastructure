@@ -118,7 +118,17 @@
           become_user: "{{ app_user }}"
 
         - name: Export release from git archive
-          shell: "mkdir -p {{ release_dir }} && git --git-dir={{ repo_bare }} archive {{ sha }} | tar -x -C {{ release_dir }}"
+          shell: |
+            set -euo pipefail
+            mkdir -p "{{ release_dir }}"
+            paths="{{ app_archive_paths | default([]) | join(' ') }}"
+            if [ -n "$paths" ]; then
+              git --git-dir="{{ repo_bare }}" archive "{{ sha }}" -- $paths | tar -x -C "{{ release_dir }}"
+            else
+              git --git-dir="{{ repo_bare }}" archive "{{ sha }}" | tar -x -C "{{ release_dir }}"
+            fi
+          args:
+            executable: /bin/bash
           when: not release_stat.stat.exists
           become: true
           become_user: "{{ app_user }}"
@@ -126,16 +136,14 @@
         - name: Build release venv
           shell: |
             set -eu
-            cd {{ release_dir }}
+            cd "{{ release_dir }}"
             uv venv venv
             REQS="{{ app_requirements | default('requirements.txt') }}"
-            if [ -f "$REQS" ]; then
-              uv pip install --python venv/bin/python -r "$REQS"
-            elif [ -f requirements.txt ]; then
-              uv pip install --python venv/bin/python -r requirements.txt
-            else
-              uv pip install --python venv/bin/python .
+            if [ ! -f "$REQS" ]; then
+              echo "requirements file $REQS not found in release" >&2
+              exit 1
             fi
+            uv pip install --python venv/bin/python -r "$REQS"
             # Install shared lib if present and not already installed via requirements
             if [ -d shared/python ] && [ -f shared/python/pyproject.toml ]; then
               uv pip install --python venv/bin/python -e shared/python || true

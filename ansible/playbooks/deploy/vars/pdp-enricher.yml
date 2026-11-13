@@ -15,6 +15,7 @@ app_browser: false
 # shared lib is installed from shared/python by the deploy venv build.
 app_working_dir: "/opt/pdp-enricher/current"
 app_requirements: "workers/pdp-enricher/requirements.txt"
+app_archive_paths: ["workers/pdp-enricher", "shared/python", "sql"]
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
 app_branch: main
 app_keep_releases: 3

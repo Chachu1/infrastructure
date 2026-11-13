@@ -1,0 +1,41 @@
+---
+# The frontend uses npm; its cache lives at /opt/frontend/.npm and is not
+# covered by the uv task. Clearing it is safe: the next `npm ci` re-downloads
+# only the packages it needs.
+
+- name: Check for the npm cache
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}/.npm"
+  register: app_maintenance_npm_cache
+
+- name: Check for the npm binary
+  ansible.builtin.stat:
+    path: /usr/bin/npm
+  register: app_maintenance_npm_bin
+
+- name: Measure the npm cache in dry-run mode
+  ansible.builtin.command: "du -sm {{ app_maintenance_root }}/.npm"
+  register: app_maintenance_npm_size
+  changed_when: false
+  check_mode: false
+  when:
+    - app_maintenance_npm_cache.stat.exists
+    - app_maintenance_dry_run | bool
+
+- name: Report npm cache size in dry-run mode
+  ansible.builtin.debug:
+    msg: "npm cache: {{ app_maintenance_npm_size.stdout | default('not present') }}"
+  when: app_maintenance_dry_run | bool
+
+- name: Clear the npm build cache
+  ansible.builtin.command: /usr/bin/npm cache clean --force
+  environment:
+    HOME: "{{ app_maintenance_root }}"
+  become: true
+  become_user: "{{ app_maintenance_app_user }}"
+  when:
+    - app_maintenance_npm_cache.stat.exists
+    - app_maintenance_npm_bin.stat.exists
+    - app_maintenance_allowed | bool
+    - not app_maintenance_dry_run | bool
+  changed_when: false
