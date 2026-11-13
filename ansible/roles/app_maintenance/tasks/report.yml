@@ -1,0 +1,14 @@
+---
+- name: Read root filesystem usage
+  ansible.builtin.command: df -h /
+  register: app_maintenance_df
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Show root filesystem usage
+  ansible.builtin.debug:
+    msg: >-
+      {{ app_maintenance_app_name | default(inventory_hostname) }}
+      [{{ app_maintenance_report_label | default('snapshot') }}]:
+      {{ app_maintenance_df.stdout_lines | default([]) | last | default('df unavailable') }}

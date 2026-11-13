@@ -1,0 +1,9 @@
+[Unit]
+Description=Push LXC root filesystem health to Uptime Kuma
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/lxc-disk-health.env
+ExecStart=/usr/local/bin/lxc-disk-health.sh

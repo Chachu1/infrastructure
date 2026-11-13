@@ -1,14 +1,44 @@
 name: Maintenance
 
-# Weekly OS maintenance for app hosts (Sunday 03:00 UTC) - also triggerable
-# manually via workflow_dispatch. Runs ansible/playbooks/maintenance.yml
-# against the lxc_apps + vm_apps groups, one host at a time. The gateway and
-# Proxmox host are excluded so apt upgrades never disrupt Caddy/WireGuard.
+# Weekly OS + disk maintenance for app hosts (Sunday 03:00 UTC), plus a
+# monthly aggressive run (1st at 04:00 UTC) that also does git gc, release
+# pruning and pct fstrim. Also triggerable manually with a report-only or
+# dry-run mode.
+#
+# Ansible owns the cleanup logic; this workflow is only the scheduler,
+# credential holder and audit log.
 
 on:
   schedule:
-    - cron: '0 3 * * 0'  # Sunday 03:00 UTC
+    - cron: '0 3 * * 0'  # weekly: safe cleanup + apt
+    - cron: '0 4 1 * *'  # monthly: aggressive (git gc, releases, fstrim)
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "report = read-only; clean = caches/logs; aggressive = + git/releases/fstrim"
+        type: choice
+        options: [report, clean, aggressive]
+        default: clean
+      limit:
+        description: "Ansible limit, e.g. review-api,transform-worker"
+        required: false
+        type: string
+      dry_run:
+        description: "Show sizes and skip every destructive command"
+        type: boolean
+        default: true
+      git_gc:
+        description: "Run git gc on deploy repositories"
+        type: boolean
+        default: false
+      prune_releases:
+        description: "Prune old and incomplete releases"
+        type: boolean
+        default: false
+      trim:
+        description: "Run pct fstrim on the Proxmox host"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -20,6 +50,9 @@ concurrency:
 jobs:
   maintenance:
     runs-on: [self-hosted, proxmox]
+    timeout-minutes: 120
+    env:
+      DEFAULT_MODE: ${{ github.event.schedule == '0 4 1 * *' && 'aggressive' || 'clean' }}
 
     steps:
       - uses: actions/checkout@v5
@@ -37,10 +70,41 @@ jobs:
 
       - name: Run Ansible maintenance playbook
         working-directory: ansible
-        run: ansible-playbook playbooks/maintenance.yml
+        run: |
+          MODE="${{ github.event.inputs.mode || env.DEFAULT_MODE }}"
+          DRY="${{ github.event.inputs.dry_run || 'false' }}"
+          LIMIT="${{ github.event.inputs.limit }}"
+          GIT_GC="${{ github.event.inputs.git_gc || 'false' }}"
+          PRUNE="${{ github.event.inputs.prune_releases || 'false' }}"
+          TRIM="${{ github.event.inputs.trim || 'false' }}"
+
+          if [ "$MODE" = "aggressive" ]; then
+            GIT_GC=true
+            PRUNE=true
+            TRIM=true
+          fi
+
+          ARGS=()
+          if [ -n "$LIMIT" ]; then
+            ARGS+=("-l" "$LIMIT")
+          fi
+
+          ansible-playbook playbooks/maintenance.yml "${ARGS[@]}" \
+            -e app_maintenance_mode="$MODE" \
+            -e app_maintenance_dry_run="$DRY" \
+            -e app_maintenance_git_gc="$GIT_GC" \
+            -e app_maintenance_prune_releases="$PRUNE" \
+            -e app_maintenance_trim="$TRIM"
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           WIREGUARD_PRIVATE_KEY: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
           POSTGRES_MOHSIN_PASSWORD: ${{ secrets.POSTGRES_MOHSIN_PASSWORD }}
           POSTGRES_PRICETRACKER_PASSWORD: ${{ secrets.POSTGRES_PRICETRACKER_PASSWORD }}
+
+      - name: Collect disk report
+        if: always()
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+            -i /home/runner/.ssh/proxmox_key root@10.0.0.1 \
+            'bash -s' < scripts/lxc-disk-report.sh | tee -a "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,25 @@
+---
+- name: Clean the APT package cache
+  ansible.builtin.command: apt-get clean
+  become: true
+  changed_when: false
+  when: not app_maintenance_dry_run | bool
+
+- name: Vacuum journald
+  ansible.builtin.command: "journalctl --vacuum-size={{ app_maintenance_journal_max }}"
+  become: true
+  changed_when: false
+  when: not app_maintenance_dry_run | bool
+
+- name: Read journald usage in dry-run mode
+  ansible.builtin.command: journalctl --disk-usage
+  register: app_maintenance_journal_usage
+  become: true
+  changed_when: false
+  check_mode: false
+  when: app_maintenance_dry_run | bool
+
+- name: Show journald usage in dry-run mode
+  ansible.builtin.debug:
+    msg: "{{ app_maintenance_journal_usage.stdout | default('journalctl unavailable') }}"
+  when: app_maintenance_dry_run | bool

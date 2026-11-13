@@ -1,0 +1,22 @@
+---
+# Deploy-time cleanup. Called from deploy.yml after the health checks, while
+# the deploy lock is intentionally still held, so check_deploy_lock must be
+# false at the include site.
+
+- name: Load app maintenance facts
+  ansible.builtin.include_tasks: facts.yml
+
+- name: Check for the app tree
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}"
+  register: app_maintenance_root_stat
+
+- name: Clean app build caches after deploy
+  ansible.builtin.include_tasks: app.yml
+  when: app_maintenance_root_stat.stat.exists
+
+- name: Report disk usage after deploy cleanup
+  ansible.builtin.include_tasks: report.yml
+  vars:
+    app_maintenance_report_label: after-deploy
+  when: app_maintenance_root_stat.stat.exists

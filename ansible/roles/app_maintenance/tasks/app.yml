@@ -1,0 +1,9 @@
+---
+- name: Reclaim the uv build cache
+  ansible.builtin.include_tasks: uv.yml
+
+- name: Prune obsolete Playwright browser revisions
+  ansible.builtin.include_tasks: playwright.yml
+
+- name: Remove leaked browser temp profiles
+  ansible.builtin.include_tasks: tmp.yml

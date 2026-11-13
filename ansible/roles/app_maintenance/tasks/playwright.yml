@@ -1,0 +1,45 @@
+---
+- name: Check for the Playwright browser cache
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}/.cache/ms-playwright"
+  register: app_maintenance_playwright_cache
+
+- name: Check for the current release venv
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}/current/venv"
+  register: app_maintenance_current_venv
+
+- name: Measure the Playwright cache in dry-run mode
+  ansible.builtin.command: "du -sm {{ app_maintenance_root }}/.cache/ms-playwright"
+  register: app_maintenance_playwright_size
+  changed_when: false
+  check_mode: false
+  when:
+    - app_maintenance_playwright_cache.stat.exists
+    - app_maintenance_dry_run | bool
+
+- name: Report Playwright cache size in dry-run mode
+  ansible.builtin.debug:
+    msg: "Playwright cache: {{ app_maintenance_playwright_size.stdout | default('not present') }}"
+  when: app_maintenance_dry_run | bool
+
+# Keep the browser revisions referenced by any retained release, not just the
+# current one. That preserves rollback: deploy.yml skips `playwright install`
+# when an old release's venv already exists, so deleting its browser revision
+# would make a rollback fail at browser launch. Aggressive mode prunes old
+# releases first, then this task can remove the now-unreferenced revisions.
+#
+# The script uses the union of playwright/patchright browsers.json files from
+# every retained release; see files/prune-playwright.sh.
+# Run as root: the script only reads browsers.json and deletes cache dirs, and
+# running it as the unprivileged app user makes Ansible's script temp-file ACL
+# handling fail on hosts whose chmod lacks A+ support.
+- name: Prune browser revisions not used by any retained release
+  ansible.builtin.script: "prune-playwright.sh {{ app_maintenance_root }}"
+  become: true
+  when:
+    - app_maintenance_playwright_cache.stat.exists
+    - app_maintenance_current_venv.stat.exists
+    - app_maintenance_allowed | bool
+    - not app_maintenance_dry_run | bool
+  changed_when: false

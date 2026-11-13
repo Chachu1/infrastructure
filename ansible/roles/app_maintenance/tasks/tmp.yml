@@ -1,0 +1,20 @@
+---
+- name: Remove leaked browser temp profiles
+  ansible.builtin.shell: |
+    set -euo pipefail
+    removed=0
+    for pattern in {{ app_maintenance_tmp_patterns | join(' ') }}; do
+      while IFS= read -r -d '' path; do
+        rm -rf -- "$path"
+        removed=$((removed + 1))
+      done < <(find /tmp -maxdepth 1 -name "$pattern" \
+        -mtime +{{ app_maintenance_tmp_age_days }} -print0 2>/dev/null)
+    done
+    echo "removed ${removed} temp entries"
+  args:
+    executable: /bin/bash
+  become: true
+  when:
+    - app_maintenance_allowed | bool
+    - not app_maintenance_dry_run | bool
+  changed_when: false

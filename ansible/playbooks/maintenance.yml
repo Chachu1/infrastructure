@@ -1,10 +1,14 @@
 ---
-# maintenance.yml - weekly OS maintenance for application hosts.
+# maintenance.yml - weekly OS + disk maintenance for application hosts.
 #
 # Targets the lxc_apps + vm_apps groups only (one host at a time via serial: 1)
 # so apt upgrades never touch the gateway (Caddy/WireGuard/CoreDNS) or the
-# Proxmox host. Run via the maintenance GitHub Actions workflow:
+# Proxmox host. The app_maintenance role reclaims APT/uv/Playwright/journal
+# space; aggressive mode also prunes releases, runs git gc and trims the LXC
+# filesystems. Run via the maintenance GitHub Actions workflow:
 #   ansible-playbook playbooks/maintenance.yml
+#   ansible-playbook playbooks/maintenance.yml -e app_maintenance_mode=report
+#   ansible-playbook playbooks/maintenance.yml -e app_maintenance_mode=aggressive
 #
 # Deploy coordination: deploy.yml creates /tmp/deploy-{{ service }}.lock while
 # an app deploy is in progress. inventory_hostname equals the service name for
@@ -25,11 +29,21 @@
   become: true
   serial: 1  # one host at a time
 
+  vars:
+    app_maintenance_mode: clean
+    app_maintenance_dry_run: false
+    app_maintenance_git_gc: false
+    app_maintenance_prune_releases: false
+    app_maintenance_trim: false
+
   tasks:
     - name: Remove legacy Elastic apt artifacts (global keyring conflict)
       ansible.builtin.shell: "rm -f /etc/apt/sources.list.d/elastic.list /etc/apt/trusted.gpg.d/elastic*; true"
       changed_when: false
-      when: ansible_connection | default('smart') != 'local'
+      when:
+        - ansible_connection | default('smart') != 'local'
+        - app_maintenance_mode != 'report'
+        - not app_maintenance_dry_run | bool
 
     - name: Check deploy lock
       stat:
@@ -42,17 +56,38 @@
         msg: "Deploy in progress on {{ inventory_hostname }}, skipping maintenance"
       when:
         - ansible_connection != 'local'
-        - deploy_lock.stat.exists
+        - app_maintenance_mode != 'report'
+        - deploy_lock is defined and deploy_lock.stat.exists
+
+    - name: Clean caches before the apt upgrade
+      ansible.builtin.include_role:
+        name: app_maintenance
+        tasks_from: pre_apt.yml
+      when:
+        - ansible_connection != 'local'
+        - app_maintenance_mode != 'report'
+        - not app_maintenance_dry_run | bool
 
     - name: Update apt cache
       apt:
         update_cache: yes
         cache_valid_time: 3600
-      when: ansible_connection != 'local'
+      when:
+        - ansible_connection != 'local'
+        - app_maintenance_mode != 'report'
+        - not app_maintenance_dry_run | bool
 
     - name: Upgrade all packages
       apt:
         upgrade: dist
+      when:
+        - ansible_connection != 'local'
+        - app_maintenance_mode != 'report'
+        - not app_maintenance_dry_run | bool
+
+    - name: Run periodic app cleanup
+      ansible.builtin.include_role:
+        name: app_maintenance
       when: ansible_connection != 'local'
 
     - name: Check if reboot is required
@@ -73,3 +108,27 @@
     - name: Re-apply common role handlers
       meta: flush_handlers
       when: ansible_connection | default('smart') != 'local'
+
+# The guest fstrim.timer is disabled by ConditionVirtualization=!container, so
+# the host must discard freed blocks. Run monthly (aggressive mode).
+- name: Trim LXC root filesystems
+  hosts: proxmox_host
+  gather_facts: false
+
+  tasks:
+    - name: Run pct fstrim for every container
+      ansible.builtin.shell: |
+        set -uo pipefail
+        failed=0
+        for id in $(pct list | awk 'NR>1 {print $1}'); do
+          if ! pct fstrim "$id"; then
+            echo "fstrim failed for $id" >&2
+            failed=1
+          fi
+        done
+        exit "$failed"
+      changed_when: false
+      when:
+        - app_maintenance_trim | default(false) | bool
+        - app_maintenance_mode | default('clean') != 'report'
+        - not app_maintenance_dry_run | default(false) | bool

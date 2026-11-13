@@ -1,0 +1,15 @@
+---
+- name: Resolve app maintenance identity
+  ansible.builtin.set_fact:
+    app_maintenance_app_name: "{{ app_name | default(inventory_hostname) }}"
+    app_maintenance_app_user: "{{ app_user | default(app_name | default(inventory_hostname)) }}"
+    app_maintenance_root: "/opt/{{ app_name | default(inventory_hostname) }}"
+
+- name: Check for an in-flight deploy
+  ansible.builtin.stat:
+    path: "/tmp/deploy-{{ app_maintenance_app_name }}.lock"
+  register: app_maintenance_deploy_lock
+
+- name: Decide whether cleanup is allowed
+  ansible.builtin.set_fact:
+    app_maintenance_allowed: "{{ not (app_maintenance_check_deploy_lock | bool and app_maintenance_deploy_lock.stat.exists) }}"

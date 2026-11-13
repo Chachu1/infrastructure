@@ -1,0 +1,37 @@
+---
+# app_maintenance - reclaim disk space on native systemd app LXCs.
+#
+# The role is intentionally split so the same code can run:
+#   - after a successful deploy (deploy.yml)  -> cheap cache cleanup only
+#   - weekly from maintenance.yml            -> cache + log cleanup
+#   - monthly/manual aggressive mode         -> git gc + release pruning
+#
+# It is safe on non-app hosts: the heavy tasks are guarded by a stat of
+# /opt/<app>. maintenance.yml targets lxc_apps, which also contains postgres,
+# uptime-kuma, graylog and pg-backup.
+
+# report | clean | aggressive
+app_maintenance_mode: clean
+
+# When true, print sizes and skip every destructive command.
+app_maintenance_dry_run: false
+
+# Periodic runs skip while a deploy holds /tmp/deploy-<app>.lock. Deploy-time
+# cleanup must set this false because the deploy lock is expected to be held.
+app_maintenance_check_deploy_lock: true
+
+app_maintenance_journal_max: "200M"
+
+# Remove leaked Chromium profiles older than this. Do not add xvfb-run.* here:
+# a long-lived Xvfb can still be using its temp directory.
+app_maintenance_tmp_patterns:
+  - "playwright_chromiumdev_profile-*"
+app_maintenance_tmp_age_days: 1
+
+# Aggressive mode only.
+app_maintenance_git_gc: false
+app_maintenance_prune_releases: false
+app_maintenance_keep_releases: 3
+
+# Used by deploy.yml's pre-flight check (kept here as the documented default).
+app_maintenance_min_free_gb: 2

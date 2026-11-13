@@ -53,6 +53,48 @@
     enabled: true
     state: started
 
+- name: Deploy LXC disk health script
+  ansible.builtin.copy:
+    src: lxc-disk-health.sh
+    dest: /usr/local/bin/lxc-disk-health.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy LXC disk health environment
+  ansible.builtin.template:
+    src: lxc-disk-health.env.j2
+    dest: /etc/lxc-disk-health.env
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Deploy LXC disk health service
+  ansible.builtin.copy:
+    src: lxc-disk-health.service
+    dest: /etc/systemd/system/lxc-disk-health.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy LXC disk health timer
+  ansible.builtin.copy:
+    src: lxc-disk-health.timer
+    dest: /etc/systemd/system/lxc-disk-health.timer
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable and start LXC disk health timer
+  ansible.builtin.systemd:
+    name: lxc-disk-health.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  # In check mode the unit files above are not actually written, so systemd
+  # cannot resolve the unit yet.
+  when: not ansible_check_mode
+
 - name: Install iptables-persistent
   apt:
     name: iptables-persistent

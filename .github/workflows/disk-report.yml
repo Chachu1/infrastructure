@@ -1,0 +1,40 @@
+name: Disk Report
+
+# Daily read-only disk report for every LXC. Writes a Markdown table to the
+# GitHub Actions summary. The independent alert lives on the Proxmox host
+# (lxc-disk-health.timer -> Uptime Kuma push monitor), so this workflow being
+# delayed does not delay an alert.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # daily 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: disk-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: [self-hosted, proxmox]
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Setup Proxmox SSH key
+        run: |
+          mkdir -p /home/runner/.ssh
+          echo "${{ secrets.PROXMOX_SSH_KEY }}" > /home/runner/.ssh/proxmox_key
+          chmod 600 /home/runner/.ssh/proxmox_key
+
+      - name: Collect disk report
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+            -i /home/runner/.ssh/proxmox_key root@10.0.0.1 \
+            'bash -s' < scripts/lxc-disk-report.sh | tee -a "$GITHUB_STEP_SUMMARY"

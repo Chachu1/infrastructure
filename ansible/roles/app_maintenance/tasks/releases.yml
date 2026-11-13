@@ -1,0 +1,44 @@
+---
+- name: Load app maintenance facts
+  ansible.builtin.include_tasks: facts.yml
+
+- name: Check for the releases directory
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}/releases"
+  register: app_maintenance_releases
+
+# Remove failed/incomplete release directories first (a failed deploy can
+# leave a directory without venv/bin/python behind), then enforce retention
+# without ever touching the current release.
+- name: Prune old and incomplete releases
+  ansible.builtin.shell: |
+    set -uo pipefail
+    cd "{{ app_maintenance_root }}/releases"
+    current=$(readlink -f "{{ app_maintenance_root }}/current" 2>/dev/null || true)
+
+    for d in */; do
+      [ -d "$d" ] || continue
+      abs=$(readlink -f "$d" 2>/dev/null || true)
+      if [ -n "$current" ] && [ "$abs" = "$current" ]; then
+        continue
+      fi
+      if [ ! -x "$d/venv/bin/python" ]; then
+        rm -rf -- "$d"
+      fi
+    done
+
+    if [ -n "$current" ]; then
+      current_base=$(basename "$current")
+      ls -1dt */ 2>/dev/null \
+        | grep -v "^${current_base}/$" \
+        | tail -n +"{{ app_maintenance_keep_releases }}" \
+        | xargs -r rm -rf -- || true
+    fi
+  args:
+    executable: /bin/bash
+  become: true
+  when:
+    - app_maintenance_releases.stat.exists
+    - app_maintenance_allowed | bool
+    - not app_maintenance_dry_run | bool
+  changed_when: false

@@ -44,6 +44,18 @@
             state: touch
           register: deploy_lock_created
 
+        - name: Check free space before building a release
+          command: df --output=avail -B1 /
+          register: deploy_free_space
+          changed_when: false
+          check_mode: false
+
+        - name: Require at least 2 GiB free on /
+          assert:
+            that:
+              - deploy_free_space.stdout_lines[-1] | int > 2147483648
+            fail_msg: "Less than 2 GiB free on /; run the disk cleanup before deploying."
+
         # --- Refresh unit + env from current vars (idempotent) ---
         - name: Require PG_DSN
           fail:
@@ -218,14 +230,39 @@
           become: true
           when: app_extra_units | default([]) | length > 0
 
-        - name: Prune old releases
-          shell: |
-            cd /opt/{{ service }}/releases
-            ls -1dt */ | tail -n +$(( {{ app_keep_releases }} + 1 )) | xargs -r rm -rf --
-          changed_when: false
-          become: true
+        - name: Clean build caches after a successful deploy
+          block:
+            - name: Run post-deploy cleanup
+              include_role:
+                name: app_maintenance
+                tasks_from: deploy.yml
+              vars:
+                app_maintenance_check_deploy_lock: false
+                app_maintenance_dry_run: false
+          rescue:
+            - name: Warn that post-deploy cleanup failed
+              debug:
+                msg: "Post-deploy cleanup failed; the deploy itself is healthy. Check the log above."
 
       always:
+        # Only clean up if this run owned the lock. If the lock already existed
+        # (another deploy is in flight), this block must not touch releases.
+        - name: Prune old and incomplete releases
+          when: deploy_lock_created is defined and deploy_lock_created.changed
+          block:
+            - name: Run release cleanup
+              include_role:
+                name: app_maintenance
+                tasks_from: releases.yml
+              vars:
+                app_maintenance_check_deploy_lock: false
+                app_maintenance_dry_run: false
+                app_maintenance_keep_releases: "{{ app_keep_releases | default(3) }}"
+          rescue:
+            - name: Warn that release cleanup failed
+              debug:
+                msg: "Release cleanup failed; check /opt/{{ service }}/releases manually."
+
         - name: Release deploy lock
           file:
             path: "/tmp/deploy-{{ service }}.lock"

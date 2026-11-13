@@ -8,3 +8,8 @@
   systemd:
     name: fail2ban
     state: restarted
+
+- name: restart systemd-journald
+  systemd:
+    name: systemd-journald
+    state: restarted

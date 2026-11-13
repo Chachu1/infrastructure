@@ -1,0 +1,23 @@
+---
+- name: Check for the deploy repository
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}/shared/repo.git"
+  register: app_maintenance_repo
+
+- name: Garbage-collect the deploy repository
+  ansible.builtin.shell: |
+    set -euo pipefail
+    repo="{{ app_maintenance_root }}/shared/repo.git"
+    if [ -d "$repo/objects/pack" ]; then
+      find "$repo/objects/pack" -maxdepth 1 -name 'tmp_pack_*' -delete
+    fi
+    git --git-dir="$repo" gc --prune=now
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ app_maintenance_app_user }}"
+  when:
+    - app_maintenance_repo.stat.exists
+    - app_maintenance_allowed | bool
+    - not app_maintenance_dry_run | bool
+  changed_when: false

@@ -1,6 +1,12 @@
 # Application VMs configuration
 # Add app-specific variables here
 
+# Bound local journald usage on app LXCs. Logs are shipped to Graylog by
+# filebeat; 200M is enough for local debugging and stops a 10-12GB worker from
+# spending 1.2GB on journals. See docs/lxc-disk-space-audit-2026-11-13.md.
+journald_system_max_use: "200M"
+journald_system_max_file_size: "50M"
+
 # Docker settings (for VMs that need docker)
 docker_edition: "ce"
 docker_packages:

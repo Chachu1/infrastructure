@@ -84,6 +84,28 @@
     mode: "0644"
   when: ansible_connection != 'local'
 
+- name: Create the journald drop-in directory
+  file:
+    path: /etc/systemd/journald.conf.d
+    state: directory
+    mode: "0755"
+  when:
+    - ansible_connection != 'local'
+    - journald_system_max_use is defined
+
+- name: Cap journald disk usage on app hosts
+  copy:
+    dest: /etc/systemd/journald.conf.d/99-size.conf
+    content: |
+      [Journal]
+      SystemMaxUse={{ journald_system_max_use }}
+      SystemMaxFileSize={{ journald_system_max_file_size | default('50M') }}
+    mode: "0644"
+  when:
+    - ansible_connection != 'local'
+    - journald_system_max_use is defined
+  notify: restart systemd-journald
+
 - name: Configure unattended-upgrades policy
   template:
     src: 50unattended-upgrades.j2

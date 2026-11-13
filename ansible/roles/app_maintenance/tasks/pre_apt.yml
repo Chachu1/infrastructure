@@ -1,0 +1,6 @@
+---
+# Run before apt upgrade so a full container has room to download packages.
+# The periodic entry point runs apt-get clean again after the upgrade.
+
+- name: Clean APT and journal caches before upgrade
+  ansible.builtin.include_tasks: base.yml

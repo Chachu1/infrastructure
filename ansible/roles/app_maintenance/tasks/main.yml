@@ -1,0 +1,52 @@
+---
+# Entry point for the periodic/manual maintenance run:
+#   ansible-playbook playbooks/maintenance.yml -e app_maintenance_mode=clean
+#   ansible-playbook playbooks/maintenance.yml -e app_maintenance_mode=aggressive
+#
+# mode=report only reads disk usage. mode=clean removes caches and logs.
+# mode=aggressive additionally runs git gc and prunes old releases.
+
+- name: Load app maintenance facts
+  ansible.builtin.include_tasks: facts.yml
+
+- name: Check for the app tree
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}"
+  register: app_maintenance_root_stat
+
+- name: Report disk usage before cleanup
+  ansible.builtin.include_tasks: report.yml
+  vars:
+    app_maintenance_report_label: before
+
+- name: Clean APT and journal caches
+  ansible.builtin.include_tasks: base.yml
+  when: app_maintenance_mode in ['clean', 'aggressive']
+
+# Prune releases before browser pruning so an aggressive run can then remove
+# Playwright revisions that are no longer referenced by any retained release.
+- name: Prune old and incomplete releases
+  ansible.builtin.include_tasks: releases.yml
+  when:
+    - app_maintenance_root_stat.stat.exists
+    - app_maintenance_mode in ['clean', 'aggressive']
+    - app_maintenance_prune_releases | bool or app_maintenance_mode == 'aggressive'
+
+- name: Clean app build caches
+  ansible.builtin.include_tasks: app.yml
+  when:
+    - app_maintenance_root_stat.stat.exists
+    - app_maintenance_mode in ['clean', 'aggressive']
+
+- name: Garbage-collect deploy repositories
+  ansible.builtin.include_tasks: git.yml
+  when:
+    - app_maintenance_root_stat.stat.exists
+    - app_maintenance_mode in ['clean', 'aggressive']
+    - app_maintenance_git_gc | bool or app_maintenance_mode == 'aggressive'
+
+- name: Report disk usage after cleanup
+  ansible.builtin.include_tasks: report.yml
+  vars:
+    app_maintenance_report_label: after
+  when: app_maintenance_mode != 'report'

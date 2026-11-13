@@ -1,0 +1,37 @@
+---
+- name: Check for the app uv cache
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}/.cache/uv"
+  register: app_maintenance_uv_cache
+
+- name: Check for the uv binary
+  ansible.builtin.stat:
+    path: /usr/local/bin/uv
+  register: app_maintenance_uv_bin
+
+- name: Measure the uv cache in dry-run mode
+  ansible.builtin.command: "du -sm {{ app_maintenance_root }}/.cache/uv"
+  register: app_maintenance_uv_size
+  changed_when: false
+  check_mode: false
+  when:
+    - app_maintenance_uv_cache.stat.exists
+    - app_maintenance_dry_run | bool
+
+- name: Report uv cache size in dry-run mode
+  ansible.builtin.debug:
+    msg: "uv cache: {{ app_maintenance_uv_size.stdout | default('not present') }}"
+  when: app_maintenance_dry_run | bool
+
+- name: Clear the uv build cache
+  ansible.builtin.command: /usr/local/bin/uv cache clean --force
+  environment:
+    HOME: "{{ app_maintenance_root }}"
+  become: true
+  become_user: "{{ app_maintenance_app_user }}"
+  when:
+    - app_maintenance_uv_cache.stat.exists
+    - app_maintenance_uv_bin.stat.exists
+    - app_maintenance_allowed | bool
+    - not app_maintenance_dry_run | bool
+  changed_when: false
