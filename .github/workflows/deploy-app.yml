@@ -68,13 +68,9 @@ jobs:
         run: ansible-playbook playbooks/deploy.yml -e service=${{ steps.validate.outputs.service }} -e sha=${{ steps.validate.outputs.sha }}
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
-          # Token to clone the private Price_Tracker repo from the LXC.
-          # Create a fine-grained PAT scoped to Chachu1/Price_Tracker
-          # (Contents: Read) and add as PRICE_TRACKER_PAT in this repo.
-          PRICE_TRACKER_PAT: ${{ secrets.PRICE_TRACKER_PAT }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          # Read-only clone token for Chachu1/tailoring-system (private).
-          APP_GIT_TOKEN: ${{ secrets.TAILORING_SYSTEM_PAT }}
+          # Read-only, repo-scoped deploy keys. No PAT is stored in the LXC.
+          PRICE_TRACKER_DEPLOY_KEY: ${{ secrets.PRICE_TRACKER_DEPLOY_KEY }}
+          TAILORING_SYSTEM_DEPLOY_KEY: ${{ secrets.TAILORING_SYSTEM_DEPLOY_KEY }}
           # Flask session signing key for tailoring-erp.
           TAILOR_SECRET_KEY: ${{ secrets.TAILOR_SECRET_KEY }}
           # App secrets are read by playbooks/deploy/vars/<service>.yml via

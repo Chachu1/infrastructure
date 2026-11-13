@@ -12,13 +12,20 @@ APP_USER="{{ app_user }}"
 APP_GROUP="{{ app_group }}"
 APP_PORT="{{ app_health_port }}"
 HEALTH_PATH="{{ app_health_path }}"
-REPO_URL="{{ app_repo_url }}"
+REPO_SSH_URL="{{ app_repo_url | replace('https://github.com/', 'git@github.com:') }}"
 BRANCH="{{ app_branch }}"
 KEEP_RELEASES="{{ app_keep_releases }}"
 ARCHIVE_PATHS="{{ app_archive_paths | default([]) | join(' ') }}"
 REQS="{{ app_requirements | default('requirements.txt') }}"
 BASE_DIR="/opt/${APP_NAME}"
 REPO_BARE="${BASE_DIR}/shared/repo.git"
+DEPLOY_KEY="${BASE_DIR}/shared/deploy_key"
+export GIT_SSH_COMMAND="ssh -i ${DEPLOY_KEY} -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+
+if [ ! -f "${DEPLOY_KEY}" ]; then
+  echo "deploy key ${DEPLOY_KEY} missing; run the Ansible deploy first" >&2
+  exit 1
+fi
 
 if [ "$#" -ne 1 ]; then
   echo "usage: $0 <commit-sha>" >&2
@@ -39,13 +46,17 @@ trap 'prune_old_releases' EXIT
 
 # 1. Ensure a bare clone of the repo exists and is current.
 if [ ! -d "${REPO_BARE}" ]; then
-  runuser -u "${APP_USER}" -- git clone --bare --branch "${BRANCH}" "${REPO_URL}" "${REPO_BARE}"
+  runuser -u "${APP_USER}" -- env GIT_SSH_COMMAND="${GIT_SSH_COMMAND}" \
+    git clone --bare --branch "${BRANCH}" "${REPO_SSH_URL}" "${REPO_BARE}"
 fi
-runuser -u "${APP_USER}" -- git --git-dir="${REPO_BARE}" fetch origin --tags --prune '+refs/heads/*:refs/heads/*'
+runuser -u "${APP_USER}" -- env GIT_SSH_COMMAND="${GIT_SSH_COMMAND}" \
+  git --git-dir="${REPO_BARE}" remote set-url origin "${REPO_SSH_URL}"
+runuser -u "${APP_USER}" -- env GIT_SSH_COMMAND="${GIT_SSH_COMMAND}" \
+  git --git-dir="${REPO_BARE}" fetch origin --tags --prune '+refs/heads/*:refs/heads/*'
 
 # 2. Verify the requested commit exists.
 if ! runuser -u "${APP_USER}" -- git --git-dir="${REPO_BARE}" rev-parse --verify --quiet "${SHA}^{commit}" >/dev/null 2>&1; then
-  echo "commit ${SHA} not found in ${REPO_URL}" >&2
+  echo "commit ${SHA} not found in ${REPO_SSH_URL}" >&2
   exit 1
 fi
 

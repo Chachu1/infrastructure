@@ -14,11 +14,13 @@
   vars:
     service: "{{ lookup('env', 'SERVICE', default='categorizer') }}"
     sha: "{{ lookup('env', 'DEPLOY_SHA', default='') }}"
-    github_token: >-
-      {{ lookup('env', 'APP_GIT_TOKEN', default='')
-         or lookup('env', 'PRICE_TRACKER_PAT', default='')
-         or lookup('env', 'GH_TOKEN', default='') }}
-    _repo_url: "{{ app_repo_url | replace('https://', 'https://x-access-token:' + github_token + '@') if github_token | length > 0 else app_repo_url }}"
+    # Read-only repo-scoped deploy keys. No PAT is stored in the LXC.
+    app_deploy_key: >-
+      {{ lookup('env', 'TAILORING_SYSTEM_DEPLOY_KEY', default='')
+         if 'tailoring-system' in app_repo_url
+         else lookup('env', 'PRICE_TRACKER_DEPLOY_KEY', default='') }}
+    repo_ssh_url: "{{ app_repo_url | replace('https://github.com/', 'git@github.com:') }}"
+    git_ssh_command: "ssh -i /opt/{{ service }}/shared/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
 
   tasks:
     - name: Require a commit SHA
@@ -76,6 +78,34 @@
             release_dir: "/opt/{{ service }}/releases/{{ sha }}"
             repo_bare: "/opt/{{ service }}/shared/repo.git"
 
+        - name: Require a repository deploy key
+          fail:
+            msg: >-
+              No deploy key for {{ service }}. Set
+              {{ 'TAILORING_SYSTEM_DEPLOY_KEY' if 'tailoring-system' in app_repo_url else 'PRICE_TRACKER_DEPLOY_KEY' }}
+              in the infrastructure GitHub secrets.
+          when: app_deploy_key | length == 0
+
+        - name: Ensure the deploy key directory exists
+          file:
+            path: "/opt/{{ service }}/.ssh"
+            state: directory
+            owner: "{{ app_user }}"
+            group: "{{ app_group }}"
+            mode: "0700"
+          become: true
+
+        - name: Install the repository deploy key
+          copy:
+            content: "{{ app_deploy_key }}\n"
+            dest: "/opt/{{ service }}/shared/deploy_key"
+            owner: "{{ app_user }}"
+            group: "{{ app_group }}"
+            mode: "0600"
+          become: true
+          no_log: true
+          when: app_deploy_key | length > 0
+
         - name: Check if release already exists
           stat:
             path: "{{ release_dir }}"
@@ -96,15 +126,25 @@
           become_user: "{{ app_user }}"
 
         - name: Ensure bare clone of app repo exists
-          command: "git clone --bare --branch {{ app_branch }} {{ _repo_url }} {{ repo_bare }}"
+          command: "git clone --bare --branch {{ app_branch }} {{ repo_ssh_url }} {{ repo_bare }}"
           args:
             creates: "{{ repo_bare }}"
+          environment:
+            GIT_SSH_COMMAND: "{{ git_ssh_command }}"
           become: true
           become_user: "{{ app_user }}"
           no_log: true
 
+        - name: Point the bare repo at the SSH remote
+          command: "git --git-dir={{ repo_bare }} remote set-url origin {{ repo_ssh_url }}"
+          changed_when: false
+          become: true
+          become_user: "{{ app_user }}"
+
         - name: Fetch latest refs
           command: "git --git-dir={{ repo_bare }} fetch origin --tags --prune '+refs/heads/*:refs/heads/*'"
+          environment:
+            GIT_SSH_COMMAND: "{{ git_ssh_command }}"
           changed_when: false
           become: true
           become_user: "{{ app_user }}"
