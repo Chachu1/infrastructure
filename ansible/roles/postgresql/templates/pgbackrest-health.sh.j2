@@ -88,10 +88,20 @@ elif (( repo_disk_pct > REPO_DISK_WARN_PCT )); then
 fi
 
 # --- WAL / spool backlog ----------------------------------------------------
-wal_segments=$(find "$PGDATA/pg_wal" -maxdepth 1 -type f -printf '%f\n' 2>/dev/null \
-  | grep -cE '^[0-9A-F]{24}$')
-if (( wal_segments > WAL_MAX_SEGMENTS )); then
-  fail "pg_wal has ${wal_segments} segments (>${WAL_MAX_SEGMENTS})"
+# pg_wal also contains recycled segments renamed for future LSNs. Counting
+# every segment file made this check report a backlog while archiving was
+# current, so only count segments up to the current WAL segment.
+current_segment=$(runuser -u postgres -- psql -tAqc \
+  'select pg_walfile_name(pg_current_wal_lsn())' 2>/dev/null | tr -d '[:space:]')
+if [[ -z "$current_segment" ]]; then
+  fail "cannot determine current WAL segment"
+  wal_segments=0
+else
+  wal_segments=$(find "$PGDATA/pg_wal" -maxdepth 1 -type f -printf '%f\n' 2>/dev/null \
+    | grep -E '^[0-9A-F]{24}$' | awk -v cur="$current_segment" '$0 <= cur' | wc -l)
+  if (( wal_segments > WAL_MAX_SEGMENTS )); then
+    fail "pg_wal has ${wal_segments} segments (>${WAL_MAX_SEGMENTS})"
+  fi
 fi
 
 spool_mb=$(du -sm /var/spool/pgbackrest 2>/dev/null | awk '{print $1}')
