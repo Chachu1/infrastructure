@@ -546,36 +546,46 @@ intentionally held.
 The process is deployed and has been run on the fleet:
 
 - Feature commit `37bbfea`, pre-apt fix `95040b2`, path-limited release/npm
-  commit `5eb69d3`.
+  commit `5eb69d3`, retention-2 commit `fc32621`.
 - Cleanup applied first to `review-api`, `transform-worker`, `categorizer`, then
   to `screenshot-service`, `enrichment-worker`, `pvl-verifier`,
   `carrefour-scraper`, `job-tracker-api`, and `frontend`.
 - `Price_Tracker` commit `982f6c6` externalized `pipelines/matcher/data` and
   moved numpy/scipy/pandas/sentence-transformers to the `ml` extra.
 
-Current root filesystem usage on the affected hosts:
+Current root filesystem usage after the first full aggressive run:
 
 | LXC | Used | Use |
 |---|---:|---:|
-| pvl-verifier | 4.2 GB | 19% |
+| tailoring-erp | 1.4 GB | 16% |
+| pg-backup | 1.8 GB | 19% |
+| pvl-verifier | 4.1 GB | 19% |
+| pdp-enricher | 2.3 GB | 21% |
 | categorizer | 2.2 GB | 24% |
-| review-api | 2.3 GB | 25% |
+| review-api | 2.3 GB | 24% |
+| job-tracker-api | 2.3 GB | 25% |
+| dashboard-api | 2.3 GB | 25% |
 | transform-worker | 2.3 GB | 25% |
-| job-tracker-api | 2.4 GB | 26% |
+| backfill-ui | 2.3 GB | 25% |
+| frontend | 3.0 GB | 28% |
 | screenshot-service | 3.2 GB | 29% |
-| carrefour-scraper | 4.2 GB | 38% |
-| enrichment-worker | 4.3 GB | 39% |
-| frontend | 4.8 GB | 43% |
+| local-scraper | 3.3 GB | 30% |
+| carrefour-scraper | 4.1 GB | 37% |
+| enrichment-worker | 4.2 GB | 38% |
 
 Path-limited release validation: deploying `categorizer` at `982f6c6`
 produced a **71 MB** release containing only `services/`, `shared/`, `sql/`
 and `venv/`; `pipelines/` and `legacy/` were absent and the service stayed
-`active`. The first three hosts were re-run after the release-payload pruner
-landed, so all nine affected hosts now have the old payload removed as well.
+`active`.
+
+The first aggressive run (`43391348558`) succeeded across the fleet:
+release retention is now 2, `git gc` consolidated packs and removed garbage,
+and `pct fstrim` reduced thin-pool usage from **627 GB (8.57%) to 377 GB
+(5.15%)**. The categorizer repo is one 491 MB pack with zero garbage; the pack
+itself remains large because history still contains the old matcher data.
 
 The Proxmox health push returned `{"ok":true}` and the Uptime Kuma monitor is
-green. The first unattended weekly run is Sunday 03:00 UTC; the monthly
-aggressive run (release retention + git gc + fstrim) is still ahead.
+green. The first unattended weekly run is Sunday 03:00 UTC.
 
 ---
 
@@ -620,18 +630,17 @@ Items 1–4 are now implemented; item 5's history rewrite remains optional.
    the weekly maintenance run is the safety net. `UV_NO_CACHE=1` remains an
    option for services with small requirements.
 
-5. **Fix the 500 MB bare clones by removing the matcher data, not by
-   branch-pruning.** On a current repo, `main` holds 655 MB of blobs and all
-   refs hold 657 MB; `--single-branch` would save ~2.5 MB. The win comes from
-   taking `pipelines/matcher/data` out of git (S3 already hosts the models), or
-   from a shared mirror on one host / a blobless partial clone if the data must
-   stay. Keep `git gc --prune=now` for the interrupted `tmp_pack_*` garbage
-   (273 MB on categorizer) and pack consolidation.
+5. **Bare-clone pack size (history rewrite pending).**
+   `git gc --prune=now` removed the interrupted `tmp_pack_*` garbage and
+   consolidated the packs (categorizer is now one 491 MB pack with zero
+   garbage). The pack itself remains large because history still contains the
+   old matcher data. Shrinking it requires a `git filter-repo` rewrite and
+   force-push; that destructive step is intentionally not done.
 
-6. **Frontend-specific:** keep 2 releases, run `npm prune --omit=dev` after
-   `next build`, and remove `.next/cache` from non-current releases if the
-   runtime does not need it. Measure before deleting; `next start` needs
-   `node_modules` and `.next`.
+6. **Frontend-specific:** releases are now capped at 2 globally. A future
+   improvement is `npm prune --omit=dev` after `next build` and removing
+   `.next/cache` from non-current releases if the runtime does not need it.
+   Measure before deleting; `next start` needs `node_modules` and `.next`.
 
 7. **Disk sizing.** With cleanup in place, 10 GB is workable for the Python
    APIs/workers and 12 GB for browser workers. If deploys are frequent or the
