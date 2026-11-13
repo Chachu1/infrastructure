@@ -558,11 +558,11 @@ Current root filesystem usage on the affected hosts:
 | LXC | Used | Use |
 |---|---:|---:|
 | pvl-verifier | 4.2 GB | 19% |
+| categorizer | 2.2 GB | 24% |
+| review-api | 2.3 GB | 25% |
+| transform-worker | 2.3 GB | 25% |
 | job-tracker-api | 2.4 GB | 26% |
 | screenshot-service | 3.2 GB | 29% |
-| categorizer | 2.8 GB | 30% |
-| review-api | 3.0 GB | 32% |
-| transform-worker | 3.1 GB | 34% |
 | carrefour-scraper | 4.2 GB | 38% |
 | enrichment-worker | 4.3 GB | 39% |
 | frontend | 4.8 GB | 43% |
@@ -570,7 +570,8 @@ Current root filesystem usage on the affected hosts:
 Path-limited release validation: deploying `categorizer` at `982f6c6`
 produced a **71 MB** release containing only `services/`, `shared/`, `sql/`
 and `venv/`; `pipelines/` and `legacy/` were absent and the service stayed
-`active`.
+`active`. The first three hosts were re-run after the release-payload pruner
+landed, so all nine affected hosts now have the old payload removed as well.
 
 The Proxmox health push returned `{"ok":true}` and the Uptime Kuma monitor is
 green. The first unattended weekly run is Sunday 03:00 UTC; the monthly
