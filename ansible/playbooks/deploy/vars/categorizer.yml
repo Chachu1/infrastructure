@@ -19,6 +19,9 @@ app_service_exec: "/opt/categorizer/current/venv/bin/python -u worker.py"
 app_env_vars:
   # Review adjudication is paused while the human-review queue is triaged.
   REVIEW_ENABLED: "false"
+  # Category guards are post-checks on tracked verdicts. They may confirm,
+  # remap to exactly one active leaf, or force human review.
+  CATEGORY_GUARDS_ENABLED: "true"
   APP_ENV: production
   APP_PORT: "8000"
   MODE: "continuous"
