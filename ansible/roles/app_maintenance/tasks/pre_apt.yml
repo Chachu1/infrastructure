@@ -1,6 +1,20 @@
 ---
 # Run before apt upgrade so a full container has room to download packages.
-# The periodic entry point runs apt-get clean again after the upgrade.
+# A 100%-full container cannot even `apt update` after only removing the APT
+# cache, so reclaim the app build caches here as well. The periodic entry point
+# runs base/app cleanup again after the upgrade.
+
+- name: Load app maintenance facts
+  ansible.builtin.include_tasks: facts.yml
+
+- name: Check for the app tree
+  ansible.builtin.stat:
+    path: "{{ app_maintenance_root }}"
+  register: app_maintenance_root_stat
 
 - name: Clean APT and journal caches before upgrade
   ansible.builtin.include_tasks: base.yml
+
+- name: Clean app build caches before upgrade
+  ansible.builtin.include_tasks: app.yml
+  when: app_maintenance_root_stat.stat.exists

@@ -486,7 +486,9 @@ the release that references it is pruned.
 `maintenance.yml` now:
 
 1. Checks the deploy lock (existing behaviour).
-2. Runs `app_maintenance` `pre_apt` (APT clean + journal vacuum) to make room.
+2. Runs `app_maintenance` `pre_apt` (APT clean + journal vacuum + app build
+   caches) to make room. This matters on a 100%-full host: it cannot even
+   `apt update` after only removing the APT cache.
 3. Runs the existing apt update/upgrade.
 4. Runs `app_maintenance` in `clean` mode: APT clean again, journal vacuum,
    `uv` cache clean, Playwright prune, `/tmp` cleanup. In `aggressive` mode it
