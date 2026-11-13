@@ -17,6 +17,8 @@ app_branch: main
 app_keep_releases: 2
 app_service_exec: "/opt/categorizer/current/venv/bin/python -u worker.py"
 app_env_vars:
+  # Review adjudication is paused while the human-review queue is triaged.
+  REVIEW_ENABLED: "false"
   APP_ENV: production
   APP_PORT: "8000"
   MODE: "continuous"
