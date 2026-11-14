@@ -81,6 +81,8 @@ jobs:
           OPENROUTER_MODEL: ${{ secrets.OPENROUTER_MODEL }}
           REVIEW_API_BEARER_TOKEN: ${{ secrets.REVIEW_API_BEARER_TOKEN }}
           OPENROUTER_BRAND_REVIEW_KEY: ${{ secrets.OPENROUTER_BRAND_REVIEW_KEY }}
+          # Site-wide frontend access token (Phase 0 gate).
+          SITE_ACCESS_TOKEN: ${{ secrets.SITE_ACCESS_TOKEN }}
           # Secrets consumed by the new migrated services (deploy/vars/*.yml).
           # Missing secrets resolve to empty strings via lookup('env', ..., default='').
           JOB_TRACKER_API_TOKEN: ${{ secrets.JOB_TRACKER_API_TOKEN }}
