@@ -26,4 +26,7 @@ app_env_vars:
   # dashboard-api's REVIEW_API_BEARER_TOKEN so brand-review decision POSTs
   # pass the require_bearer guard.
   NEXT_PUBLIC_REVIEW_BEARER_TOKEN: "{{ lookup('env', 'REVIEW_API_BEARER_TOKEN', default='') }}"
-app_secrets: {}
+app_secrets:
+  # Site-wide access gate. Empty disables the gate (safe local fallback);
+  # set this GitHub Actions secret before relying on it in production.
+  SITE_ACCESS_TOKEN: "{{ lookup('env', 'SITE_ACCESS_TOKEN', default='') }}"
