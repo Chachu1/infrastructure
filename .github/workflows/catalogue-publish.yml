@@ -48,13 +48,11 @@ jobs:
             RUN=(uv run --no-project --with psycopg2-binary python)
           elif python3 -c "import psycopg2" >/dev/null 2>&1; then
             RUN=(python3)
-          elif command -v sudo >/dev/null 2>&1; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq python3-psycopg2
-            RUN=(python3)
           else
-            echo "No Python PostgreSQL driver is available on this runner" >&2
-            exit 1
+            curl -fsSL https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+            python3 /tmp/get-pip.py --user --break-system-packages
+            python3 -m pip install --user --break-system-packages --quiet psycopg2-binary
+            RUN=(python3)
           fi
           export PYTHONPATH="$PWD/shared/python/src"
           "${RUN[@]}" operations/export_category_registry.py \
