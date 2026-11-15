@@ -36,10 +36,14 @@ jobs:
           PG_DSN: ${{ secrets.PG_DSN }}
         run: |
           set -euo pipefail
-          python3 -m venv /tmp/catalogue-venv
-          /tmp/catalogue-venv/bin/pip install --quiet psycopg2-binary
+          if command -v uv >/dev/null 2>&1; then
+            RUN=(uv run --no-project --with psycopg2-binary python)
+          else
+            python3 -m pip install --user --break-system-packages --quiet psycopg2-binary
+            RUN=(python3)
+          fi
           export PYTHONPATH="$PWD/shared/python/src"
-          /tmp/catalogue-venv/bin/python operations/export_category_registry.py \
+          "${RUN[@]}" operations/export_category_registry.py \
             --due-only --write --mark-exporting
 
       - name: Commit and push
@@ -67,5 +71,10 @@ jobs:
           PG_DSN: ${{ secrets.PG_DSN }}
         run: |
           set -euo pipefail
+          if command -v uv >/dev/null 2>&1; then
+            RUN=(uv run --no-project --with psycopg2-binary python)
+          else
+            RUN=(python3)
+          fi
           export PYTHONPATH="$PWD/shared/python/src"
-          /tmp/catalogue-venv/bin/python operations/export_category_registry.py --mark-deployed
+          "${RUN[@]}" operations/export_category_registry.py --mark-deployed
