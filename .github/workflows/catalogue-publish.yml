@@ -1,0 +1,71 @@
+name: Catalogue Publish
+
+# Publishes due category-registry versions from PostgreSQL into the committed
+# catalogue/artifacts, then lets the normal Price Tracker deploy run on push.
+#
+# Runs on the self-hosted Proxmox runner so it can reach the database. The
+# Price Tracker checkout uses a write deploy key; the default token cannot
+# write to another repository.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catalogue-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: [self-hosted, proxmox]
+    steps:
+      - name: Checkout Price Tracker
+        uses: actions/checkout@v5
+        with:
+          repository: Chachu1/Price_Tracker
+          ref: main
+          ssh-key: ${{ secrets.PRICE_TRACKER_PUBLISH_KEY }}
+          fetch-depth: 0
+
+      - name: Export due catalogue version
+        env:
+          PG_DSN: ${{ secrets.PG_DSN }}
+        run: |
+          set -euo pipefail
+          python3 -m venv /tmp/catalogue-venv
+          /tmp/catalogue-venv/bin/pip install --quiet psycopg2-binary
+          export PYTHONPATH="$PWD/shared/python/src"
+          /tmp/catalogue-venv/bin/python operations/export_category_registry.py \
+            --due-only --write --mark-exporting
+
+      - name: Commit and push
+        run: |
+          set -euo pipefail
+          git config user.name "catalogue-publisher"
+          git config user.email "catalogue-publisher@users.noreply.github.com"
+          FILES="shared/taxonomy/categories.json shared/python/src/price_tracker/taxonomy/generated.py frontend/src/lib/generated/categories.ts frontend/src/lib/generated/catalogue.json"
+          if git diff --quiet -- $FILES; then
+            echo "No catalogue changes to publish"
+            exit 0
+          fi
+          git add $FILES
+          git commit -m "chore(catalogue): publish scheduled registry"
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            git pull --rebase origin main
+          done
+          exit 1
+
+      - name: Mark deployed
+        env:
+          PG_DSN: ${{ secrets.PG_DSN }}
+        run: |
+          set -euo pipefail
+          export PYTHONPATH="$PWD/shared/python/src"
+          /tmp/catalogue-venv/bin/python operations/export_category_registry.py --mark-deployed
