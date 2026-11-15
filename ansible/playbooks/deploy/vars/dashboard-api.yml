@@ -24,6 +24,8 @@ app_env_vars:
   AWS_DEFAULT_REGION: "us-east-1"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  # Admin category-registry bearer, shared with the frontend proxy.
+  SITE_ACCESS_TOKEN: "{{ lookup('env', 'SITE_ACCESS_TOKEN', default='') }}"
   # Presign price-proof PNGs for /api/price-proof/<uuid>/<date>. The proof
   # bucket lives under the screenshot-service principal, which already has
   # head/get/put access to the screenshots prefix.
