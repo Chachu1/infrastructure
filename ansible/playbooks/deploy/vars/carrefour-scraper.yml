@@ -74,15 +74,17 @@ app_env_vars:
   # is blocked by Akamai. Carrefour search, Carrefour PDP and Swas KSA all share
   # the same residential exit, so their bursts add up on one IP. Pacing was
   # raised after the 2026-11-10 shared-IP 403s (5/11 UAE categories hit Akamai
-  # blocks): 180s between queue tasks, 8-12s between paginated API calls, and a
-  # 30-minute cooldown when a block is detected. The Chromium pin lives in
+  # blocks): 600s between queue tasks, 20-30s between paginated API calls, and a
+  # 60-minute cooldown when a block is detected. Pacing was raised again on
+  # 2026-11-16 after 5/5 UAE categories were blocked at the storefront warm-up
+  # while no better residential egress was available. The Chromium pin lives in
   # requirements-carrefour.txt (patchright 1.61.2 -> Chromium 1228 / Chrome 149);
   # newer builds are rejected by Carrefour UAE's Akamai rules.
   SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
-  INTER_TASK_DELAY_SECONDS: "180"
-  BOT_BLOCK_COOLDOWN_SECONDS: "1800"
-  CARREFOUR_REQUEST_DELAY_MIN: "8"
-  CARREFOUR_REQUEST_DELAY_MAX: "12"
+  INTER_TASK_DELAY_SECONDS: "600"
+  BOT_BLOCK_COOLDOWN_SECONDS: "3600"
+  CARREFOUR_REQUEST_DELAY_MIN: "20"
+  CARREFOUR_REQUEST_DELAY_MAX: "30"
 # Second worker on the same LXC: the headed Carrefour PDP fetcher. Previously
 # hand-created on the container (drifted across deploys); now managed here.
 app_extra_units:
@@ -106,7 +108,7 @@ app_extra_units:
       SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
       PDP_PROXY_COUNTRIES: "UAE"
       # PDP shares the residential exit with Carrefour search + Swas KSA.
-      PDP_FETCH_DELAY_SECONDS: "30"
+      PDP_FETCH_DELAY_SECONDS: "60"
     env_secrets:
       PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
       AWS_ACCESS_KEY_ID: "{{ lookup('env', 'LOCAL_SCRAPER_AWS_ACCESS_KEY_ID', default='') }}"
