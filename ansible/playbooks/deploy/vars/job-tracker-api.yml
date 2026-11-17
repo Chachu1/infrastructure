@@ -42,6 +42,17 @@ app_env_vars:
   # Price_Tracker .agents/playbooks/carrefour-scraper.md) can legitimately hold
   # tasks for hours, and the old 30-minute blanket rule false-failed them.
   SCRAPE_STALL_TIMEOUT_MINUTES: "360"
+  # Dispatcher model (Price_Tracker sql/065): the DB is the scrape queue, the
+  # dispatcher releases work per scrape_route_policy, workers take renewable
+  # leases, and a run's scrape work is hard-stopped 12h after it starts.
+  # legacy = old scheduler->SQS path (kill switch); shadow = log only;
+  # live = dispatcher owns pacing and retries.
+  SCRAPE_DISPATCH_MODE: "live"
+  SCRAPE_DISPATCHER_INTERVAL_SECONDS: "15"
+  RUN_DEADLINE_HOURS: "12"
+  # Don't hand a terminal run to the matcher in the same breath; the scrape
+  # finalisation and the last task report are separate transactions.
+  MATCHER_V3_MIN_RUN_AGE_SECONDS: "120"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   API_BEARER_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"

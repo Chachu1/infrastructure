@@ -54,6 +54,10 @@
       # Insurance while the per-task deadline watchdog lands (deploy/vars is
       # authoritative and force-renders the env on every app deploy).
       SCRAPE_STALL_TIMEOUT_MINUTES: "360"
+      SCRAPE_DISPATCH_MODE: "live"
+      SCRAPE_DISPATCHER_INTERVAL_SECONDS: "15"
+      RUN_DEADLINE_HOURS: "12"
+      MATCHER_V3_MIN_RUN_AGE_SECONDS: "120"
   pre_tasks:
     - name: Check distribution is supported
       assert:
