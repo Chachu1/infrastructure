@@ -18,6 +18,7 @@
 - import_playbook: hosts/review-api.yml
 - import_playbook: hosts/job-tracker-api.yml
 - import_playbook: hosts/dashboard-api.yml
+- import_playbook: hosts/devapi.yml
 - import_playbook: hosts/transform-worker.yml
 - import_playbook: hosts/backfill-ui.yml
 - import_playbook: hosts/screenshot-service.yml
@@ -27,6 +28,7 @@
 - import_playbook: hosts/pdp-enricher.yml
 - import_playbook: hosts/pvl-verifier.yml
 - import_playbook: hosts/frontend.yml
+- import_playbook: hosts/devfront.yml
 - import_playbook: hosts/pg-backup.yml
 - import_playbook: hosts/graylog.yml
 - import_playbook: hosts/tailoring-erp.yml

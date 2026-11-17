@@ -208,3 +208,7 @@ jobs:
           WIREGUARD_PRIVATE_KEY: ${{ secrets.WIREGUARD_PRIVATE_KEY }}
           POSTGRES_MOHSIN_PASSWORD: ${{ secrets.POSTGRES_MOHSIN_PASSWORD }}
           POSTGRES_PRICETRACKER_PASSWORD: ${{ secrets.POSTGRES_PRICETRACKER_PASSWORD }}
+          # Devfront/devapi auth stack (site.yml renders their env files).
+          BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+          PT_INTERNAL_SECRET: ${{ secrets.PT_INTERNAL_SECRET }}
+          DASHBOARD_SERVICE_TOKEN: ${{ secrets.DASHBOARD_SERVICE_TOKEN }}

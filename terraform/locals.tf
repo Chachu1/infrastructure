@@ -192,6 +192,29 @@ locals {
       internal_dns = "frontend"
     }
 
+    # Development preview pair. devfront serves the feature branch and points
+    # its BFF at devapi, so auth/scoping/writes can be tested without touching
+    # the live frontend or dashboard-api. devapi has no public domain.
+    devfront = {
+      vm_id        = 275
+      cores        = 2
+      memory       = 2048
+      disk         = 12
+      ip           = "10.0.0.77/24"
+      domain       = "devfront.mhlab.me"
+      port         = 3000
+      internal_dns = "devfront"
+    }
+
+    devapi = {
+      vm_id        = 276
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.78/24"
+      internal_dns = "devapi"
+    }
+
     pg-backup = {
       vm_id        = 270
       cores        = 1
