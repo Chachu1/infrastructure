@@ -7,6 +7,10 @@ caddy_hosts:
   domain: dashboard-api.mhlab.me
   port: 8002
   scheme: http
+- backend: 10.0.0.77
+  domain: devfront.mhlab.me
+  port: 3000
+  scheme: http
 - backend: 10.0.0.70
   domain: frontend.mhlab.me
   port: 3000
@@ -44,6 +48,8 @@ dns_records:
   carrefour-scraper: 10.0.0.74
   categorizer: 10.0.0.61
   dashboard-api: 10.0.0.64
+  devapi: 10.0.0.78
+  devfront: 10.0.0.77
   enrichment-worker: 10.0.0.69
   frontend: 10.0.0.70
   gateway: 10.0.0.10
