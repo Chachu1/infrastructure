@@ -1,0 +1,65 @@
+---
+# devfront - feature-branch preview of the Next.js 16 dashboard.
+# Native Node systemd + LXC (no Docker). Serves devfront.mhlab.me.
+# The read BFF points at the private devapi LXC (10.0.0.78:8002).
+# Run standalone: ansible-playbook playbooks/hosts/devfront.yml
+
+- name: Bootstrap devfront
+  hosts: devfront
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python (for Ansible bootstrap)
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Install Node.js 20
+  hosts: devfront
+  become: true
+  tasks:
+    - name: Install Node source + runtime
+      shell: |
+        if ! command -v node >/dev/null 2>&1 || ! command -v npm >/dev/null 2>&1; then
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y -qq nodejs
+        fi
+
+- name: Configure devfront
+  hosts: devfront
+  vars:
+    dns_configured: true
+    app_name: devfront
+    app_user: devfront
+    app_group: devfront
+    app_port: 3000
+    app_health_path: /login
+    app_health_port: 3000
+    app_health_check: "http"
+    app_runtime: "node"
+    app_working_dir: "/opt/devfront/current/frontend"
+    app_service_exec: "/usr/bin/npx next start -p 3000 -H 0.0.0.0"
+    app_env_vars:
+      NODE_ENV: production
+      APP_PORT: "3000"
+      BETTER_AUTH_URL: "https://devfront.mhlab.me"
+      DASHBOARD_API_URL: "http://10.0.0.78:8002"
+    app_secrets:
+      PG_DSN: "{{ lookup('env', 'PG_DSN', default='') }}"
+      BETTER_AUTH_SECRET: "{{ lookup('env', 'BETTER_AUTH_SECRET', default='') }}"
+      PT_INTERNAL_SECRET: "{{ lookup('env', 'PT_INTERNAL_SECRET', default='') }}"
+      DASHBOARD_SERVICE_TOKEN: "{{ lookup('env', 'DASHBOARD_SERVICE_TOKEN', default='') }}"
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

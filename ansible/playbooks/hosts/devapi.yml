@@ -1,0 +1,56 @@
+---
+# devapi - private feature-branch dashboard-api for devfront.
+# Same code and DB as production, but no public Caddy route.
+# devfront's /api/data BFF talks to http://10.0.0.78:8002.
+# Run standalone: ansible-playbook playbooks/hosts/devapi.yml
+
+- name: Bootstrap devapi
+  hosts: devapi
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python (for Ansible bootstrap)
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure devapi
+  hosts: devapi
+  vars:
+    dns_configured: true
+    app_name: devapi
+    app_user: devapi
+    app_group: devapi
+    app_port: 8002
+    app_health_path: /health
+    app_health_port: 8002
+    app_health_check: "http"
+    app_working_dir: "/opt/devapi/current/services/dashboard-api"
+    app_service_exec: "/opt/devapi/current/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8002"
+    app_env_vars:
+      APP_ENV: production
+      APP_PORT: "8002"
+      ALLOWED_ORIGINS: "*"
+      AWS_REGION: "us-east-1"
+      AWS_DEFAULT_REGION: "us-east-1"
+      PT_IDENTITY_ENFORCE: "1"
+    app_secrets:
+      PG_DSN: "{{ lookup('env', 'PG_DSN', default='') }}"
+      PT_INTERNAL_SECRET: "{{ lookup('env', 'PT_INTERNAL_SECRET', default='') }}"
+      AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
+      AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
+      OPENROUTER_BRAND_REVIEW_KEY: "{{ lookup('env', 'OPENROUTER_BRAND_REVIEW_KEY', default='') }}"
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

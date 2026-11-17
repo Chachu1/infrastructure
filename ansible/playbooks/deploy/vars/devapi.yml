@@ -1,0 +1,32 @@
+---
+# Per-service vars for devapi (used by playbooks/deploy.yml).
+# Mirrors playbooks/hosts/devapi.yml - keep both in sync.
+# Private feature-branch dashboard-api for devfront; no public domain.
+
+app_name: devapi
+app_user: devapi
+app_group: devapi
+app_port: 8002
+app_health_path: /health
+app_health_port: 8002
+app_health_check: "http"
+app_working_dir: "/opt/devapi/current/services/dashboard-api"
+app_requirements: "services/dashboard-api/requirements.txt"
+app_archive_paths: ["services/dashboard-api", "shared/python", "sql"]
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: feat/frontend-overhaul-auth
+app_keep_releases: 2
+app_service_exec: "/opt/devapi/current/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8002"
+app_env_vars:
+  APP_ENV: production
+  APP_PORT: "8002"
+  ALLOWED_ORIGINS: "*"
+  AWS_REGION: "us-east-1"
+  AWS_DEFAULT_REGION: "us-east-1"
+  PT_IDENTITY_ENFORCE: "1"
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN', default='') }}"
+  PT_INTERNAL_SECRET: "{{ lookup('env', 'PT_INTERNAL_SECRET', default='') }}"
+  AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
+  AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
+  OPENROUTER_BRAND_REVIEW_KEY: "{{ lookup('env', 'OPENROUTER_BRAND_REVIEW_KEY', default='') }}"
