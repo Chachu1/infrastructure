@@ -95,6 +95,9 @@
       # the env on every app deploy; these keep first-provision parity.
       SCRAPE_PROXY_URL: "{{ lookup('env', 'SCRAPE_PROXY_URL', default='') }}"
       INTER_TASK_DELAY_SECONDS: "600"
+      # Only UAE egresses through the residential proxy; KSA/QA fetch direct,
+      # so they keep the pre-Nov-17 180s gap. Unknown countries fall back to 600.
+      INTER_TASK_DELAY_BY_COUNTRY: '{"UAE": 600, "KSA": 180, "QA": 180}'
       BOT_BLOCK_COOLDOWN_SECONDS: "3600"
       CARREFOUR_REQUEST_DELAY_MIN: "20"
       CARREFOUR_REQUEST_DELAY_MAX: "30"
