@@ -54,6 +54,7 @@ in the public path for application services.
 | `backfill.mhlab.me` | 10.0.0.66 | 8012 | backfill-ui LXC |
 | `screenshots.mhlab.me` | 10.0.0.67 | 8010 | screenshot-service LXC |
 | `frontend.mhlab.me` | 10.0.0.70 | 3000 | frontend LXC |
+| `devfront.mhlab.me` | 10.0.0.77 | 3000 | devfront LXC (feature preview) |
 | `graylog.mhlab.me` | 10.0.0.72 | 9000 | graylog LXC |
 | `tailor.mhlab.me` | 10.0.0.75 | 8004 | tailoring-erp LXC |
 
@@ -93,6 +94,8 @@ in the public path for application services.
 | `10.0.0.68`     |  local-scraper  |  Local scraper (internal, headless) |
 | `10.0.0.69`     |  enrichment-worker | Enrichment worker (internal)    |
 | `10.0.0.70`     |  frontend       |  frontend.mhlab.me (LXC)           |
+| `10.0.0.77`     |  devfront       |  devfront.mhlab.me (LXC, feature preview) |
+| `10.0.0.78`     |  devapi         |  Private dev dashboard-api (internal) |
 | `10.0.0.71`     |  pg-backup      |  PostgreSQL backup (internal)      |
 | `10.0.0.72`     |  graylog        |  graylog.mhlab.me (LXC)            |
 | `10.0.0.73`     |  pdp-enricher   |  PDP enrichment worker (internal)  |
@@ -135,12 +138,14 @@ Publicly routed services (Cloudflare → gateway Caddy → LXC):
 | Backfill UI  | 10.0.0.66  | 8012      | https://backfill.mhlab.me      |
 | Screenshot Service | 10.0.0.67 | 8010 | https://screenshots.mhlab.me |
 | Frontend     | 10.0.0.70  |  3000     |  https://frontend.mhlab.me     |
+| Devfront     | 10.0.0.77  |  3000     |  https://devfront.mhlab.me     |
+| Dev API      | 10.0.0.78  |  8002     |  internal only (devfront BFF)  |
 | Graylog      | 10.0.0.72  |  9000     |  https://graylog.mhlab.me      |
 | Tailoring ERP | 10.0.0.75 | 8004      |  https://tailor.mhlab.me       |
 
 Internal-only services (no public domain): categorizer (61), transform-worker
 (65), local-scraper (68), enrichment-worker (69), pg-backup (71), pdp-enricher
-(73), **carrefour-scraper (74)**, **pvl-verifier (76)**.
+(73), carrefour-scraper (74), pvl-verifier (76), devapi (78).
 
 > **`pvl-verifier` (10.0.0.76, VMID 274)** is the PVL price-verification worker
 > (issue #106): it claims `price_verification_jobs`, re-fetches suspicious PDPs
