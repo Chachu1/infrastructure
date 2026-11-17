@@ -7,6 +7,7 @@ app_name: devapi
 app_user: devapi
 app_group: devapi
 app_port: 8002
+app_python_version: "3.12"
 app_health_path: /health
 app_health_port: 8002
 app_health_check: "http"

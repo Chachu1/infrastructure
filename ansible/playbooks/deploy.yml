@@ -177,7 +177,7 @@
           shell: |
             set -eu
             cd "{{ release_dir }}"
-            uv venv venv
+            uv venv {{ ('--python ' ~ app_python_version) if (app_python_version | default('') | length > 0) else '' }} venv
             REQS="{{ app_requirements | default('requirements.txt') }}"
             if [ ! -f "$REQS" ]; then
               echo "requirements file $REQS not found in release" >&2
