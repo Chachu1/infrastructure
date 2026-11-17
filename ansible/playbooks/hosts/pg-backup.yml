@@ -30,8 +30,15 @@
         mode: "0755"
 
     - name: Add PostgreSQL GPG key
-      shell:
-        cmd: curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /etc/apt/keyrings/postgresql.asc
+      get_url:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        dest: /etc/apt/keyrings/postgresql.asc
+        mode: "0644"
+        force: true
+      register: pg_gpg_key
+      until: pg_gpg_key is succeeded
+      retries: 5
+      delay: 5
 
     - name: Add PostgreSQL APT repository
       apt_repository:
