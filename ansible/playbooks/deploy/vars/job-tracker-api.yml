@@ -38,6 +38,10 @@ app_env_vars:
   MATCHER_V3_API_URL: "http://192.168.1.171:8010"
   MATCHER_V3_HTTP_TIMEOUT_S: "3600"
   MATCHER_V3_MIN_COMPLETED_AT: "2026-09-16T10:45:00Z"
+  # Insurance while the per-task deadline watchdog lands: paced queues (see
+  # Price_Tracker .agents/playbooks/carrefour-scraper.md) can legitimately hold
+  # tasks for hours, and the old 30-minute blanket rule false-failed them.
+  SCRAPE_STALL_TIMEOUT_MINUTES: "360"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   API_BEARER_TOKEN: "{{ lookup('env', 'JOB_TRACKER_API_TOKEN', default='') }}"
