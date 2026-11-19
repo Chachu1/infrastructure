@@ -38,6 +38,7 @@
       SCRAPED_DATA_BUCKET: "price-tracker-data-751626788293-us-east-1"
       JT_POLL_INTERVAL: "10"
       JOB_TRACKER_URL: "http://job-tracker-api:8001"
+      TRANSFORM_SKIP_TOMBSTONED: "on"
   pre_tasks:
     - name: Check distribution is supported
       assert:
