@@ -27,7 +27,8 @@ app_env_vars:
   DASHBOARD_API_URL: "http://10.0.0.64:8002"
 app_secrets:
   # Better Auth session storage (user/session/account/verification).
-  PG_DSN: "{{ lookup('env', 'PG_DSN', default='') }}"
+  # Least-privilege role: DML on the auth/audit tables only.
+  PG_DSN: "{{ lookup('env', 'FRONTEND_PG_DSN', default='') }}"
   BETTER_AUTH_SECRET: "{{ lookup('env', 'BETTER_AUTH_SECRET', default='') }}"
   # HS256 key for the 60s X-PT-Identity claim; must match dashboard-api.
   PT_INTERNAL_SECRET: "{{ lookup('env', 'PT_INTERNAL_SECRET', default='') }}"
