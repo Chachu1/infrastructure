@@ -15,7 +15,7 @@ app_node_dir: "frontend"
 app_archive_paths: ["frontend"]
 app_working_dir: "/opt/devfront/current/frontend"
 app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
-app_branch: feat/frontend-overhaul-auth
+app_branch: main
 app_keep_releases: 2
 app_service_exec: "/usr/bin/npx next start -p 3000 -H 0.0.0.0"
 app_env_vars:

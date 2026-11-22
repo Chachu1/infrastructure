@@ -38,7 +38,9 @@
     app_user: frontend
     app_group: frontend
     app_port: 3000
-    app_health_path: /
+    # Better Auth redirects anonymous visitors from / to /login, so
+    # health-check the login page.
+    app_health_path: /login
     app_health_port: 3000
     app_health_check: "http"
     app_runtime: "node"
@@ -47,7 +49,13 @@
     app_env_vars:
       NODE_ENV: production
       APP_PORT: "3000"
-      NEXT_PUBLIC_DASHBOARD_API_URL: "https://dashboard-api.mhlab.me"
+      BETTER_AUTH_URL: "https://frontend.mhlab.me"
+      DASHBOARD_API_URL: "http://10.0.0.64:8002"
+    app_secrets:
+      PG_DSN: "{{ lookup('env', 'PG_DSN', default='') }}"
+      BETTER_AUTH_SECRET: "{{ lookup('env', 'BETTER_AUTH_SECRET', default='') }}"
+      PT_INTERNAL_SECRET: "{{ lookup('env', 'PT_INTERNAL_SECRET', default='') }}"
+      DASHBOARD_SERVICE_TOKEN: "{{ lookup('env', 'DASHBOARD_SERVICE_TOKEN', default='') }}"
   pre_tasks:
     - name: Check distribution is supported
       assert:

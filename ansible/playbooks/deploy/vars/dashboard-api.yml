@@ -22,9 +22,9 @@ app_env_vars:
   ALLOWED_ORIGINS: "*"
   AWS_REGION: "us-east-1"
   AWS_DEFAULT_REGION: "us-east-1"
-  # Cutover phase 1: the pre-auth frontend does not send X-PT-Identity yet.
-  # Flip to "1" and redeploy once the new frontend release is healthy.
-  PT_IDENTITY_ENFORCE: "0"
+  # Phase 2: the new frontend release signs X-PT-Identity on every BFF hop.
+  # Keep in sync with the frontend deploy; set to "0" only for rollback.
+  PT_IDENTITY_ENFORCE: "1"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
   # HS256 key for the 60s X-PT-Identity claim; must match frontend.

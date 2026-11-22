@@ -37,10 +37,15 @@
       ALLOWED_ORIGINS: "*"
       AWS_REGION: "us-east-1"
       AWS_DEFAULT_REGION: "us-east-1"
+      PT_IDENTITY_ENFORCE: "1"
     app_secrets:
       PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+      PT_INTERNAL_SECRET: "{{ lookup('env', 'PT_INTERNAL_SECRET', default='') }}"
+      SITE_ACCESS_TOKEN: "{{ lookup('env', 'SITE_ACCESS_TOKEN', default='') }}"
       AWS_ACCESS_KEY_ID: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_ACCESS_KEY_ID', default='') }}"
       AWS_SECRET_ACCESS_KEY: "{{ lookup('env', 'SCREENSHOT_SERVICE_AWS_SECRET_ACCESS_KEY', default='') }}"
+      REVIEW_API_BEARER_TOKEN: "{{ lookup('env', 'REVIEW_API_BEARER_TOKEN', default='') }}"
+      OPENROUTER_BRAND_REVIEW_KEY: "{{ lookup('env', 'OPENROUTER_BRAND_REVIEW_KEY', default='') }}"
   pre_tasks:
     - name: Check distribution is supported
       assert:
