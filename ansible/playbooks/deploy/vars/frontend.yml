@@ -7,7 +7,9 @@ app_name: frontend
 app_user: frontend
 app_group: frontend
 app_port: 3000
-app_health_path: /
+# Better Auth redirects anonymous visitors from / to /login, so health-check
+# the login page (the deploy playbook requires HTTP 200).
+app_health_path: /login
 app_health_port: 3000
 app_health_check: "http"
 app_runtime: "node"
@@ -21,12 +23,13 @@ app_service_exec: "/usr/bin/npx next start -p 3000 -H 0.0.0.0"
 app_env_vars:
   NODE_ENV: production
   APP_PORT: "3000"
-  NEXT_PUBLIC_DASHBOARD_API_URL: "https://dashboard-api.mhlab.me"
-  # Baked into the JS bundle at build time (inherently public). Must match
-  # dashboard-api's REVIEW_API_BEARER_TOKEN so brand-review decision POSTs
-  # pass the require_bearer guard.
-  NEXT_PUBLIC_REVIEW_BEARER_TOKEN: "{{ lookup('env', 'REVIEW_API_BEARER_TOKEN', default='') }}"
+  BETTER_AUTH_URL: "https://frontend.mhlab.me"
+  DASHBOARD_API_URL: "http://10.0.0.64:8002"
 app_secrets:
-  # Site-wide access gate. Empty disables the gate (safe local fallback);
-  # set this GitHub Actions secret before relying on it in production.
-  SITE_ACCESS_TOKEN: "{{ lookup('env', 'SITE_ACCESS_TOKEN', default='') }}"
+  # Better Auth session storage (user/session/account/verification).
+  PG_DSN: "{{ lookup('env', 'PG_DSN', default='') }}"
+  BETTER_AUTH_SECRET: "{{ lookup('env', 'BETTER_AUTH_SECRET', default='') }}"
+  # HS256 key for the 60s X-PT-Identity claim; must match dashboard-api.
+  PT_INTERNAL_SECRET: "{{ lookup('env', 'PT_INTERNAL_SECRET', default='') }}"
+  # Transport bearer for the /api/data and /api/admin BFF hops.
+  DASHBOARD_SERVICE_TOKEN: "{{ lookup('env', 'DASHBOARD_SERVICE_TOKEN', default='') }}"

@@ -22,8 +22,13 @@ app_env_vars:
   ALLOWED_ORIGINS: "*"
   AWS_REGION: "us-east-1"
   AWS_DEFAULT_REGION: "us-east-1"
+  # Cutover phase 1: the pre-auth frontend does not send X-PT-Identity yet.
+  # Flip to "1" and redeploy once the new frontend release is healthy.
+  PT_IDENTITY_ENFORCE: "0"
 app_secrets:
   PG_DSN: "{{ lookup('env', 'PG_DSN') }}"
+  # HS256 key for the 60s X-PT-Identity claim; must match frontend.
+  PT_INTERNAL_SECRET: "{{ lookup('env', 'PT_INTERNAL_SECRET', default='') }}"
   # Admin category-registry bearer, shared with the frontend proxy.
   SITE_ACCESS_TOKEN: "{{ lookup('env', 'SITE_ACCESS_TOKEN', default='') }}"
   # Presign price-proof PNGs for /api/price-proof/<uuid>/<date>. The proof
