@@ -1,5 +1,10 @@
 ---
 # Caddy role - reverse proxy with automatic HTTPS
+#
+# The stock package does not include the Cloudflare DNS provider. The official
+# build service now requires an account/API key, so keep any existing custom
+# binary and build one locally with xcaddy only when the installed binary is
+# missing the module.
 
 - name: Install Caddy dependencies
   apt:
@@ -8,6 +13,8 @@
       - debian-archive-keyring
       - apt-transport-https
       - curl
+      - git
+      - tar
     state: present
 
 - name: Add Caddy GPG key
@@ -21,26 +28,99 @@
     state: present
     filename: caddy-stable
 
-- name: Install Caddy (for service file and user)
+- name: Check for an existing Caddy binary
+  stat:
+    path: /usr/bin/caddy
+  register: caddy_binary
+
+# Only install on first provision. A later `state: present` would upgrade the
+# stock package and overwrite the custom binary with one that cannot do DNS-01.
+- name: Install Caddy (first install only)
   apt:
     name: caddy
     state: present
     update_cache: yes
+  when: not caddy_binary.stat.exists
 
-- name: Download Caddy with Cloudflare DNS module
-  get_url:
-    url: "https://caddyserver.com/api/download?os=linux&arch=amd64&p=github.com%2Fcaddy-dns%2Fcloudflare"
-    dest: /tmp/caddy-custom
-    mode: "0755"
-  notify: restart caddy
+- name: Read the installed Caddy modules
+  command: /usr/bin/caddy list-modules
+  register: caddy_modules
+  changed_when: false
+  failed_when: false
 
-- name: Replace Caddy binary with custom build
-  copy:
-    src: /tmp/caddy-custom
-    dest: /usr/bin/caddy
-    mode: "0755"
-    remote_src: yes
-  notify: restart caddy
+- name: Build Caddy with the Cloudflare DNS module when missing
+  when: caddy_modules.rc != 0 or 'dns.providers.cloudflare' not in caddy_modules.stdout
+  block:
+    - name: Check the installed Go version
+      command: /usr/local/go/bin/go version
+      register: caddy_go
+      changed_when: false
+      failed_when: false
+
+    - name: Determine whether Go needs installing
+      set_fact:
+        caddy_go_install: >-
+          {{ caddy_go.rc != 0
+             or ('go' ~ caddy_go_version) not in (caddy_go.stdout | default('')) }}
+
+    - name: Remove an older Go toolchain
+      file:
+        path: /usr/local/go
+        state: absent
+      when: caddy_go_install | bool
+
+    - name: Download Go {{ caddy_go_version }}
+      get_url:
+        url: "https://go.dev/dl/go{{ caddy_go_version }}.linux-amd64.tar.gz"
+        dest: /tmp/go.tar.gz
+        mode: "0644"
+      when: caddy_go_install | bool
+
+    - name: Install Go {{ caddy_go_version }}
+      unarchive:
+        src: /tmp/go.tar.gz
+        dest: /usr/local
+        remote_src: yes
+      when: caddy_go_install | bool
+
+    - name: Remove the Go archive
+      file:
+        path: /tmp/go.tar.gz
+        state: absent
+
+    - name: Install xcaddy {{ caddy_xcaddy_version }}
+      command: >-
+        /usr/local/go/bin/go install
+        github.com/caddyserver/xcaddy/cmd/xcaddy@{{ caddy_xcaddy_version }}
+      environment:
+        GOBIN: /usr/local/bin
+        GOPATH: /tmp/caddy-build
+        GOCACHE: /tmp/caddy-build/gocache
+
+    - name: Build Caddy {{ caddy_version }} with the Cloudflare DNS module
+      command: >-
+        /usr/local/bin/xcaddy build {{ caddy_version }}
+        --with {{ caddy_cloudflare_module }}
+      args:
+        chdir: /tmp/caddy-build
+      environment:
+        GOPATH: /tmp/caddy-build
+        GOCACHE: /tmp/caddy-build/gocache
+        GOMODCACHE: /tmp/caddy-build/mod
+
+    - name: Install the custom Caddy binary
+      copy:
+        src: /tmp/caddy-build/caddy
+        dest: /usr/bin/caddy
+        remote_src: yes
+        mode: "0755"
+        backup: yes
+      notify: restart caddy
+
+    - name: Remove the Caddy build tree
+      file:
+        path: /tmp/caddy-build
+        state: absent
 
 - name: Create Caddy systemd drop-in directory
   file:

@@ -1,0 +1,8 @@
+---
+# Caddy build used when the installed package lacks the Cloudflare DNS
+# provider. The official build API (caddyserver.com/api/download) now requires
+# an account/API key, so we build locally with xcaddy instead.
+caddy_version: "v2.11.9"
+caddy_cloudflare_module: "github.com/caddy-dns/cloudflare"
+caddy_go_version: "1.26.11"
+caddy_xcaddy_version: "v0.4.7"
