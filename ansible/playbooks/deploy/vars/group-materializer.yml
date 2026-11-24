@@ -1,0 +1,30 @@
+---
+# Per-service vars for group-materializer (used by playbooks/deploy.yml).
+#
+# Single Executor for every `accepted` decision (human UI, LLM judge, ops):
+# groups the pair or records a match_materialize_conflicts row. Mirrors
+# playbooks/hosts/group-materializer.yml - keep both in sync.
+
+app_name: group-materializer
+app_user: group-materializer
+app_group: group-materializer
+app_port: 8000
+app_health_path: /health
+app_health_port: 8000
+app_health_check: "systemd"
+# The loop is idle-safe (open conflicts are skipped); "always" keeps the
+# reconciler running after an unexpected exit.
+app_restart: always
+app_working_dir: "/opt/group-materializer/current/pipelines/matcher"
+app_requirements: "pipelines/matcher/requirements-drain.txt"
+app_archive_paths: ["pipelines/matcher", "shared/python", "sql"]
+app_repo_url: "https://github.com/Chachu1/Price_Tracker.git"
+app_branch: main
+app_keep_releases: 2
+app_service_exec: "/opt/group-materializer/current/venv/bin/python -u scripts/merge_accepted.py --loop --backfill --limit 500 --poll-interval 15"
+app_env_vars:
+  APP_ENV: production
+# Secrets are injected from GitHub Actions env at deploy time. Add/rename keys
+# here to match the app's needs; empty values are written verbatim.
+app_secrets:
+  PG_DSN: "{{ lookup('env', 'PG_DSN') }}"

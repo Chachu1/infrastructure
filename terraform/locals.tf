@@ -263,6 +263,34 @@ locals {
       internal_dns = "pvl-verifier"
     }
 
+    # ── Matcher Judge/Executor split (issue #85) ──────────────────────────
+    # Judge: pure decision producer. Reads `pending` rows from
+    # match_review_queue, calls OpenRouter, writes accepted/rejected. Never
+    # touches product_groups. Needs only Python + HTTPS egress to OpenRouter.
+    llm-drain = {
+      vm_id        = 277
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.79/24"
+      distro       = "ubuntu"
+      internal_dns = "llm-drain"
+    }
+
+    # Executor: reconciles accepted decisions (human, LLM or ops) into
+    # product_groups, or records an open match_materialize_conflicts row.
+    # Colocated with Postgres (10.0.0.20) instead of the GPU host's ~123 ms
+    # WAN link to it, so the 500-pair batches stay sub-second.
+    group-materializer = {
+      vm_id        = 278
+      cores        = 2
+      memory       = 2048
+      disk         = 10
+      ip           = "10.0.0.82/24"
+      distro       = "ubuntu"
+      internal_dns = "group-materializer"
+    }
+
     # Example VM (uncomment to add a VM service):
     # my-vm = {
     #   type   = "vm"

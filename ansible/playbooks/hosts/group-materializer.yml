@@ -1,0 +1,50 @@
+---
+# group-materializer - accepted-decision Executor (native systemd + venv), LXC.
+# Polls `accepted` rows not yet co-grouped and materializes them into
+# product_groups, or records an open match_materialize_conflicts row. Runs
+# next to Postgres (10.0.0.20) for sub-millisecond RTT.
+# Internal worker, no HTTP listener; health checked via systemd active.
+# Run standalone: ansible-playbook playbooks/hosts/group-materializer.yml
+
+- name: Bootstrap group-materializer
+  hosts: group-materializer
+  gather_facts: false
+  tasks:
+    - name: Wait for SSH
+      wait_for_connection:
+        timeout: 60
+
+    - name: Install Python
+      raw: which python3 || (apt-get update -qq || true; apt-get install -y -qq python3)
+      changed_when: false
+
+    - name: Gather facts
+      setup:
+
+- name: Configure group-materializer
+  hosts: group-materializer
+  vars:
+    dns_configured: true
+    app_name: group-materializer
+    app_user: group-materializer
+    app_group: group-materializer
+    app_port: 8000
+    app_health_path: /health
+    app_health_port: 8000
+    app_health_check: "systemd"
+    app_working_dir: "/opt/group-materializer/current/pipelines/matcher"
+    app_service_exec: "/opt/group-materializer/current/venv/bin/python -u scripts/merge_accepted.py --loop --backfill --limit 500 --poll-interval 15"
+    # The loop is idle-safe (open conflicts are skipped); "always" keeps the
+    # reconciler running after an unexpected exit.
+    app_restart: always
+    app_env_vars:
+      APP_ENV: production
+  pre_tasks:
+    - name: Check distribution is supported
+      assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        fail_msg: "app_systemd requires Debian or Ubuntu, got {{ ansible_distribution }} {{ ansible_distribution_version }}"
+  roles:
+    - common
+    - app_systemd

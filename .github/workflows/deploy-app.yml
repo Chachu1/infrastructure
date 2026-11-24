@@ -48,7 +48,7 @@ jobs:
           SERVICE="${{ github.event.client_payload.service }}"
           SHA="${{ github.event.client_payload.sha }}"
           case "$SERVICE" in
-            categorizer|review-api|enrichment-worker|pdp-enricher|local-scraper|carrefour-scraper|screenshot-service|pvl-verifier|job-tracker-api|dashboard-api|devapi|transform-worker|backfill-ui|frontend|devfront|pg-backup|tailoring-erp)
+            categorizer|review-api|enrichment-worker|pdp-enricher|local-scraper|carrefour-scraper|screenshot-service|pvl-verifier|job-tracker-api|dashboard-api|devapi|transform-worker|backfill-ui|frontend|devfront|pg-backup|tailoring-erp|llm-drain|group-materializer)
               ;;
             *)
               echo "::error::service '$SERVICE' not in allowlist"
@@ -94,6 +94,10 @@ jobs:
           MATCHER_V3_API_TOKEN: ${{ secrets.MATCHER_V3_API_TOKEN }}
           OPENROUTER_ENRICHMENT_KEY: ${{ secrets.OPENROUTER_ENRICHMENT_KEY }}
           OPENROUTER_QUALITY_KEY: ${{ secrets.OPENROUTER_QUALITY_KEY }}
+          # Judge (llm-drain). MATCHER_KEY is the matcher-scoped key;
+          # OPENROUTER_API_KEY is the fallback the deploy vars accept.
+          OPENROUTER_MATCHER_KEY: ${{ secrets.OPENROUTER_MATCHER_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           SCRAPE_PROXY_URL: ${{ vars.SCRAPE_PROXY_URL || secrets.SCRAPE_PROXY_URL }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           # Least-privilege AWS credentials, scoped per service (deploy/vars/*.yml).

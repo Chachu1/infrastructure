@@ -54,7 +54,9 @@ dns_records:
   frontend: 10.0.0.70
   gateway: 10.0.0.10
   graylog: 10.0.0.72
+  group-materializer: 10.0.0.82
   job-tracker-api: 10.0.0.63
+  llm-drain: 10.0.0.79
   local-scraper: 10.0.0.68
   pdp-enricher: 10.0.0.73
   pg-backup: 10.0.0.71
